@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/sandi/lumiina/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -18,11 +17,5 @@ func ConnectDB(cfg *Config) *gorm.DB {
 	if err != nil {
 		log.Fatalf("Gagal terhubung ke database PostgreSQL: %v", err)
 	}
-
-	err = db.AutoMigrate(&model.User{}, &model.Artwork{}, &model.Tag{})
-	if err != nil {
-		log.Fatalf("Gagal melakukan migrasi tabel: %v", err)
-	}
-	log.Println("berhasil melakukan migrasi tabel")
 	return db
 }
