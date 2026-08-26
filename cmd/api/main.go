@@ -36,6 +36,10 @@ func main() {
 	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret)
 
 	r := gin.Default()
+
+	// 1. Keamanan & Aksesibilitas: Pasang CORS Middleware agar API tidak diblokir oleh Frontend (Vite/React)
+	r.Use(middleware.CORSMiddleware())
+
 	v1 := r.Group("/api/v1")
 
 	// 1. Inisialisasi Satpam dengan Secret Key

@@ -7,7 +7,7 @@ type Artwork struct {
 	Title       string    `json:"title" gorm:"not null"`
 	Description string    `json:"description"`
 	ImageURL    string    `json:"image_url" gorm:"not null"`
-	UserID      uint      `json:"user_id" gorm:"not null"` // (Foreign Key) User
+	UserID      uint      `json:"user_id" gorm:"not null;index"` // (Foreign Key) User + Indexed untuk performa pencarian
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 
@@ -46,6 +47,39 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	file, err := c.FormFile("image")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Gambar wajib diunggah (field: image)"})
+		return
+	}
+
+	// 1. Sesuaikan Ukuran File: Max 20MB (Ideal untuk resolusi 4K Jpg/Png di platform seni)
+	if file.Size > 20*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ukuran gambar maksimal 20MB"})
+		return
+	}
+
+	// 2. Keamanan Tingkat Lanjut: Pengecekan Magic Bytes (Mencegah Ekstensi Palsu)
+	uploadedFile, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuka file"})
+		return
+	}
+	defer uploadedFile.Close()
+
+	buffer := make([]byte, 512) // Baca 512 byte pertama dari file
+	if _, err := uploadedFile.Read(buffer); err != nil && err != io.EOF {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca isi file"})
+		return
+	}
+
+	// Kembalikan cursor pembacaan file ke titik awal (byte 0) agar Cloudinary bisa membacanya secara utuh
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses file"})
+		return
+	}
+
+	// Deteksi tipe asli file berdasarkan isinya, bukan nama ekstensinya
+	contentType := http.DetectContentType(buffer)
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Maling tertangkap! File yang dikirim BUKAN gambar asli (terdeteksi: " + contentType + ")"})
 		return
 	}
 
