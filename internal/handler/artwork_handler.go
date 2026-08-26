@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sandi/lumiina/internal/model"
@@ -90,13 +91,26 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	}
 	userID := uint(userIDFloat.(float64)) // JWT parsing angka sebagai float64
 
+	// 3. Tangkap Input Tags (Mendukung format Array dari Frontend saat tekan 'Enter')
+	tagNames := c.PostFormArray("tags")
+	if len(tagNames) == 0 {
+		tagNames = c.PostFormArray("tags[]") // Frontend seperti Axios kadang menambahkan []
+	}
+	// Fallback: Jika dikirim sebagai string gabungan dipisah koma
+	if len(tagNames) == 0 {
+		tagsInput := c.PostForm("tags")
+		if tagsInput != "" {
+			tagNames = strings.Split(tagsInput, ",")
+		}
+	}
+
 	artwork := &model.Artwork{
 		Title:       title,
 		Description: description,
 		UserID:      userID,
 	}
 
-	err = h.service.CreateArtwork(c.Request.Context(), artwork, file)
+	err = h.service.CreateArtwork(c.Request.Context(), artwork, file, tagNames)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengunggah gambar: " + err.Error()})
 		return

@@ -32,7 +32,7 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork,
 	return s.repo.GetAllArtworks(limit, offset)
 }
 
-func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, fileHeader *multipart.FileHeader) error {
+func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, fileHeader *multipart.FileHeader, tagNames []string) error {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwo
 	}
 
 	artwork.ImageURL = imageURL
-	return s.repo.Create(artwork)
+	return s.repo.Create(artwork, tagNames)
 }
 
 func (s *ArtworkService) GetArtworkByID(id uint) (*model.Artwork, error) {

@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strings"
+
 	"github.com/sandi/lumiina/internal/model"
 	"gorm.io/gorm"
 )
@@ -19,7 +21,23 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int) ([]model.Artwo
 	return artworks, err
 }
 
-func (r *ArtworkRepository) Create(artwork *model.Artwork) error {
+func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) error {
+	var tags []model.Tag
+
+	// Cari tag di DB, kalau belum ada, buat baru (FirstOrCreate)
+	for _, name := range tagNames {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		var tag model.Tag
+		if err := r.db.Where(model.Tag{Name: name}).FirstOrCreate(&tag).Error; err != nil {
+			return err // Gagal memproses tag
+		}
+		tags = append(tags, tag)
+	}
+
+	artwork.Tags = tags // Tempelkan tags ke karya seni
 	return r.db.Create(artwork).Error
 }
 
