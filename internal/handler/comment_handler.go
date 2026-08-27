@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sandi/lumiina/internal/model"
@@ -45,7 +46,11 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 	}
 
 	if err := h.service.CreateComment(comment); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to post comment"})
+		if strings.Contains(err.Error(), "violates foreign key") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Artwork not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to post comment: " + err.Error()})
 		return
 	}
 
@@ -102,7 +107,11 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	role := c.GetString("role")
 
 	if err := h.service.DeleteComment(uint(commentID), userID, role); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		if err.Error() == "forbidden: unauthorized to delete this comment" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Comment not found"})
 		return
 	}
 

@@ -14,17 +14,20 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/service"
+	"golang.org/x/sync/singleflight"
 )
 
 type ArtworkHandler struct {
-	service *service.ArtworkService
-	rdb     *redis.Client
+	service      *service.ArtworkService
+	rdb          *redis.Client
+	requestGroup singleflight.Group
 }
 
 func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client) *ArtworkHandler {
 	return &ArtworkHandler{
 		service: service,
-		rdb:     rdb}
+		rdb:     rdb,
+	}
 }
 
 func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
@@ -45,24 +48,35 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 		return
 	}
 
-	// Fetch from database on cache miss
-	artworks, err := h.service.GetAllArtworks(limit, offset)
+	// Singleflight: Collapses concurrent cache-miss queries to protect DB from cache stampede
+	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
+		artworks, err := h.service.GetAllArtworks(limit, offset)
+		if err != nil {
+			return nil, err
+		}
+
+		response := gin.H{
+			"message": "Successfully fetched artworks",
+			"page":    page,
+			"limit":   limit,
+			"data":    artworks,
+		}
+
+		responseJSON, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
+
+		h.rdb.Set(ctx, cacheKey, responseJSON, 1*time.Minute)
+		return responseJSON, nil
+	})
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch artworks"})
 		return
 	}
 
-	response := gin.H{
-		"message": "Successfully fetched artworks",
-		"page":    page,
-		"limit":   limit,
-		"data":    artworks,
-	}
-
-	responseJSON, _ := json.Marshal(response)
-	h.rdb.Set(ctx, cacheKey, responseJSON, 1*time.Minute)
-
-	c.JSON(http.StatusOK, response)
+	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
 func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
@@ -147,6 +161,8 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 		return
 	}
 
+	h.invalidateArtworkCache(c.Request.Context())
+
 	c.JSON(http.StatusCreated, gin.H{"message": "Artwork uploaded successfully", "data": artwork})
 }
 
@@ -193,6 +209,8 @@ func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 		return
 	}
 
+	h.invalidateArtworkCache(c.Request.Context())
+
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork updated successfully"})
 }
 
@@ -213,5 +231,14 @@ func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 		return
 	}
 
+	h.invalidateArtworkCache(c.Request.Context())
+
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
+}
+
+func (h *ArtworkHandler) invalidateArtworkCache(ctx context.Context) {
+	iter := h.rdb.Scan(ctx, 0, "artworks:page:*", 0).Iterator()
+	for iter.Next(ctx) {
+		h.rdb.Del(ctx, iter.Val())
+	}
 }

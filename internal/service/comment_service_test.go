@@ -97,3 +97,24 @@ func TestDeleteComment_AdminSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestCreateComment_XSSSanitization(t *testing.T) {
+	mockRepo := new(MockCommentRepository)
+	commentService := NewCommentService(mockRepo)
+
+	comment := &model.Comment{
+		Content:   "<script>alert('xss')</script>",
+		ArtworkID: 1,
+		UserID:    2,
+	}
+
+	mockRepo.On("Create", mock.MatchedBy(func(c *model.Comment) bool {
+		return c.Content == "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"
+	})).Return(nil)
+
+	err := commentService.CreateComment(comment)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;", comment.Content)
+	mockRepo.AssertExpectations(t)
+}

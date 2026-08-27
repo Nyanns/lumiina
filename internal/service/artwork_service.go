@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"html"
 	"mime/multipart"
+	"strings"
 
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/cloudinary"
@@ -33,6 +35,9 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork,
 }
 
 func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, file multipart.File, tagNames []string) error {
+	artwork.Title = html.EscapeString(strings.TrimSpace(artwork.Title))
+	artwork.Description = html.EscapeString(strings.TrimSpace(artwork.Description))
+
 	imageURL, err := s.cloudinary.UploadImage(ctx, file, "lumiina_artworks")
 	if err != nil {
 		return err
@@ -56,8 +61,8 @@ func (s *ArtworkService) UpdateArtwork(id uint, userID uint, role string, title,
 		return errors.New("forbidden: unauthorized to update this artwork")
 	}
 
-	artwork.Title = title
-	artwork.Description = description
+	artwork.Title = html.EscapeString(strings.TrimSpace(title))
+	artwork.Description = html.EscapeString(strings.TrimSpace(description))
 
 	return s.repo.Update(artwork)
 }

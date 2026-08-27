@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"html"
+	"strings"
 
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/repository"
@@ -22,9 +24,13 @@ func NewCommentService(repo repository.CommentRepository) CommentService {
 }
 
 func (s *commentService) CreateComment(comment *model.Comment) error {
-	if comment.Content == "" {
+	trimmed := strings.TrimSpace(comment.Content)
+	if trimmed == "" {
 		return errors.New("comment content cannot be empty")
 	}
+
+	// Defense in depth: Sanitize HTML markup to prevent Stored XSS
+	comment.Content = html.EscapeString(trimmed)
 	return s.repo.Create(comment)
 }
 

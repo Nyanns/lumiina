@@ -45,7 +45,13 @@ func main() {
 	commentHandler := handler.NewCommentHandler(commentService)
 
 	r := gin.Default()
+
+	// Security: Configure trusted proxies to prevent IP spoofing & rate-limit bypass
+	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+
+	// Security: Global middlewares (CORS & HTTP Security Headers)
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.SecurityHeadersMiddleware())
 
 	v1 := r.Group("/api/v1")
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret)
