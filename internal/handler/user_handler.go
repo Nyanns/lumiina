@@ -20,21 +20,23 @@ func NewUserHandler(service service.UserService, jwtSecret string) *UserHandler 
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
-	var user model.User
+	var req model.RegisterRequest
 
-	err := c.ShouldBindJSON(&user)
-
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = h.service.Register(&user)
+	user := model.User{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	}
 
+	err = h.service.Register(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -54,7 +56,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.Login(loginRequest.Email, loginRequest.Password)
+	user, err := h.service.Login(loginRequest.Identifier, loginRequest.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return

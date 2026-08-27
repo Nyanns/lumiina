@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sandi/lumiina/config"
@@ -18,17 +19,23 @@ func main() {
 	if db == nil {
 		log.Fatal("Gagal konek ke database")
 	}
+	// Hubungkan ke Redis
+	rdb := config.ConnectRedis(cfg)
 
 	// Inisialisasi Cloudinary
+	if cfg.CloudinaryURL == "" || len(cfg.CloudinaryURL) < 13 || cfg.CloudinaryURL[:13] != "cloudinary://" {
+		log.Fatal("Peringatan Keras: CLOUDINARY_SECRET di .env kamu salah format! Harus berawalan 'cloudinary://...'")
+	}
+
 	cldService, err := cloudinary.NewCloudinaryService(cfg.CloudinaryURL)
 	if err != nil {
-		log.Println("Peringatan: Gagal menginisialisasi Cloudinary:", err)
+		log.Fatal("Gagal menginisialisasi Cloudinary:", err)
 	}
 
 	// Injeksi Dependensi (Perakitan) Artwork
 	artworkRepo := repository.NewArtworkRepository(db)
 	ArtworkService := service.NewArtworkService(artworkRepo, cldService)
-	ArtworkHandler := handler.NewArtworkHandler(ArtworkService)
+	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb)
 
 	// Injeksi Dependensi (Perakitan) User
 	userRepo := repository.NewUserRepository(db)
@@ -52,7 +59,10 @@ func main() {
 		artwork.GET("/:id", ArtworkHandler.GetArtworkByID)
 	}
 
+	// Buat aturan untuk Satpam: Maksimal 5 kali percobaan dalam 1 menit
+	rateLimiter := middleware.RateLimiterMiddleware(rdb, 5, 1*time.Minute)
 	auth := v1.Group("/auth")
+	auth.Use(rateLimiter)
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)

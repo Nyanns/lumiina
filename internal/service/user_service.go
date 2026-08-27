@@ -8,7 +8,7 @@ import (
 
 type UserService interface {
 	Register(user *model.User) error
-	Login(email, password string) (*model.User, error)
+	Login(identifier, password string) (*model.User, error)
 }
 
 type userService struct {
@@ -35,8 +35,8 @@ func (s *userService) Register(user *model.User) error {
 	return s.repo.CreateUser(user)
 }
 
-func (s *userService) Login(email, password string) (*model.User, error) {
-	user, err := s.repo.FindByEmail(email)
+func (s *userService) Login(identifier, password string) (*model.User, error) {
+	user, err := s.repo.FindByIdentifier(identifier)
 	if err != nil {
 		return nil, err
 	}

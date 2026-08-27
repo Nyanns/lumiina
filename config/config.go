@@ -16,6 +16,8 @@ type Config struct {
 	DBPort        string
 	JWTSecret     string
 	CloudinaryURL string
+	RedisHost     string
+	RedisPort     string
 }
 
 func LoadConfig() *Config {
@@ -41,5 +43,7 @@ func LoadConfig() *Config {
 		DBName:        os.Getenv("DB_NAME"),
 		JWTSecret:     secret,
 		CloudinaryURL: cloudinaryURL,
+		RedisHost:     os.Getenv("REDIS_HOST"),
+		RedisPort:     os.Getenv("REDIS_PORT"),
 	}
 }

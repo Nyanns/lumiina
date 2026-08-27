@@ -32,13 +32,7 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork,
 	return s.repo.GetAllArtworks(limit, offset)
 }
 
-func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, fileHeader *multipart.FileHeader, tagNames []string) error {
-	file, err := fileHeader.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
+func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, file multipart.File, tagNames []string) error {
 	// Upload ke Cloudinary
 	imageURL, err := s.cloudinary.UploadImage(ctx, file, "lumiina_artworks")
 	if err != nil {
