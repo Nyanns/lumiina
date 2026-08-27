@@ -24,7 +24,6 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int) ([]model.Artwo
 func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) error {
 	var tags []model.Tag
 
-	// Cari tag di DB, kalau belum ada, buat baru (FirstOrCreate)
 	for _, name := range tagNames {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -32,12 +31,12 @@ func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) er
 		}
 		var tag model.Tag
 		if err := r.db.Where(model.Tag{Name: name}).FirstOrCreate(&tag).Error; err != nil {
-			return err // Gagal memproses tag
+			return err
 		}
 		tags = append(tags, tag)
 	}
 
-	artwork.Tags = tags // Tempelkan tags ke karya seni
+	artwork.Tags = tags
 	return r.db.Create(artwork).Error
 }
 

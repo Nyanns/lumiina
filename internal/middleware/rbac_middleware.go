@@ -6,25 +6,22 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminOnly adalah RBAC Middleware khusus untuk mengecek apakah user memiliki role 'admin'
+// AdminOnly restricts endpoint access to users with the 'admin' role
 func AdminOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Mengambil role dari dalam Gin Context (yang sebelumnya sudah diset oleh AuthMiddleware)
 		role, exists := c.Get("role")
 		if !exists {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Role not found in token"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Role not found in context"})
 			return
 		}
 
-		// Memastikan role-nya benar-benar string dan bernilai "admin"
 		if roleStr, ok := role.(string); !ok || roleStr != "admin" {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-				"error": "Akses Ditolak: Fitur ini hanya untuk Admin",
+				"error": "Forbidden: Admin access required",
 			})
 			return
 		}
 
-		// Jika dia Admin, silakan masuk!
 		c.Next()
 	}
 }

@@ -7,6 +7,5 @@ type Tag struct {
 	Name      string    `json:"name" gorm:"unique;not null"`
 	CreatedAt time.Time `json:"created_at"`
 
-	// Kebalikan dari Relasi Many-to-Many
 	Artworks []Artwork `json:"artworks,omitempty" gorm:"many2many:artwork_tags;"`
 }

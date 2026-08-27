@@ -23,15 +23,14 @@ type Config struct {
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Peringatan: file .env tidak ditemukan")
+		log.Println("Warning: .env file not found, loading environment variables")
 	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "supersecretkey_fallback" // Fallback jika .env lupa diset
+		secret = "supersecretkey_fallback"
 	}
 
-	// Mengambil CLOUDINARY_SECRET sesuai yang didefinisikan user
 	cloudinaryURL := os.Getenv("CLOUDINARY_SECRET")
 
 	return &Config{

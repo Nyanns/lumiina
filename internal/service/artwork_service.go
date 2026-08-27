@@ -33,7 +33,6 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork,
 }
 
 func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, file multipart.File, tagNames []string) error {
-	// Upload ke Cloudinary
 	imageURL, err := s.cloudinary.UploadImage(ctx, file, "lumiina_artworks")
 	if err != nil {
 		return err
@@ -53,9 +52,8 @@ func (s *ArtworkService) UpdateArtwork(id uint, userID uint, role string, title,
 		return err
 	}
 
-	// Authorization Check: Hanya pemilik atau Admin yang boleh update
 	if artwork.UserID != userID && role != "admin" {
-		return errors.New("akses ditolak: bukan pemilik karya")
+		return errors.New("forbidden: unauthorized to update this artwork")
 	}
 
 	artwork.Title = title
@@ -70,12 +68,9 @@ func (s *ArtworkService) DeleteArtwork(id uint, userID uint, role string) error 
 		return err
 	}
 
-	// Authorization Check: Hanya pemilik atau Admin yang boleh hapus
 	if artwork.UserID != userID && role != "admin" {
-		return errors.New("akses ditolak: bukan pemilik karya")
+		return errors.New("forbidden: unauthorized to delete this artwork")
 	}
-
-	// TODO: Hapus juga gambar di Cloudinary jika mau menghemat space (opsional)
 
 	return s.repo.Delete(id)
 }

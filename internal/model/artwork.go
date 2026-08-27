@@ -7,10 +7,10 @@ type Artwork struct {
 	Title       string    `json:"title" gorm:"not null"`
 	Description string    `json:"description"`
 	ImageURL    string    `json:"image_url" gorm:"not null"`
-	UserID      uint      `json:"user_id" gorm:"not null;index"` // (Foreign Key) User + Indexed untuk performa pencarian
+	UserID      uint      `json:"user_id" gorm:"not null;index"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 
-	// Relasi Many-to-Many
-	Tags []Tag `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
+	Tags     []Tag     `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
+	Comments []Comment `json:"comments,omitempty"`
 }
