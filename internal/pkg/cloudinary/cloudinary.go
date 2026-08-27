@@ -24,12 +24,10 @@ func NewCloudinaryService(url string) (CloudinaryService, error) {
 }
 
 func (s *cloudinaryService) UploadImage(ctx context.Context, file interface{}, folder string) (string, error) {
-	// Melakukan upload file ke Cloudinary
 	resp, err := s.cld.Upload.Upload(ctx, file, uploader.UploadParams{Folder: folder})
 	if err != nil {
 		return "", err
 	}
 
-	// Mengembalikan URL gambar yang bisa diakses publik secara aman
 	return resp.SecureURL, nil
 }

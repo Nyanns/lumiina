@@ -17,49 +17,53 @@ func main() {
 	cfg := config.LoadConfig()
 	db := config.ConnectDB(cfg)
 	if db == nil {
-		log.Fatal("Gagal konek ke database")
+		log.Fatal("Failed to connect to database")
 	}
-	// Hubungkan ke Redis
+
 	rdb := config.ConnectRedis(cfg)
 
-	// Inisialisasi Cloudinary
 	if cfg.CloudinaryURL == "" || len(cfg.CloudinaryURL) < 13 || cfg.CloudinaryURL[:13] != "cloudinary://" {
-		log.Fatal("Peringatan Keras: CLOUDINARY_SECRET di .env kamu salah format! Harus berawalan 'cloudinary://...'")
+		log.Fatal("Invalid CLOUDINARY_SECRET format in .env, must start with 'cloudinary://'")
 	}
 
 	cldService, err := cloudinary.NewCloudinaryService(cfg.CloudinaryURL)
 	if err != nil {
-		log.Fatal("Gagal menginisialisasi Cloudinary:", err)
+		log.Fatal("Failed to initialize Cloudinary:", err)
 	}
 
-	// Injeksi Dependensi (Perakitan) Artwork
+	// Dependencies
 	artworkRepo := repository.NewArtworkRepository(db)
 	ArtworkService := service.NewArtworkService(artworkRepo, cldService)
 	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb)
 
-	// Injeksi Dependensi (Perakitan) User
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret)
 
+	commentRepo := repository.NewCommentRepository(db)
+	commentService := service.NewCommentService(commentRepo)
+	commentHandler := handler.NewCommentHandler(commentService)
+
 	r := gin.Default()
 
-	// 1. Keamanan & Aksesibilitas: Pasang CORS Middleware agar API tidak diblokir oleh Frontend (Vite/React)
+	// Security: Configure trusted proxies to prevent IP spoofing & rate-limit bypass
+	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+
+	// Security: Global middlewares (CORS & HTTP Security Headers)
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.SecurityHeadersMiddleware())
 
 	v1 := r.Group("/api/v1")
-
-	// 1. Inisialisasi Satpam dengan Secret Key
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret)
 
-	// 2. Route Publik
+	// Public routes
 	artwork := v1.Group("/artworks")
 	{
 		artwork.GET("", ArtworkHandler.GetAllArtworks)
 		artwork.GET("/:id", ArtworkHandler.GetArtworkByID)
+		artwork.GET("/:id/comments", commentHandler.GetCommentsByArtwork)
 	}
 
-	// Buat aturan untuk Satpam: Maksimal 5 kali percobaan dalam 1 menit
 	rateLimiter := middleware.RateLimiterMiddleware(rdb, 5, 1*time.Minute)
 	auth := v1.Group("/auth")
 	auth.Use(rateLimiter)
@@ -68,21 +72,24 @@ func main() {
 		auth.POST("/login", userHandler.Login)
 	}
 
-	// 3. Route Privat (Dilindungi Satpam)
+	// Protected routes
 	protected := v1.Group("/")
 	protected.Use(authGuard)
 	{
 		protected.POST("/artworks", ArtworkHandler.CreateArtwork)
 		protected.PUT("/artworks/:id", ArtworkHandler.UpdateArtwork)
 		protected.DELETE("/artworks/:id", ArtworkHandler.DeleteArtwork)
+
+		// Comment routes
+		protected.POST("/artworks/:id/comments", commentHandler.CreateComment)
+		protected.DELETE("/comments/:id", commentHandler.DeleteComment)
 	}
 
-	// 4. Route Super Privat (Dilindungi Satpam + Khusus Admin)
+	// Admin routes
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.AdminOnly())
 	{
-		// Nanti endpoint seperti Hapus Karya Orang Lain ditaruh di sini
-		// Contoh: adminOnly.DELETE("/artworks/:id", ArtworkHandler.DeleteArtworkAsAdmin)
+		// Admin-only endpoints
 	}
 
 	r.Run(":" + cfg.Port)

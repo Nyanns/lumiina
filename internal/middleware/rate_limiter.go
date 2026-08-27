@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"time"
 
@@ -9,32 +8,24 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// RateLimiterMiddleware membatasi jumlah request per IP
+// RateLimiterMiddleware limits incoming requests per client IP
 func RateLimiterMiddleware(rdb *redis.Client, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Ambil alamat IP tamu yang datang
 		ip := c.ClientIP()
-
-		// Buat "KTP" sementara di Redis. Contoh: "rate_limit:192.168.1.5"
 		key := "rate_limit:" + ip
 
-		ctx := context.Background()
+		ctx := c.Request.Context()
 
-		// rdb.Incr ibarat Satpam mencetak tiket/klik counter.
-		// Kalau kunci belum ada, otomatis dibuat jadi 1.
-		count, err := rdb.Incr(ctx, key).Result()
+		pipe := rdb.TxPipeline()
+		incrCmd := pipe.Incr(ctx, key)
+		pipe.Expire(ctx, key, window)
+		_, err := pipe.Exec(ctx)
 		if err != nil {
-			// Kalau alat klik Redis rusak, biarkan tamu masuk daripada restoran tutup total.
 			c.Next()
 			return
 		}
 
-		// Jika ini percobaan pertama (count == 1), nyalakan timer kadaluarsa (TTL) tiketnya
-		if count == 1 {
-			rdb.Expire(ctx, key, window)
-		}
-
-		// Jika jumlah percobaan melebihi limit maksimal
+		count := incrCmd.Val()
 		if count > int64(limit) {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error": "Too many requests. Please try again later.",
@@ -42,7 +33,6 @@ func RateLimiterMiddleware(rdb *redis.Client, limit int, window time.Duration) g
 			return
 		}
 
-		// Kalau masih aman, silakan masuk ke fitur selanjutnya
 		c.Next()
 	}
 }
