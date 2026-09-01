@@ -1,7 +1,7 @@
 package config
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -28,7 +28,7 @@ type Config struct {
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Warning: .env file not found, loading environment variables")
+		slog.Warn(".env file not found, loading environment variables")
 	}
 
 	baseURL := os.Getenv("APP_BASE_URL")

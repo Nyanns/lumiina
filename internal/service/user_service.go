@@ -77,7 +77,7 @@ func (s *userService) Register(user *model.User) error {
 		_ = s.rdb.Set(ctx, key, fmt.Sprintf("%d", user.ID), 24*time.Hour).Err()
 	}
 
-	// Non-blocking Goroutine: Send Verification Email in background
+	// Dispatch verification email asynchronously in background
 	if s.mailer != nil {
 		go func(toEmail, username, verToken, baseURL string) {
 			err := s.mailer.SendVerificationEmail(toEmail, username, verToken, baseURL)
@@ -138,7 +138,7 @@ func (s *userService) VerifyEmail(token string) error {
 		return err
 	}
 
-	// Hapus token setelah berhasil dipakai (Single-Use Token)
+	// Invalidate token upon successful consumption (single-use constraint)
 	_ = s.rdb.Del(ctx, key)
 	return nil
 }
@@ -146,8 +146,7 @@ func (s *userService) VerifyEmail(token string) error {
 func (s *userService) ForgotPassword(email string) error {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
-		// Defense in Depth: Anti-Account Enumeration.
-		// Jangan bocorkan apakah email terdaftar atau tidak ke penyerang.
+		// Anti-enumeration defense: return nil so existence of email is not leaked
 		return nil
 	}
 
@@ -162,7 +161,7 @@ func (s *userService) ForgotPassword(email string) error {
 		_ = s.rdb.Set(ctx, key, fmt.Sprintf("%d", user.ID), 15*time.Minute).Err()
 	}
 
-	// Non-blocking Goroutine: Send Reset Password Email in background
+	// Dispatch reset password email asynchronously in background
 	if s.mailer != nil {
 		go func(toEmail, username, resetToken, baseURL string) {
 			err := s.mailer.SendPasswordResetEmail(toEmail, username, resetToken, baseURL)
@@ -210,7 +209,7 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 		return err
 	}
 
-	// Hapus token setelah berhasil dipakai
+	// Invalidate reset token upon successful consumption
 	_ = s.rdb.Del(ctx, key)
 	return nil
 }
