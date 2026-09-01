@@ -79,9 +79,9 @@ func TestLogin_Unverified(t *testing.T) {
 	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
 
 	dummyUser := &model.User{
-		Username:   "sandi",
-		Email:      "sandi@htb.com",
-		Password:   "passwordrahasia",
+		Username: "sandi",
+		Email:    "sandi@htb.com",
+		Password: "passwordrahasia",
 	}
 	mockRepo.On("CreateUser", mock.Anything).Return(nil)
 	_ = userService.Register(dummyUser)
