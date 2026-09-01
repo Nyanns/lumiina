@@ -28,6 +28,11 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
+	if req.Password != req.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Konfirmasi password tidak cocok dengan password yang dimasukkan"})
+		return
+	}
+
 	user := model.User{
 		Username: req.Username,
 		Email:    req.Email,
@@ -41,7 +46,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "User created successfully",
+		"message": "Registrasi berhasil! Tautan verifikasi telah dikirimkan ke email Anda.",
 		"data":    user,
 	})
 }
@@ -58,7 +63,7 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 	user, err := h.service.Login(loginRequest.Identifier, loginRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -79,5 +84,79 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   tokenString,
+	})
+}
+
+func (h *UserHandler) VerifyEmail(c *gin.Context) {
+	token := c.Query("token")
+	wantsJSON := c.GetHeader("Accept") == "application/json"
+
+	if token == "" {
+		if wantsJSON {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Token verifikasi wajib disertakan"})
+			return
+		}
+		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Token Tidak Ditemukan", "Tautan verifikasi tidak lengkap atau tidak memiliki parameter token yang valid.")))
+		return
+	}
+
+	err := h.service.VerifyEmail(token)
+	if err != nil {
+		if wantsJSON {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Tautan Kedaluwarsa / Tidak Valid", err.Error())))
+		return
+	}
+
+	if wantsJSON {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Email berhasil diverifikasi! Akun Anda kini sudah aktif. Silakan login.",
+		})
+		return
+	}
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(renderVerificationSuccessPage()))
+}
+
+func (h *UserHandler) ForgotPassword(c *gin.Context) {
+	var req model.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.ForgotPassword(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses permintaan reset password"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Jika alamat email terdaftar di sistem kami, instruksi reset kata sandi telah dikirimkan ke email Anda.",
+	})
+}
+
+func (h *UserHandler) ResetPassword(c *gin.Context) {
+	var req model.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.NewPassword != req.ConfirmPassword {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Konfirmasi password baru tidak cocok"})
+		return
+	}
+
+	err := h.service.ResetPassword(req.Token, req.NewPassword)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Kata sandi berhasil diperbarui! Silakan login menggunakan kata sandi baru Anda.",
 	})
 }

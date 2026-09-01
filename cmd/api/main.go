@@ -9,6 +9,7 @@ import (
 	"github.com/sandi/lumiina/internal/handler"
 	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/pkg/cloudinary"
+	"github.com/sandi/lumiina/internal/pkg/mailer"
 	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
 )
@@ -31,13 +32,15 @@ func main() {
 		log.Fatal("Failed to initialize Cloudinary:", err)
 	}
 
+	mailerService := mailer.NewMailerService(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPEmail, cfg.SMTPPassword)
+
 	// Dependencies
 	artworkRepo := repository.NewArtworkRepository(db)
 	ArtworkService := service.NewArtworkService(artworkRepo, cldService)
 	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb)
 
 	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, rdb, mailerService, cfg.AppBaseURL)
 	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret)
 
 	commentRepo := repository.NewCommentRepository(db)
@@ -70,6 +73,9 @@ func main() {
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
+		auth.GET("/verify-email", userHandler.VerifyEmail)
+		auth.POST("/forgot-password", userHandler.ForgotPassword)
+		auth.POST("/reset-password", userHandler.ResetPassword)
 	}
 
 	// Protected routes
