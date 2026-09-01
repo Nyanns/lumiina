@@ -18,12 +18,22 @@ type Config struct {
 	CloudinaryURL string
 	RedisHost     string
 	RedisPort     string
+	SMTPHost      string
+	SMTPPort      string
+	SMTPEmail     string
+	SMTPPassword  string
+	AppBaseURL    string
 }
 
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found, loading environment variables")
+	}
+
+	baseURL := os.Getenv("APP_BASE_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
 	}
 
 	secret := os.Getenv("JWT_SECRET")
@@ -44,5 +54,10 @@ func LoadConfig() *Config {
 		CloudinaryURL: cloudinaryURL,
 		RedisHost:     os.Getenv("REDIS_HOST"),
 		RedisPort:     os.Getenv("REDIS_PORT"),
+		SMTPHost:      os.Getenv("SMTP_HOST"),
+		SMTPPort:      os.Getenv("SMTP_PORT"),
+		SMTPEmail:     os.Getenv("SMTP_EMAIL"),
+		SMTPPassword:  os.Getenv("SMTP_PASSWORD"),
+		AppBaseURL:    baseURL,
 	}
 }
