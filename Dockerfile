@@ -37,5 +37,10 @@ COPY db/migrations ./db/migrations
 # Buka port 8080 untuk lalu lintas jaringan
 EXPOSE 8080
 
+# Health check probe for Docker / Kubernetes
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/livez || exit 1
+
 # Jalankan aplikasi saat container start
 CMD ["./main"]
+
