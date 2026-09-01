@@ -52,3 +52,12 @@ migrate-down:
 	@echo "Rolling back 1 migration step..."
 	migrate -path db/migrations -database "postgresql://postgres:lumina_rahasia@localhost:5432/lumiina_db?sslmode=disable" -verbose down 1
 
+web-dev:
+	@echo "Starting Vite React frontend..."
+	cd web && npm run dev
+
+web-build:
+	@echo "Building frontend production assets..."
+	cd web && npm run build
+
+
