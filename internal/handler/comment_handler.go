@@ -18,6 +18,20 @@ func NewCommentHandler(service service.CommentService) *CommentHandler {
 	return &CommentHandler{service: service}
 }
 
+// CreateComment adds a sanitized comment to an artwork.
+// @Summary Post a comment on artwork
+// @Description Creates a new text comment for the specified artwork. Content is sanitized for HTML/XSS.
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Artwork ID"
+// @Param req body model.CreateCommentRequest true "Comment content"
+// @Success 201 {object} map[string]interface{} "Comment created successfully"
+// @Failure 400 {object} map[string]string "Invalid input or empty comment"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Artwork not found"
+// @Router /artworks/{id}/comments [post]
 func (h *CommentHandler) CreateComment(c *gin.Context) {
 	artworkIDStr := c.Param("id")
 	artworkID, err := strconv.Atoi(artworkIDStr)
@@ -60,6 +74,18 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 	})
 }
 
+// GetCommentsByArtwork returns paginated comments for an artwork.
+// @Summary Get artwork comments
+// @Description Fetches comments belonging to an artwork with pagination support.
+// @Tags comments
+// @Produce json
+// @Param id path int true "Artwork ID"
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20, max: 50)"
+// @Success 200 {object} map[string]interface{} "Paginated comments list"
+// @Failure 400 {object} map[string]string "Invalid artwork ID"
+// @Failure 500 {object} map[string]string "Database error"
+// @Router /artworks/{id}/comments [get]
 func (h *CommentHandler) GetCommentsByArtwork(c *gin.Context) {
 	artworkIDStr := c.Param("id")
 	artworkID, err := strconv.Atoi(artworkIDStr)
@@ -90,6 +116,18 @@ func (h *CommentHandler) GetCommentsByArtwork(c *gin.Context) {
 	})
 }
 
+// DeleteComment deletes a comment by its ID.
+// @Summary Delete a comment
+// @Description Deletes a comment. Only the author or an admin can delete.
+// @Tags comments
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Comment ID"
+// @Success 200 {object} map[string]string "Comment deleted successfully"
+// @Failure 400 {object} map[string]string "Invalid comment ID"
+// @Failure 403 {object} map[string]string "Forbidden: Unauthorized to delete this comment"
+// @Failure 404 {object} map[string]string "Comment not found"
+// @Router /comments/{id} [delete]
 func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	commentIDStr := c.Param("id")
 	commentID, err := strconv.Atoi(commentIDStr)

@@ -60,6 +60,17 @@ func (h *UserHandler) Register(c *gin.Context) {
 	})
 }
 
+// Login authenticates a user and returns a signed JWT access token.
+// @Summary Authenticate user
+// @Description Logs in using email or username along with password, returning a JWT Bearer token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param req body model.LoginRequest true "User Credentials"
+// @Success 200 {object} map[string]interface{} "Returns JWT Bearer token and user info"
+// @Failure 400 {object} map[string]string "Invalid input payload"
+// @Failure 401 {object} map[string]string "Invalid credentials or unverified account"
+// @Router /auth/login [post]
 func (h *UserHandler) Login(c *gin.Context) {
 	var loginRequest model.LoginRequest
 
@@ -96,6 +107,15 @@ func (h *UserHandler) Login(c *gin.Context) {
 	})
 }
 
+// VerifyEmail validates the email confirmation token and activates the account.
+// @Summary Verify email address
+// @Description Activates the user account using the single-use token sent via email.
+// @Tags auth
+// @Produce json,html
+// @Param token query string true "Verification Token"
+// @Success 200 {object} map[string]string "Account successfully activated"
+// @Failure 400 {object} map[string]string "Missing, expired, or invalid token"
+// @Router /auth/verify-email [get]
 func (h *UserHandler) VerifyEmail(c *gin.Context) {
 	token := c.Query("token")
 	wantsJSON := c.GetHeader("Accept") == "application/json"
@@ -129,6 +149,16 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(renderVerificationSuccessPage()))
 }
 
+// ForgotPassword initiates the password reset workflow.
+// @Summary Request password reset
+// @Description Sends a 15-minute ephemeral password reset token to the given email address.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param req body model.ForgotPasswordRequest true "Registered Email Address"
+// @Success 200 {object} map[string]string "Generic success response to prevent account enumeration"
+// @Failure 400 {object} map[string]string "Invalid email format"
+// @Router /auth/forgot-password [post]
 func (h *UserHandler) ForgotPassword(c *gin.Context) {
 	var req model.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -147,6 +177,16 @@ func (h *UserHandler) ForgotPassword(c *gin.Context) {
 	})
 }
 
+// ResetPassword updates the account password using the reset token.
+// @Summary Reset account password
+// @Description Sets a new password using a valid reset token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param req body model.ResetPasswordRequest true "Token and New Password"
+// @Success 200 {object} map[string]string "Password reset successfully"
+// @Failure 400 {object} map[string]string "Invalid token or password mismatch"
+// @Router /auth/reset-password [post]
 func (h *UserHandler) ResetPassword(c *gin.Context) {
 	var req model.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -30,6 +30,16 @@ func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client) *Artw
 	}
 }
 
+// GetAllArtworks retrieves a paginated feed of artworks with singleflight Redis caching.
+// @Summary Get artwork feed
+// @Description Fetches public anime fan art artworks with pagination support (page, limit).
+// @Tags artworks
+// @Produce json
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20)"
+// @Success 200 {object} map[string]interface{} "Paginated list of artworks"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /artworks [get]
 func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "20")
 	pageStr := c.DefaultQuery("page", "1")
@@ -79,6 +89,22 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
+// CreateArtwork handles uploading new artwork image with tags to Cloudinary and database.
+// @Summary Upload new artwork
+// @Description Uploads fan art image (JPEG/PNG/WebP, max 20MB) with title, description, and tags.
+// @Tags artworks
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param title formData string true "Artwork title"
+// @Param description formData string false "Artwork description"
+// @Param tags formData []string false "Artwork tags"
+// @Param image formData file true "Artwork image file"
+// @Success 201 {object} map[string]interface{} "Artwork created successfully"
+// @Failure 400 {object} map[string]string "Invalid form data or unsupported file format"
+// @Failure 401 {object} map[string]string "Unauthorized token"
+// @Failure 500 {object} map[string]string "Image upload or database failure"
+// @Router /artworks [post]
 func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	title := c.PostForm("title")
 	description := c.PostForm("description")
@@ -166,6 +192,16 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Artwork uploaded successfully", "data": artwork})
 }
 
+// GetArtworkByID fetches a single artwork by its numeric ID with author and tags.
+// @Summary Get artwork details
+// @Description Returns artwork metadata, author information, and associated tags.
+// @Tags artworks
+// @Produce json
+// @Param id path int true "Artwork ID"
+// @Success 200 {object} map[string]interface{} "Artwork details"
+// @Failure 400 {object} map[string]string "Invalid artwork ID"
+// @Failure 404 {object} map[string]string "Artwork not found"
+// @Router /artworks/{id} [get]
 func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -183,6 +219,19 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": artwork})
 }
 
+// UpdateArtwork modifies an existing artwork's title and description.
+// @Summary Update artwork
+// @Description Updates artwork details. Only the artwork creator or an admin can update.
+// @Tags artworks
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Artwork ID"
+// @Param req body map[string]string true "Updated title and description"
+// @Success 200 {object} map[string]string "Artwork updated successfully"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 403 {object} map[string]string "Forbidden: Not the owner"
+// @Router /artworks/{id} [put]
 func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -214,6 +263,17 @@ func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork updated successfully"})
 }
 
+// DeleteArtwork removes an artwork from the database and CDN.
+// @Summary Delete artwork
+// @Description Deletes an artwork by ID. Only the creator or admin can perform deletion.
+// @Tags artworks
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "Artwork ID"
+// @Success 200 {object} map[string]string "Artwork deleted successfully"
+// @Failure 400 {object} map[string]string "Invalid ID"
+// @Failure 403 {object} map[string]string "Forbidden: Unauthorized to delete"
+// @Router /artworks/{id} [delete]
 func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

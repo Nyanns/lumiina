@@ -1,11 +1,550 @@
 basePath: /api/v1
+definitions:
+  model.CreateCommentRequest:
+    properties:
+      content:
+        maxLength: 1000
+        minLength: 1
+        type: string
+    required:
+    - content
+    type: object
+  model.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  model.LoginRequest:
+    properties:
+      identifier:
+        description: Email or Username
+        type: string
+      password:
+        type: string
+    required:
+    - identifier
+    - password
+    type: object
+  model.RegisterRequest:
+    properties:
+      confirm_password:
+        minLength: 6
+        type: string
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      username:
+        type: string
+    required:
+    - confirm_password
+    - email
+    - password
+    - username
+    type: object
+  model.ResetPasswordRequest:
+    properties:
+      confirm_password:
+        minLength: 6
+        type: string
+      new_password:
+        minLength: 6
+        type: string
+      token:
+        type: string
+    required:
+    - confirm_password
+    - new_password
+    - token
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: Platform sharing fan art anime (Pixiv-like).
   title: Lumiina API
   version: "1.0"
-paths: {}
+paths:
+  /artworks:
+    get:
+      description: Fetches public anime fan art artworks with pagination support (page,
+        limit).
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated list of artworks
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get artwork feed
+      tags:
+      - artworks
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads fan art image (JPEG/PNG/WebP, max 20MB) with title, description,
+        and tags.
+      parameters:
+      - description: Artwork title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Artwork description
+        in: formData
+        name: description
+        type: string
+      - collectionFormat: csv
+        description: Artwork tags
+        in: formData
+        items:
+          type: string
+        name: tags
+        type: array
+      - description: Artwork image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Artwork created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid form data or unsupported file format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Image upload or database failure
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload new artwork
+      tags:
+      - artworks
+  /artworks/{id}:
+    delete:
+      description: Deletes an artwork by ID. Only the creator or admin can perform
+        deletion.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Artwork deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: 'Forbidden: Unauthorized to delete'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete artwork
+      tags:
+      - artworks
+    get:
+      description: Returns artwork metadata, author information, and associated tags.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Artwork details
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid artwork ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Artwork not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get artwork details
+      tags:
+      - artworks
+    put:
+      consumes:
+      - application/json
+      description: Updates artwork details. Only the artwork creator or an admin can
+        update.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated title and description
+        in: body
+        name: req
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Artwork updated successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid input
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: 'Forbidden: Not the owner'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update artwork
+      tags:
+      - artworks
+  /artworks/{id}/comments:
+    get:
+      description: Fetches comments belonging to an artwork with pagination support.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20, max: 50)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated comments list
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid artwork ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Database error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get artwork comments
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: Creates a new text comment for the specified artwork. Content is
+        sanitized for HTML/XSS.
+      parameters:
+      - description: Artwork ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment content
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Comment created successfully
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input or empty comment
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Artwork not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Post a comment on artwork
+      tags:
+      - comments
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a 15-minute ephemeral password reset token to the given email
+        address.
+      parameters:
+      - description: Registered Email Address
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Generic success response to prevent account enumeration
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid email format
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Request password reset
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in using email or username along with password, returning
+        a JWT Bearer token.
+      parameters:
+      - description: User Credentials
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Returns JWT Bearer token and user info
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid input payload
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Invalid credentials or unverified account
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Authenticate user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and returns a verification token.
+      parameters:
+      - description: User Registration Data
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Sets a new password using a valid reset token.
+      parameters:
+      - description: Token and New Password
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/model.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Password reset successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid token or password mismatch
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Reset account password
+      tags:
+      - auth
+  /auth/verify-email:
+    get:
+      description: Activates the user account using the single-use token sent via
+        email.
+      parameters:
+      - description: Verification Token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      - text/html
+      responses:
+        "200":
+          description: Account successfully activated
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Missing, expired, or invalid token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Verify email address
+      tags:
+      - auth
+  /comments/{id}:
+    delete:
+      description: Deletes a comment. Only the author or an admin can delete.
+      parameters:
+      - description: Comment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Comment deleted successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid comment ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: 'Forbidden: Unauthorized to delete this comment'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Comment not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a comment
+      tags:
+      - comments
 securityDefinitions:
   BearerAuth:
     in: header
