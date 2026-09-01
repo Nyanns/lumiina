@@ -30,25 +30,32 @@ func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client) *Artw
 	}
 }
 
-// GetAllArtworks retrieves a paginated feed of artworks with singleflight Redis caching.
-// @Summary Get artwork feed
-// @Description Fetches public anime fan art artworks with pagination support (page, limit).
+// GetAllArtworks retrieves a paginated feed of artworks with search, tag filtering, and singleflight Redis caching.
+// @Summary Get artwork feed & search
+// @Description Fetches public anime fan art artworks with pagination, keyword search, tag filtering, and artist filtering.
 // @Tags artworks
 // @Produce json
 // @Param page query int false "Page number (default: 1)"
 // @Param limit query int false "Items per page (default: 20)"
-// @Success 200 {object} map[string]interface{} "Paginated list of artworks"
+// @Param search query string false "Search keyword matching title or description"
+// @Param tag query string false "Filter by tag name"
+// @Param user_id query int false "Filter by artist/creator user ID"
+// @Success 200 {object} map[string]interface{} "Paginated list of artworks with total count"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /artworks [get]
 func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "20")
 	pageStr := c.DefaultQuery("page", "1")
+	search := c.Query("search")
+	tag := c.Query("tag")
+	userIDStr := c.Query("user_id")
 
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
+	userID, _ := strconv.Atoi(userIDStr)
 	offset := (page - 1) * limit
 
-	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d", page, limit)
+	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d:s:%s:t:%s:u:%d", page, limit, search, tag, userID)
 	ctx := context.Background()
 
 	// Check cache
@@ -60,7 +67,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 
 	// Singleflight: Collapses concurrent cache-miss queries to protect DB from cache stampede
 	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
-		artworks, err := h.service.GetAllArtworks(limit, offset)
+		artworks, total, err := h.service.GetAllArtworks(limit, offset, search, tag, uint(userID))
 		if err != nil {
 			return nil, err
 		}
@@ -69,6 +76,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 			"message": "Successfully fetched artworks",
 			"page":    page,
 			"limit":   limit,
+			"total":   total,
 			"data":    artworks,
 		}
 

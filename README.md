@@ -95,7 +95,7 @@ Once the server is running, explore and test all endpoints via the interactive S
 | `GET` | `/api/v1/auth/verify-email` | Activate user account via verification token | ❌ |
 | `POST` | `/api/v1/auth/forgot-password` | Request 15-min password reset token | ❌ |
 | `POST` | `/api/v1/auth/reset-password` | Reset password using valid reset token | ❌ |
-| `GET` | `/api/v1/artworks` | Get paginated artwork feed (cached) | ❌ |
+| `GET` | `/api/v1/artworks` | Get paginated artwork feed, search & tag filter | ❌ |
 | `GET` | `/api/v1/artworks/:id` | Get artwork details with tags & author | ❌ |
 | `POST` | `/api/v1/artworks` | Upload fan art image (`multipart/form-data`) | ✅ |
 | `PUT` | `/api/v1/artworks/:id` | Update artwork title & description | ✅ |
@@ -103,6 +103,9 @@ Once the server is running, explore and test all endpoints via the interactive S
 | `GET` | `/api/v1/artworks/:id/comments` | Get paginated comments for artwork | ❌ |
 | `POST` | `/api/v1/artworks/:id/comments` | Post comment (HTML sanitized) | ✅ |
 | `DELETE` | `/api/v1/comments/:id` | Delete comment (Author / Admin only) | ✅ |
+| `GET` | `/api/v1/users/me` | Get currently authenticated user profile | ✅ |
+| `GET` | `/api/v1/users/search` | Search artists/users by username keyword | ❌ |
+| `GET` | `/api/v1/users/:id` | Get public artist profile & their uploaded artworks | ❌ |
 | `GET` | `/livez` | Liveness health probe | ❌ |
 | `GET` | `/readyz` | Readiness health probe | ❌ |
 

@@ -21,9 +21,9 @@ func NewArtworkService(repo *repository.ArtworkRepository, cld cloudinary.Cloudi
 	return &ArtworkService{repo: repo, cloudinary: cld}
 }
 
-func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork, error) {
+func (s *ArtworkService) GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error) {
 	if limit <= 0 {
-		limit = 10
+		limit = 20
 	}
 	if limit > 50 {
 		limit = 50
@@ -31,7 +31,9 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int) ([]model.Artwork,
 	if offset < 0 {
 		offset = 0
 	}
-	return s.repo.GetAllArtworks(limit, offset)
+	search = strings.TrimSpace(search)
+	tag = strings.TrimSpace(tag)
+	return s.repo.GetAllArtworks(limit, offset, search, tag, userID)
 }
 
 func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, file multipart.File, tagNames []string) error {

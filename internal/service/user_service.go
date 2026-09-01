@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -23,6 +24,8 @@ type UserService interface {
 	VerifyEmail(token string) error
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
+	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
+	GetProfileByID(id uint) (*model.User, error)
 }
 
 type userService struct {
@@ -212,4 +215,22 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 	// Invalidate reset token upon successful consumption
 	_ = s.rdb.Del(ctx, key)
 	return nil
+}
+
+func (s *userService) SearchUsers(query string, limit int, offset int) ([]model.User, int64, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	query = strings.TrimSpace(query)
+	return s.repo.SearchUsers(query, limit, offset)
+}
+
+func (s *userService) GetProfileByID(id uint) (*model.User, error) {
+	return s.repo.GetProfileByID(id)
 }

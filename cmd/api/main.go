@@ -100,6 +100,13 @@ func main() {
 		artwork.GET("/:id/comments", commentHandler.GetCommentsByArtwork)
 	}
 
+	// User & Artist discovery routes
+	users := v1.Group("/users")
+	{
+		users.GET("/search", userHandler.SearchUsers)
+		users.GET("/:id", userHandler.GetUserProfile)
+	}
+
 	rateLimiter := middleware.RateLimiterMiddleware(rdb, 5, 1*time.Minute)
 	auth := v1.Group("/auth")
 	auth.Use(rateLimiter)
@@ -115,6 +122,9 @@ func main() {
 	protected := v1.Group("/")
 	protected.Use(authGuard)
 	{
+		// User profile
+		protected.GET("/users/me", userHandler.GetMe)
+
 		protected.POST("/artworks", ArtworkHandler.CreateArtwork)
 		protected.PUT("/artworks/:id", ArtworkHandler.UpdateArtwork)
 		protected.DELETE("/artworks/:id", ArtworkHandler.DeleteArtwork)

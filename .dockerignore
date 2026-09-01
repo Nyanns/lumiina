@@ -3,6 +3,7 @@
 .env
 tmp
 api
+bin
 *.md
 docs/*.json
 docs/*.yaml

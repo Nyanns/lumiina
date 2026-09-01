@@ -69,8 +69,8 @@ info:
 paths:
   /artworks:
     get:
-      description: Fetches public anime fan art artworks with pagination support (page,
-        limit).
+      description: Fetches public anime fan art artworks with pagination, keyword
+        search, tag filtering, and artist filtering.
       parameters:
       - description: 'Page number (default: 1)'
         in: query
@@ -80,11 +80,23 @@ paths:
         in: query
         name: limit
         type: integer
+      - description: Search keyword matching title or description
+        in: query
+        name: search
+        type: string
+      - description: Filter by tag name
+        in: query
+        name: tag
+        type: string
+      - description: Filter by artist/creator user ID
+        in: query
+        name: user_id
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Paginated list of artworks
+          description: Paginated list of artworks with total count
           schema:
             additionalProperties: true
             type: object
@@ -94,7 +106,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get artwork feed
+      summary: Get artwork feed & search
       tags:
       - artworks
     post:
@@ -545,6 +557,99 @@ paths:
       summary: Delete a comment
       tags:
       - comments
+  /users/{id}:
+    get:
+      description: Fetches public artist profile and their uploaded artworks.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Public artist profile
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid user ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get public user profile
+      tags:
+      - users
+  /users/me:
+    get:
+      description: Fetches details of the authenticated user from the JWT token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile details
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+  /users/search:
+    get:
+      description: Search for community artists by username with pagination.
+      parameters:
+      - description: Search keyword
+        in: query
+        name: q
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paginated list of users
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Database error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search users & artists
+      tags:
+      - users
 securityDefinitions:
   BearerAuth:
     in: header

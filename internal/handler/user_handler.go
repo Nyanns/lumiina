@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -208,4 +209,92 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Kata sandi berhasil diperbarui! Silakan login menggunakan kata sandi baru Anda.",
 	})
+}
+
+// GetMe returns the profile of the currently authenticated user.
+// @Summary Get current user profile
+// @Description Fetches details of the authenticated user from the JWT token.
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "User profile details"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "User not found"
+// @Router /users/me [get]
+func (h *UserHandler) GetMe(c *gin.Context) {
+	userIDFloat, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	userID := uint(userIDFloat.(float64))
+
+	user, err := h.service.GetProfileByID(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
+// SearchUsers searches for artists/users by username.
+// @Summary Search users & artists
+// @Description Search for community artists by username with pagination.
+// @Tags users
+// @Produce json
+// @Param q query string false "Search keyword"
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20)"
+// @Success 200 {object} map[string]interface{} "Paginated list of users"
+// @Failure 500 {object} map[string]string "Database error"
+// @Router /users/search [get]
+func (h *UserHandler) SearchUsers(c *gin.Context) {
+	q := c.Query("q")
+	limitStr := c.DefaultQuery("limit", "20")
+	pageStr := c.DefaultQuery("page", "1")
+
+	limit, _ := strconv.Atoi(limitStr)
+	page, _ := strconv.Atoi(pageStr)
+	offset := (page - 1) * limit
+
+	users, total, err := h.service.SearchUsers(q, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search users"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"page":  page,
+		"limit": limit,
+		"total": total,
+		"data":  users,
+	})
+}
+
+// GetUserProfile returns the public profile and artworks of a user by ID.
+// @Summary Get public user profile
+// @Description Fetches public artist profile and their uploaded artworks.
+// @Tags users
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} map[string]interface{} "Public artist profile"
+// @Failure 400 {object} map[string]string "Invalid user ID"
+// @Failure 404 {object} map[string]string "User not found"
+// @Router /users/{id} [get]
+func (h *UserHandler) GetUserProfile(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	user, err := h.service.GetProfileByID(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": user})
 }

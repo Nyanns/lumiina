@@ -47,6 +47,22 @@ func (m *MockUserRepository) UpdateUser(user *model.User) error {
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) SearchUsers(query string, limit int, offset int) ([]model.User, int64, error) {
+	args := m.Called(query, limit, offset)
+	if args.Get(0) != nil {
+		return args.Get(0).([]model.User), args.Get(1).(int64), args.Error(2)
+	}
+	return nil, 0, args.Error(2)
+}
+
+func (m *MockUserRepository) GetProfileByID(id uint) (*model.User, error) {
+	args := m.Called(id)
+	if args.Get(0) != nil {
+		return args.Get(0).(*model.User), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func TestRegister_Success(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockUserRepository)
