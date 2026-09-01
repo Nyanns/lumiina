@@ -1,0 +1,40 @@
+name: Lumiina CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-and-build:
+    name: Run Tests & Build Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      # 3. Download dependencies
+      - name: Download Go modules
+        run: go mod download
+
+      # 4. Run static analysis & vet
+      - name: Run Go Vet
+        run: go vet ./...
+
+      # 5. Run Unit Tests with Race Detector
+      - name: Run Unit Tests
+        run: go test -v -race ./...
+
+      # 6. Verify Docker Build
+      - name: Verify Dockerfile Build
+        run: docker build -t lumiina-api:ci .

@@ -1,14 +1,67 @@
 version: '3.8'
 
 services:
+  # ==========================================
+  # 1. PostgreSQL Database Service
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: lumiina_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-lumiina_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lumiina_network
+
+  # ==========================================
+  # 2. Redis Caching & Ephemeral Store
+  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: lumiina_redis
+    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - lumiina_network
+
+  # ==========================================
+  # 3. Lumiina Go Backend API Service
+  # ==========================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumiina_api
     restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=8080
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - lumiina_network
+
+networks:
+  lumiina_network:
+    driver: bridge
 
 volumes:
+  postgres_data:
   redis_data:
