@@ -1,84 +1,74 @@
 import React, { useState } from 'react';
-import { MessageSquare, Heart, Eye } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MessageSquare, Eye } from 'lucide-react';
 
-export const ArtworkCard = ({ artwork, onClick, onTagClick, onArtistClick }) => {
+export const ArtworkCard = ({ artwork, index, onClick, onTagClick, onArtistClick }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   return (
-    <article
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
       onClick={() => onClick(artwork)}
-      className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col cursor-pointer"
+      className="group relative bg-white rounded-[20px] overflow-hidden transition-all duration-300 cursor-pointer shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-transparent hover:border-slate-200/60 flex flex-col"
     >
-      {/* Image Container with organic aspect ratio */}
-      <div className="relative w-full bg-slate-100 overflow-hidden aspect-4/3 sm:aspect-auto">
+      {/* Image Container with Organic Masonry Ratio */}
+      <div className="relative w-full bg-slate-100 overflow-hidden">
         {!isLoaded && (
           <div className="absolute inset-0 bg-slate-200 animate-pulse" />
         )}
         <img
           src={artwork.image_url}
-          alt={artwork.title}
+          alt={`Ilustrasi ${artwork.title} oleh ${artwork.user?.username}`}
           loading="lazy"
           onLoad={() => setIsLoaded(true)}
-          className={`w-full h-auto object-cover group-hover:scale-103 transition-transform duration-300 ${
+          className={`w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 ease-out ${
             isLoaded ? 'opacity-100' : 'opacity-0'
           }`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-end p-3">
-          <span className="text-white text-xs font-semibold flex items-center gap-1">
-            <Eye className="w-3.5 h-3.5" /> Lihat Detail
-          </span>
+        
+        {/* Subtle Dark Gradient Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        
+        {/* Action Button (Visible on Hover) */}
+        <div className="absolute top-3 right-3 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ease-out z-10">
+          <div className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm text-slate-800 flex items-center justify-center shadow-lg hover:scale-110 hover:bg-white transition-transform">
+            <Eye className="w-4 h-4" />
+          </div>
         </div>
-      </div>
 
-      {/* Details Box */}
-      <div className="p-3.5 flex flex-col gap-2">
-        <h3 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-sky-600 transition-colors">
-          {artwork.title}
-        </h3>
-
-        {/* Tags */}
-        {artwork.tags && artwork.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {artwork.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag.id || tag.name}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTagClick(tag.name);
-                }}
-                className="text-[11px] font-medium text-slate-500 hover:text-sky-600 bg-slate-100 hover:bg-sky-50 px-2 py-0.5 rounded-md transition-colors"
-              >
-                #{tag.name}
+        {/* Bottom Details (Appears on Hover over image) */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out z-10">
+          <h3 className="font-bold text-white text-base leading-tight drop-shadow-md mb-1 line-clamp-2">
+            {artwork.title}
+          </h3>
+          
+          <div className="flex items-center justify-between">
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                if (artwork.user?.id) onArtistClick(artwork.user.id);
+              }}
+              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-5 h-5 rounded-full bg-sky-500 text-white font-bold text-[10px] flex items-center justify-center uppercase shadow-sm">
+                {artwork.user?.username?.[0] || 'A'}
+              </div>
+              <span className="font-semibold text-white/90 text-xs drop-shadow-sm">
+                {artwork.user?.username || 'Artist'}
               </span>
-            ))}
-          </div>
-        )}
-
-        {/* Author Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-0.5 text-xs text-slate-500">
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              if (artwork.user?.id) onArtistClick(artwork.user.id);
-            }}
-            className="flex items-center gap-2 hover:text-slate-900"
-          >
-            <div className="w-5 h-5 rounded-full bg-sky-100 text-sky-800 font-bold text-[10px] flex items-center justify-center uppercase">
-              {artwork.user?.username?.[0] || 'A'}
             </div>
-            <span className="font-medium text-slate-700 truncate max-w-[120px]">
-              {artwork.user?.username || 'Artist'}
-            </span>
-          </div>
 
-          <div className="flex items-center gap-2 text-slate-400">
-            <span className="flex items-center gap-1 text-[11px]">
-              <MessageSquare className="w-3.5 h-3.5" />
-              {artwork.comments?.length || 0}
-            </span>
+            {artwork.comments && artwork.comments.length > 0 && (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-white/90 drop-shadow-sm bg-black/20 px-2 py-0.5 rounded-full backdrop-blur-xs">
+                <MessageSquare className="w-3 h-3" />
+                {artwork.comments.length}
+              </span>
+            )}
           </div>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Upload, LogIn, User, LogOut, Sparkles, X } from 'lucide-react';
+import { Search, Upload, LogIn, LogOut, X, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar = ({
@@ -12,82 +12,78 @@ export const Navbar = ({
   onOpenProfile,
 }) => {
   const { user, isAuthenticated, logout } = useAuth();
-
-  const POPULAR_TAGS = [
-    'Semua',
-    'GenshinImpact',
-    'Vocaloid',
-    'Frieren',
-    'Cyberpunk',
-    'Original',
-    'Illustration',
-  ];
+  const POPULAR_TAGS = ['Semua', 'GenshinImpact', 'Vocaloid', 'Frieren', 'Cyberpunk', 'Original'];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Top Navbar Row */}
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo & Mascots */}
-          <div className="flex items-center gap-3 shrink-0 cursor-pointer" onClick={() => { onSearchChange(''); onTagSelect('Semua'); }}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-sky-400 flex items-center justify-center text-white font-bold text-xl shadow-sm">
+    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Main Row */}
+        <div className="flex items-center justify-between h-16 gap-6">
+          
+          {/* Brand */}
+          <div 
+            className="flex items-center gap-3 shrink-0 cursor-pointer group" 
+            onClick={() => { onSearchChange(''); onTagSelect('Semua'); }}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="w-9 h-9 rounded-xl bg-sky-600 group-hover:bg-sky-500 transition-colors flex items-center justify-center text-white font-bold text-lg shadow-sm">
               L
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight text-slate-900">Lumiina</span>
-                <span className="text-[11px] font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
-                  v1.0
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium leading-none">by Lumi & Ina</p>
+              <h1 className="font-extrabold text-xl tracking-tight text-slate-900 leading-none">Lumiina</h1>
+              <p className="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-0.5">Platform Fan Art</p>
             </div>
           </div>
 
-          {/* Center: Search Bar */}
-          <div className="flex-1 max-w-2xl relative">
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Search Box */}
+          <div className="flex-1 max-w-2xl relative hidden sm:block">
+            <div className="relative group">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-sky-500 transition-colors pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Cari fan art, judul anime, deskripsi, atau artist..."
-                className="w-full pl-10 pr-10 py-2 text-sm bg-slate-100/80 hover:bg-slate-100 focus:bg-white text-slate-900 placeholder:text-slate-400 rounded-full border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-100 focus:outline-none transition-all duration-150"
+                placeholder="Cari ilustrasi, gaya seni, atau kreator..."
+                className="w-full pl-11 pr-10 py-2.5 text-sm bg-slate-100 hover:bg-slate-200/60 focus:bg-white text-slate-900 placeholder:text-slate-400 rounded-full border border-transparent focus:border-sky-300 focus:ring-4 focus:ring-sky-100 transition-all outline-none"
               />
               {searchQuery && (
                 <button
                   onClick={() => onSearchChange('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  aria-label="Clear search"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Right: Actions & User State */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Actions */}
+          <nav className="flex items-center gap-3 shrink-0" aria-label="User navigation">
             {isAuthenticated ? (
               <>
                 <button
                   onClick={onOpenUpload}
-                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-500 active:bg-sky-700 rounded-full shadow-sm transition-colors cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-sky-600 hover:bg-sky-500 active:bg-sky-700 rounded-full shadow-sm transition-colors cursor-pointer"
                 >
                   <Upload className="w-4 h-4" />
-                  <span className="hidden sm:inline">Unggah Karya</span>
+                  <span className="hidden md:inline">Unggah</span>
                 </button>
 
-                <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="h-6 w-[1px] bg-slate-200 mx-1 hidden sm:block" />
+
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => onOpenProfile(user?.id)}
-                    className="flex items-center gap-2 p-1.5 rounded-full hover:bg-slate-100 text-slate-700 font-medium text-sm transition-colors cursor-pointer"
-                    title="Buka Profil"
+                    className="flex items-center gap-2 p-1 hover:bg-slate-100 rounded-full transition-colors cursor-pointer pr-3"
+                    aria-label="View Profile"
                   >
-                    <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-xs uppercase border border-slate-300">
+                    <div className="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                       {user?.username?.[0] || 'U'}
                     </div>
-                    <span className="hidden md:inline text-xs font-semibold">{user?.username}</span>
+                    <span className="hidden md:block text-sm font-bold text-slate-700">{user?.username}</span>
                   </button>
 
                   <button
@@ -95,35 +91,36 @@ export const Navbar = ({
                     className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
                     title="Keluar"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-[18px] h-[18px]" />
                   </button>
                 </div>
               </>
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 border border-sky-200 rounded-full transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-sky-700 bg-sky-50 hover:bg-sky-100 active:bg-sky-200 rounded-full transition-colors cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
                 <span>Masuk / Daftar</span>
               </button>
             )}
-          </div>
+          </nav>
+
         </div>
 
-        {/* Bottom Tag Filter Pills */}
-        <div className="flex items-center gap-1.5 py-2.5 overflow-x-auto no-scrollbar border-t border-slate-100">
-          <Sparkles className="w-3.5 h-3.5 text-sky-600 shrink-0 mr-1" />
+        {/* Tags Row */}
+        <div className="flex items-center gap-2 py-3 overflow-x-auto no-scrollbar border-t border-slate-100/60 mt-1">
+          <Sparkles className="w-4 h-4 text-sky-600 shrink-0 mr-2" />
           {POPULAR_TAGS.map((tag) => {
             const isSelected = activeTag === tag;
             return (
               <button
                 key={tag}
                 onClick={() => onTagSelect(tag)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors shrink-0 cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer border ${
                   isSelected
-                    ? 'bg-sky-600 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    ? 'bg-sky-600 border-sky-600 text-white shadow-sm'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                 }`}
               >
                 {tag === 'Semua' ? '🔥 Semua Karya' : `#${tag}`}
@@ -131,6 +128,7 @@ export const Navbar = ({
             );
           })}
         </div>
+
       </div>
     </header>
   );
