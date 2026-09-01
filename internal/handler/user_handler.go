@@ -19,6 +19,15 @@ func NewUserHandler(service service.UserService, jwtSecret string) *UserHandler 
 	return &UserHandler{service: service, jwtSecret: jwtSecret}
 }
 
+// Register handles new user registration and dispatches email verification.
+// @Summary Register a new user
+// @Description Creates a new user account and returns a verification token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param req body model.RegisterRequest true "User Registration Data"
+// @Success 201 {object} map[string]interface{}
+// @Router /auth/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var req model.RegisterRequest
 
