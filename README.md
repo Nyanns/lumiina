@@ -1,65 +1,77 @@
-# 🎨 Lumiina API — High-Performance Anime Fan Art Platform
+# Lumiina API
 
-[![Lumiina CI Pipeline](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml)
+[![CI](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Nyanns/lumiina)](https://goreportcard.com/report/github.com/Nyanns/lumiina)
 [![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?style=flat&logo=docker)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Lumiina** is an enterprise-grade backend service powering a Pixiv-inspired anime fan art sharing community. Built with idiomatic Go (Golang), Clean Architecture, and hardened for production reliability, cybersecurity resilience, and sub-millisecond response latency.
-
----
-
-## 🌟 Key Architectural Features
-
-- **Clean Layered Architecture**: Strict dependency flow (`Handler` → `Service` → `Repository` → `Model`) with zero circular imports.
-- **Cybersecurity & Defense-in-Depth**:
-  - Magic byte MIME detection (`http.DetectContentType`) preventing disguised executable uploads.
-  - Rate limiting with atomic Redis transactions (`TxPipeline`) for brute-force mitigation.
-  - Ephemeral single-use crypto tokens for email activation and password reset.
-  - Anti-account enumeration protection across authentication endpoints.
-  - HTTP security headers (CSP, X-Frame-Options, X-Content-Type-Options).
-- **High-Throughput Caching & SRE**:
-  - Redis cache with `singleflight.Group` to prevent cache stampedes under high concurrent load.
-  - Standard library `log/slog` structured JSON logging.
-  - POSIX signal handling (`SIGINT`, `SIGTERM`) with 5-second graceful shutdown drain.
-  - Health check probes (`/livez`, `/readyz`).
-- **Cloud Media Engine**: Cloudinary integration for automated image storage and CDN distribution.
-- **Full Containerization & CI/CD**:
-  - Multi-stage Dockerfile producing a tiny **~19 MB** production image with `CGO_ENABLED=0`.
-  - Automated GitHub Actions testing pipeline on every push & pull request.
+Backend REST API for **Lumiina**, an anime fan art sharing platform inspired by Pixiv. Built with Go (Gin), PostgreSQL, GORM, Redis, and Cloudinary.
 
 ---
 
-## 🛠️ Tech Stack
+## Architecture & Features
 
-- **Language**: Go (v1.21+)
-- **Framework**: [Gin Web Framework](https://github.com/gin-gonic/gin)
-- **Database**: PostgreSQL 15 & GORM ORM
-- **Cache & Ephemeral Store**: Redis 7
-- **Migrations**: `golang-migrate`
-- **Documentation**: Swagger / OpenAPI 2.0 via `swaggo/swag`
-- **Testing**: `testify` (Suite & Mocking)
+- **Layered Clean Architecture**: Strict unidirectional flow (`Handler` -> `Service` -> `Repository` -> `Model`).
+- **Authentication & Security**:
+  - JWT Bearer authentication with role-based access (`regular`, `admin`).
+  - Bcrypt password hashing (`DefaultCost`).
+  - Ephemeral single-use tokens in Redis for email verification (24h TTL) and password reset (15m TTL).
+  - Rate limiting middleware using Redis atomic `TxPipeline`.
+  - Stored XSS input sanitization via `html.EscapeString`.
+  - HTTP security headers (CSP, X-Content-Type-Options, X-Frame-Options).
+- **Media & Artwork Engine**:
+  - File upload with magic-byte MIME type validation (`http.DetectContentType`) accepting JPEG, PNG, and WebP up to 20MB.
+  - Cloudinary asset management for cloud storage and image delivery.
+  - Multi-tag support with automatic tag normalization and many-to-many relationship mapping.
+- **Feed, Search & Caching**:
+  - Paginated artwork feed with keyword search (`ILIKE`) across title and description.
+  - Multi-tag filtering and artist/user lookup (`/users/search`, `/users/:id`).
+  - Redis cache with `golang.org/x/sync/singleflight` to prevent cache stampedes under concurrent traffic.
+- **Reliability & SRE**:
+  - Structured logging using standard library `log/slog`.
+  - POSIX signal trapping (`SIGINT`, `SIGTERM`) with 5-second graceful drain timeout.
+  - Liveness (`/livez`) and readiness (`/readyz`) health check probes.
+- **Containerization**:
+  - Multi-stage Dockerfile producing a minimal static binary (~19MB runner image).
+  - Docker Compose orchestration for local API, PostgreSQL 15, and Redis 7 stack.
 
 ---
 
-## 🚀 Quick Start (Docker Compose)
+## Tech Stack
 
-### 1. Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
-- [Go](https://go.dev/dl/) (optional, if running natively)
+| Component | Technology |
+| :--- | :--- |
+| Runtime | Go 1.21+ |
+| HTTP Framework | [Gin](https://github.com/gin-gonic/gin) |
+| Database & ORM | PostgreSQL 15, [GORM](https://gorm.io/) |
+| Cache & Ephemeral Store | Redis 7 |
+| Image Hosting | Cloudinary SDK |
+| Email Service | Standard `net/smtp` |
+| Migrations | [golang-migrate](https://github.com/golang-migrate/migrate) |
+| Documentation | OpenAPI 2.0 / Swagger ([swaggo/swag](https://github.com/swaggo/swag)) |
+| Testing | [testify](https://github.com/stretchr/testify) (mock & suite) |
 
-### 2. Environment Configuration
-Create a `.env` file in the project root:
+---
+
+## Getting Started
+
+### Prerequisites
+- Docker & Docker Compose
+- Go 1.21+ (for native local development)
+
+### 1. Environment Configuration
+Create a `.env` file in the root directory:
+
 ```env
 PORT=8080
 DB_HOST=postgres
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=your_secure_password
+DB_PASSWORD=postgres
 DB_NAME=lumiina_db
 REDIS_HOST=redis
 REDIS_PORT=6379
-JWT_SECRET=your_super_secret_jwt_key
+JWT_SECRET=replace_with_a_secure_random_key
 CLOUDINARY_SECRET=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -68,80 +80,80 @@ SMTP_PASSWORD=your_app_password
 APP_BASE_URL=http://localhost:8080
 ```
 
-### 3. Spin Up the Full Stack
-Run the entire ecosystem (PostgreSQL, Redis, Lumiina API) with one command:
+### 2. Run with Docker Compose
 ```bash
+# Build and start all services in background
 make docker-up
+
+# View combined service logs
+make docker-logs
+
+# Stop services
+make docker-down
 ```
-Or natively:
+
+### 3. Native Development
 ```bash
-docker compose up -d --build
-```
+# Start API locally
+make run
 
----
-
-## 📖 Interactive API Documentation (Swagger)
-
-Once the server is running, explore and test all endpoints via the interactive Swagger UI:
-
-👉 **[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)**
-
-### API Overview Table
-
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/api/v1/auth/register` | Register new user & send activation email | ❌ |
-| `POST` | `/api/v1/auth/login` | Authenticate and obtain JWT Bearer token | ❌ |
-| `GET` | `/api/v1/auth/verify-email` | Activate user account via verification token | ❌ |
-| `POST` | `/api/v1/auth/forgot-password` | Request 15-min password reset token | ❌ |
-| `POST` | `/api/v1/auth/reset-password` | Reset password using valid reset token | ❌ |
-| `GET` | `/api/v1/artworks` | Get paginated artwork feed, search & tag filter | ❌ |
-| `GET` | `/api/v1/artworks/:id` | Get artwork details with tags & author | ❌ |
-| `POST` | `/api/v1/artworks` | Upload fan art image (`multipart/form-data`) | ✅ |
-| `PUT` | `/api/v1/artworks/:id` | Update artwork title & description | ✅ |
-| `DELETE` | `/api/v1/artworks/:id` | Delete artwork (Author / Admin only) | ✅ |
-| `GET` | `/api/v1/artworks/:id/comments` | Get paginated comments for artwork | ❌ |
-| `POST` | `/api/v1/artworks/:id/comments` | Post comment (HTML sanitized) | ✅ |
-| `DELETE` | `/api/v1/comments/:id` | Delete comment (Author / Admin only) | ✅ |
-| `GET` | `/api/v1/users/me` | Get currently authenticated user profile | ✅ |
-| `GET` | `/api/v1/users/search` | Search artists/users by username keyword | ❌ |
-| `GET` | `/api/v1/users/:id` | Get public artist profile & their uploaded artworks | ❌ |
-| `GET` | `/livez` | Liveness health probe | ❌ |
-| `GET` | `/readyz` | Readiness health probe | ❌ |
-
----
-
-## 🧪 Testing & Quality Assurance
-
-Run the automated test suite with race detector:
-```bash
+# Run test suite with race detector
 make test-race
-```
 
-Regenerate Swagger annotations:
-```bash
+# Regenerate Swagger documentation
 make swagger
 ```
 
 ---
 
-## 📁 Project Structure
+## API Reference
+
+Interactive OpenAPI documentation is available at `/swagger/index.html` when the service is running:
+
+**[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)**
+
+### Endpoints Summary
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/v1/auth/register` | Register new user and send activation email | Public |
+| `POST` | `/api/v1/auth/login` | Authenticate credentials and return JWT token | Public |
+| `GET` | `/api/v1/auth/verify-email` | Verify account via email token | Public |
+| `POST` | `/api/v1/auth/forgot-password` | Request password reset token | Public |
+| `POST` | `/api/v1/auth/reset-password` | Set new password with reset token | Public |
+| `GET` | `/api/v1/artworks` | Get artwork feed with search and tag filters | Public |
+| `GET` | `/api/v1/artworks/:id` | Get artwork by ID with author and tags | Public |
+| `POST` | `/api/v1/artworks` | Upload artwork (`multipart/form-data`) | Bearer |
+| `PUT` | `/api/v1/artworks/:id` | Update artwork title and description | Bearer |
+| `DELETE` | `/api/v1/artworks/:id` | Delete artwork (Author or Admin) | Bearer |
+| `GET` | `/api/v1/artworks/:id/comments` | List comments for an artwork | Public |
+| `POST` | `/api/v1/artworks/:id/comments` | Post a comment on an artwork | Bearer |
+| `DELETE` | `/api/v1/comments/:id` | Delete comment (Author or Admin) | Bearer |
+| `GET` | `/api/v1/users/me` | Get authenticated user profile | Bearer |
+| `GET` | `/api/v1/users/search` | Search users by username keyword (`?q=`) | Public |
+| `GET` | `/api/v1/users/:id` | Get public artist profile with uploaded artworks | Public |
+| `GET` | `/livez` | Liveness health probe | Public |
+| `GET` | `/readyz` | Readiness health probe | Public |
+
+---
+
+## Project Structure
 
 ```text
 lumiina/
-├── .github/workflows/ci.yml # Automated CI Pipeline (GitHub Actions)
-├── cmd/api/main.go          # Application Entrypoint & Graceful Shutdown
-├── config/                  # Database, Redis, and Environment Config
-├── db/migrations/           # PostgreSQL Schema Migrations (golang-migrate)
-├── docs/                    # OpenAPI / Swagger Generated Specifications
+├── .github/workflows/ci.yml # GitHub Actions CI pipeline
+├── cmd/api/main.go          # Application entrypoint & HTTP server
+├── config/                  # Configuration & database/Redis initialization
+├── db/migrations/           # SQL migration files (golang-migrate)
+├── docs/                    # Generated Swagger / OpenAPI documentation
 ├── internal/
-│   ├── handler/             # HTTP Handlers (Gin Web Transport Layer)
-│   ├── middleware/          # Security, Auth, Rate Limiter, Timeout Middlewares
-│   ├── model/               # Domain Models & Request/Response DTOs
-│   ├── pkg/                 # Cloudinary & SMTP Mailer Integrations
-│   ├── repository/          # GORM Database Operations & Queries
-│   └── service/             # Business Logic & Security Sanitization
-├── Dockerfile               # Production Multi-Stage Container Definition
-├── docker-compose.yml       # Multi-Service Orchestration Specification
-└── Makefile                 # Developer Task Automation Commands
+│   ├── handler/             # Gin HTTP handlers
+│   ├── middleware/          # Security, auth, rate limit, timeout middlewares
+│   ├── model/               # Data models & DTOs
+│   ├── pkg/                 # Cloudinary & SMTP email clients
+│   ├── repository/          # GORM database queries
+│   └── service/             # Business logic & input sanitization
+├── Dockerfile               # Multi-stage production container
+├── docker-compose.yml       # Local development multi-container orchestration
+└── Makefile                 # Build, test, and container automation
 ```

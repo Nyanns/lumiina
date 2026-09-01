@@ -1,9 +1,4 @@
-version: '3.8'
-
 services:
-  # ==========================================
-  # 1. PostgreSQL Database Service
-  # ==========================================
   postgres:
     image: postgres:15-alpine
     container_name: lumiina_postgres
@@ -19,9 +14,6 @@ services:
     networks:
       - lumiina_network
 
-  # ==========================================
-  # 2. Redis Caching & Ephemeral Store
-  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: lumiina_redis
@@ -33,9 +25,6 @@ services:
     networks:
       - lumiina_network
 
-  # ==========================================
-  # 3. Lumiina Go Backend API Service
-  # ==========================================
   api:
     build:
       context: .
