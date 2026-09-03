@@ -88,10 +88,14 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss":     "lumiina-api",
 		"user_id": user.ID,
 		"role":    user.Role,
-		"exp":     time.Now().Add(time.Hour * 24).Unix(),
+		"iat":     now.Unix(),
+		"nbf":     now.Unix(),
+		"exp":     now.Add(time.Hour * 24).Unix(),
 	})
 
 	secret := h.jwtSecret
@@ -297,4 +301,40 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
+// Logout revokes the active JWT token in Redis.
+// @Summary Logout user
+// @Description Revokes the caller's JWT token, rendering it invalid for future requests.
+// @Tags auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]string "Logged out successfully"
+// @Failure 400 {object} map[string]string "Missing token"
+// @Failure 500 {object} map[string]string "Revocation failure"
+// @Router /auth/logout [post]
+func (h *UserHandler) Logout(c *gin.Context) {
+	rawToken, exists := c.Get("raw_token")
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Token not found in request context"})
+		return
+	}
+
+	tokenStr := rawToken.(string)
+	tokenExp, exists := c.Get("token_exp")
+	ttl := 24 * time.Hour
+	if exists {
+		remaining := time.Until(time.Unix(tokenExp.(int64), 0))
+		if remaining > 0 {
+			ttl = remaining
+		}
+	}
+
+	err := h.service.RevokeToken(c.Request.Context(), tokenStr, ttl)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to revoke token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil. Sesi Anda telah diakhiri."})
 }

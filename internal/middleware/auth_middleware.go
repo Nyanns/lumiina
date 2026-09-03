@@ -7,10 +7,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 )
 
-// AuthMiddleware validates JWT Bearer tokens from incoming requests
-func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
+// AuthMiddleware validates JWT Bearer tokens from incoming requests and verifies revocation in Redis
+func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
+	var redisClient *redis.Client
+	if len(rdb) > 0 {
+		redisClient = rdb[0]
+	}
+
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -24,6 +30,15 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 			return
 		}
 		tokenString := parts[1]
+
+		// Check if token has been revoked / logged out
+		if redisClient != nil {
+			revokedKey := fmt.Sprintf("revoked_token:%s", tokenString)
+			if exists, err := redisClient.Exists(c.Request.Context(), revokedKey).Result(); err == nil && exists > 0 {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked. Please login again."})
+				return
+			}
+		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -40,6 +55,10 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("user_id", claims["user_id"])
 			c.Set("role", claims["role"])
+			c.Set("raw_token", tokenString)
+			if exp, ok := claims["exp"].(float64); ok {
+				c.Set("token_exp", int64(exp))
+			}
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			return

@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"strings"
-
 	"github.com/sandi/lumiina/internal/model"
 	"gorm.io/gorm"
 )
@@ -31,7 +29,7 @@ func (r *userRepository) CreateUser(user *model.User) error {
 
 func (r *userRepository) FindByIdentifier(identifier string) (*model.User, error) {
 	var user model.User
-	err := r.db.Where("email = ? OR username = ?", identifier, identifier).First(&user).Error
+	err := r.db.Where("LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)", identifier, identifier).First(&user).Error
 	return &user, err
 }
 
@@ -43,7 +41,7 @@ func (r *userRepository) FindByID(id uint) (*model.User, error) {
 
 func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	var user model.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.Where("LOWER(email) = LOWER(?)", email).First(&user).Error
 	return &user, err
 }
 
@@ -57,8 +55,8 @@ func (r *userRepository) SearchUsers(searchQuery string, limit int, offset int) 
 
 	dbQuery := r.db.Model(&model.User{})
 	if searchQuery != "" {
-		param := "%" + strings.ToLower(searchQuery) + "%"
-		dbQuery = dbQuery.Where("LOWER(username) LIKE ?", param)
+		param := "%" + searchQuery + "%"
+		dbQuery = dbQuery.Where("username ILIKE ?", param)
 	}
 
 	if err := dbQuery.Count(&total).Error; err != nil {

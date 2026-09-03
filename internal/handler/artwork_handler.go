@@ -53,10 +53,21 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
 	userID, _ := strconv.Atoi(userIDStr)
+
+	// Clamp pagination to prevent excessive DB memory exhaustion
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
 	offset := (page - 1) * limit
 
 	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d:s:%s:t:%s:u:%d", page, limit, search, tag, userID)
-	ctx := context.Background()
+	ctx := c.Request.Context()
 
 	// Check cache
 	cachedData, err := h.rdb.Get(ctx, cacheKey).Result()
@@ -114,8 +125,20 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 // @Failure 500 {object} map[string]string "Image upload or database failure"
 // @Router /artworks [post]
 func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
-	title := c.PostForm("title")
-	description := c.PostForm("description")
+	// Security: Guard against memory exhaustion DoS from oversized multipart bodies
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 25*1024*1024)
+
+	title := strings.TrimSpace(c.PostForm("title"))
+	description := strings.TrimSpace(c.PostForm("description"))
+
+	if title == "" || len(title) > 150 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Judul karya wajib diisi dan maksimal 150 karakter"})
+		return
+	}
+	if len(description) > 3000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Deskripsi karya maksimal 3000 karakter"})
+		return
+	}
 
 	file, err := c.FormFile("image")
 	if err != nil {
@@ -305,8 +328,26 @@ func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 }
 
 func (h *ArtworkHandler) invalidateArtworkCache(ctx context.Context) {
-	iter := h.rdb.Scan(ctx, 0, "artworks:page:*", 0).Iterator()
-	for iter.Next(ctx) {
-		h.rdb.Del(ctx, iter.Val())
+	if h.rdb == nil {
+		return
 	}
+
+	// High-Throughput: Perform batch invalidation in background without blocking HTTP response
+	go func() {
+		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		var batchKeys []string
+		iter := h.rdb.Scan(bgCtx, 0, "artworks:page:*", 100).Iterator()
+		for iter.Next(bgCtx) {
+			batchKeys = append(batchKeys, iter.Val())
+			if len(batchKeys) >= 100 {
+				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+				batchKeys = batchKeys[:0]
+			}
+		}
+		if len(batchKeys) > 0 {
+			_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+		}
+	}()
 }

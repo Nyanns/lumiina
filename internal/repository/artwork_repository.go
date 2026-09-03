@@ -22,12 +22,12 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int, search string,
 	query := r.db.Model(&model.Artwork{})
 
 	if search != "" {
-		searchParam := "%" + strings.ToLower(search) + "%"
-		query = query.Where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", searchParam, searchParam)
+		searchParam := "%" + search + "%"
+		query = query.Where("title ILIKE ? OR description ILIKE ?", searchParam, searchParam)
 	}
 
 	if userID > 0 {
-		query = query.Where("user_id = ?", userID)
+		query = query.Where("artworks.user_id = ?", userID)
 	}
 
 	if tag != "" {
@@ -44,7 +44,7 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int, search string,
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, username, created_at")
 		}).
-		Order("created_at DESC").
+		Order("artworks.created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&artworks).Error
@@ -53,22 +53,24 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int, search string,
 }
 
 func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) error {
-	var tags []model.Tag
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var tags []model.Tag
 
-	for _, name := range tagNames {
-		name = strings.TrimSpace(name)
-		if name == "" {
-			continue
+		for _, name := range tagNames {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+			var tag model.Tag
+			if err := tx.Where(model.Tag{Name: name}).FirstOrCreate(&tag).Error; err != nil {
+				return err
+			}
+			tags = append(tags, tag)
 		}
-		var tag model.Tag
-		if err := r.db.Where(model.Tag{Name: name}).FirstOrCreate(&tag).Error; err != nil {
-			return err
-		}
-		tags = append(tags, tag)
-	}
 
-	artwork.Tags = tags
-	return r.db.Create(artwork).Error
+		artwork.Tags = tags
+		return tx.Create(artwork).Error
+	})
 }
 
 func (r *ArtworkRepository) GetByID(id uint) (*model.Artwork, error) {

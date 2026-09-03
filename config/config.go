@@ -18,11 +18,20 @@ type Config struct {
 	CloudinaryURL string
 	RedisHost     string
 	RedisPort     string
+	RedisPassword string
 	SMTPHost      string
 	SMTPPort      string
 	SMTPEmail     string
 	SMTPPassword  string
 	AppBaseURL    string
+}
+
+func getEnvOrDefault(key, defaultValue string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultValue
+	}
+	return val
 }
 
 func LoadConfig() *Config {
@@ -31,29 +40,30 @@ func LoadConfig() *Config {
 		slog.Warn(".env file not found, loading environment variables")
 	}
 
-	baseURL := os.Getenv("APP_BASE_URL")
-	if baseURL == "" {
-		baseURL = "http://localhost:8080"
-	}
-
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "supersecretkey_fallback"
-	}
+	baseURL := getEnvOrDefault("APP_BASE_URL", "http://localhost:8080")
+	secret := getEnvOrDefault("JWT_SECRET", "supersecretkey_fallback_please_change_in_production")
+	port := getEnvOrDefault("PORT", "8080")
+	dbHost := getEnvOrDefault("DB_HOST", "localhost")
+	dbPort := getEnvOrDefault("DB_PORT", "5432")
+	dbUser := getEnvOrDefault("DB_USER", "postgres")
+	dbName := getEnvOrDefault("DB_NAME", "lumiina_db")
+	redisHost := getEnvOrDefault("REDIS_HOST", "localhost")
+	redisPort := getEnvOrDefault("REDIS_PORT", "6379")
 
 	cloudinaryURL := os.Getenv("CLOUDINARY_SECRET")
 
 	return &Config{
-		Port:          os.Getenv("PORT"),
-		DBHost:        os.Getenv("DB_HOST"),
-		DBPort:        os.Getenv("DB_PORT"),
-		DBUser:        os.Getenv("DB_USER"),
+		Port:          port,
+		DBHost:        dbHost,
+		DBPort:        dbPort,
+		DBUser:        dbUser,
 		DBPassword:    os.Getenv("DB_PASSWORD"),
-		DBName:        os.Getenv("DB_NAME"),
+		DBName:        dbName,
 		JWTSecret:     secret,
 		CloudinaryURL: cloudinaryURL,
-		RedisHost:     os.Getenv("REDIS_HOST"),
-		RedisPort:     os.Getenv("REDIS_PORT"),
+		RedisHost:     redisHost,
+		RedisPort:     redisPort,
+		RedisPassword: os.Getenv("REDIS_PASSWORD"),
 		SMTPHost:      os.Getenv("SMTP_HOST"),
 		SMTPPort:      os.Getenv("SMTP_PORT"),
 		SMTPEmail:     os.Getenv("SMTP_EMAIL"),
