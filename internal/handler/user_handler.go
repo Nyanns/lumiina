@@ -12,6 +12,7 @@ import (
 	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
+	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/service"
 )
 
@@ -75,9 +76,9 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	slog.Info("Security Audit: New user registered",
-		"username", user.Username,
-		"email", user.Email,
-		"ip", c.ClientIP(),
+		"username", sanitize.Log(user.Username),
+		"email", sanitize.Log(user.Email),
+		"ip", sanitize.Log(c.ClientIP()),
 		"request_id", middleware.GetRequestID(c),
 	)
 
@@ -109,8 +110,8 @@ func (h *UserHandler) Login(c *gin.Context) {
 	user, err := h.service.Login(loginRequest.Identifier, loginRequest.Password)
 	if err != nil {
 		slog.Warn("Security Audit: Failed authentication attempt",
-			"identifier", loginRequest.Identifier,
-			"ip", c.ClientIP(),
+			"identifier", sanitize.Log(loginRequest.Identifier),
+			"ip", sanitize.Log(c.ClientIP()),
 			"request_id", middleware.GetRequestID(c),
 		)
 		var appErr *apperror.AppError
@@ -124,8 +125,8 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 	slog.Info("Security Audit: User logged in successfully",
 		"user_id", user.ID,
-		"username", user.Username,
-		"ip", c.ClientIP(),
+		"username", sanitize.Log(user.Username),
+		"ip", sanitize.Log(c.ClientIP()),
 		"request_id", middleware.GetRequestID(c),
 	)
 

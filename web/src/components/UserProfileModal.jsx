@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Image as ImageIcon, BadgeCheck, User as UserIcon } from 'lucide-react';
+import { X, Calendar, Image as ImageIcon, BadgeCheck } from 'lucide-react';
 import { usersAPI } from '../api/client';
 import { ArtworkCard } from './ArtworkCard';
 

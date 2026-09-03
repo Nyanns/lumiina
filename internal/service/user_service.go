@@ -15,6 +15,7 @@ import (
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
 	"github.com/sandi/lumiina/internal/pkg/mailer"
+	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/pkg/validator"
 	"github.com/sandi/lumiina/internal/repository"
 	"golang.org/x/crypto/bcrypt"
@@ -103,10 +104,11 @@ func (s *userService) Register(user *model.User) error {
 	if s.mailer != nil {
 		go func(toEmail, username, verToken, baseURL string) {
 			err := s.mailer.SendVerificationEmail(toEmail, username, verToken, baseURL)
+			cleanEmail := sanitize.Log(toEmail)
 			if err != nil {
-				log.Printf("[MAILER ERROR] Failed to send verification email to %s: %v\n", toEmail, err)
+				log.Printf("[MAILER ERROR] Failed to send verification email to %s: %v\n", cleanEmail, err)
 			} else {
-				log.Printf("[MAILER SUCCESS] Verification email sent to %s\n", toEmail)
+				log.Printf("[MAILER SUCCESS] Verification email sent to %s\n", cleanEmail)
 			}
 		}(user.Email, user.Username, token, s.baseURL)
 	}
@@ -192,10 +194,11 @@ func (s *userService) ForgotPassword(email string) error {
 	if s.mailer != nil {
 		go func(toEmail, username, resetToken, baseURL string) {
 			err := s.mailer.SendPasswordResetEmail(toEmail, username, resetToken, baseURL)
+			cleanEmail := sanitize.Log(toEmail)
 			if err != nil {
-				log.Printf("[MAILER ERROR] Failed to send reset password email to %s: %v\n", toEmail, err)
+				log.Printf("[MAILER ERROR] Failed to send reset password email to %s: %v\n", cleanEmail, err)
 			} else {
-				log.Printf("[MAILER SUCCESS] Reset password email sent to %s\n", toEmail)
+				log.Printf("[MAILER SUCCESS] Reset password email sent to %s\n", cleanEmail)
 			}
 		}(user.Email, user.Username, token, s.baseURL)
 	}

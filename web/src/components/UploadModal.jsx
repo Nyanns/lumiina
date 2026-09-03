@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, UploadCloud, Tag as TagIcon, AlertCircle } from 'lucide-react';
 import { artworksAPI } from '../api/client';
@@ -17,6 +17,15 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
   const [shake, setShake] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Clean up object URL when component unmounts or preview changes to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const triggerError = (msg) => {
     setError(msg);
@@ -37,8 +46,14 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
       return;
     }
     setFile(selectedFile);
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
     setPreviewUrl(URL.createObjectURL(selectedFile));
   };
+
+  // Enforce blob URL protocol check to mitigate DOM-based text reinterpretation as HTML (CWE-079)
+  const safePreviewUrl = previewUrl && previewUrl.startsWith('blob:') ? previewUrl : null;
 
   const handleAddTag = (e) => {
     e?.preventDefault();
@@ -120,14 +135,14 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { e.preventDefault(); handleFileSelect(e.dataTransfer.files[0]); }}
               className={`relative border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-300 ${
-                previewUrl ? 'border-sky-300 bg-sky-50' : 'border-slate-300 hover:border-sky-400 bg-slate-50 hover:bg-white'
+                safePreviewUrl ? 'border-sky-300 bg-sky-50' : 'border-slate-300 hover:border-sky-400 bg-slate-50 hover:bg-white'
               }`}
             >
               <input type="file" ref={fileInputRef} onChange={(e) => handleFileSelect(e.target.files[0])} accept="image/jpeg,image/png,image/webp" className="hidden" />
               
-              {previewUrl ? (
+              {safePreviewUrl ? (
                 <div className="relative group flex flex-col items-center">
-                  <img src={previewUrl} alt="Preview" className="max-h-[300px] rounded-xl shadow-md object-contain group-hover:opacity-50 transition-opacity" />
+                  <img src={safePreviewUrl} alt="Preview" className="max-h-[300px] rounded-xl shadow-md object-contain group-hover:opacity-50 transition-opacity" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">Ganti Gambar</span>
                   </div>
