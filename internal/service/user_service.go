@@ -18,6 +18,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var dummyBcryptHash []byte
+
+func init() {
+	// Pre-compute a valid bcrypt hash during package init to eliminate timing variance on login
+	dummyBcryptHash, _ = bcrypt.GenerateFromPassword([]byte("lumiina_anti_timing_attack_canary_secret_hash"), bcrypt.DefaultCost)
+}
+
 type UserService interface {
 	Register(user *model.User) error
 	Login(identifier, password string) (*model.User, error)
@@ -26,6 +33,8 @@ type UserService interface {
 	ResetPassword(token, newPassword string) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
+	RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error
+	IsTokenRevoked(ctx context.Context, tokenString string) bool
 }
 
 type userService struct {
@@ -53,6 +62,9 @@ func generateCryptoToken(length int) (string, error) {
 }
 
 func (s *userService) Register(user *model.User) error {
+	user.Username = strings.TrimSpace(user.Username)
+	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -96,14 +108,18 @@ func (s *userService) Register(user *model.User) error {
 }
 
 func (s *userService) Login(identifier, password string) (*model.User, error) {
-	user, err := s.repo.FindByIdentifier(identifier)
+	normalizedIdentifier := strings.TrimSpace(identifier)
+	user, err := s.repo.FindByIdentifier(normalizedIdentifier)
 	if err != nil {
-		return nil, err
+		// Constant-time mitigation against timing attacks:
+		// Always execute bcrypt comparison against precomputed hash even when user is not found.
+		_ = bcrypt.CompareHashAndPassword(dummyBcryptHash, []byte(password))
+		return nil, errors.New("kombinasi username/email atau password salah")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, err
+		return nil, errors.New("kombinasi username/email atau password salah")
 	}
 
 	if !user.IsVerified {
@@ -147,7 +163,8 @@ func (s *userService) VerifyEmail(token string) error {
 }
 
 func (s *userService) ForgotPassword(email string) error {
-	user, err := s.repo.FindByEmail(email)
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+	user, err := s.repo.FindByEmail(normalizedEmail)
 	if err != nil {
 		// Anti-enumeration defense: return nil so existence of email is not leaked
 		return nil
@@ -214,6 +231,11 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 
 	// Invalidate reset token upon successful consumption
 	_ = s.rdb.Del(ctx, key)
+
+	// Invalidate active sessions by setting user token revocation epoch
+	userRevocationKey := fmt.Sprintf("user_revocation:%d", user.ID)
+	_ = s.rdb.Set(ctx, userRevocationKey, time.Now().Unix(), 24*time.Hour).Err()
+
 	return nil
 }
 
@@ -233,4 +255,24 @@ func (s *userService) SearchUsers(query string, limit int, offset int) ([]model.
 
 func (s *userService) GetProfileByID(id uint) (*model.User, error) {
 	return s.repo.GetProfileByID(id)
+}
+
+func (s *userService) RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error {
+	if s.rdb == nil {
+		return nil
+	}
+	if expiration <= 0 {
+		expiration = 24 * time.Hour
+	}
+	key := fmt.Sprintf("revoked_token:%s", tokenString)
+	return s.rdb.Set(ctx, key, "1", expiration).Err()
+}
+
+func (s *userService) IsTokenRevoked(ctx context.Context, tokenString string) bool {
+	if s.rdb == nil {
+		return false
+	}
+	key := fmt.Sprintf("revoked_token:%s", tokenString)
+	exists, err := s.rdb.Exists(ctx, key).Result()
+	return err == nil && exists > 0
 }

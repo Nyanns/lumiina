@@ -128,3 +128,32 @@ func TestForgotPassword_NonExistentEmail_NoError(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestLogin_NonExistentUser_ConstantTimeMitigation(t *testing.T) {
+	// Arrange
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	mockRepo.On("FindByIdentifier", "ghost_user").Return(nil, assert.AnError)
+
+	// Act
+	user, err := userService.Login("ghost_user", "password123")
+
+	// Assert: Returns sanitized generic error
+	assert.Error(t, err)
+	assert.Nil(t, user)
+	assert.Equal(t, "kombinasi username/email atau password salah", err.Error())
+	mockRepo.AssertExpectations(t)
+}
+
+func TestRevokeToken_NilRedis_Safe(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	// Act & Assert
+	err := userService.RevokeToken(nil, "dummy_token", 0)
+	assert.NoError(t, err)
+
+	isRevoked := userService.IsTokenRevoked(nil, "dummy_token")
+	assert.False(t, isRevoked)
+}
