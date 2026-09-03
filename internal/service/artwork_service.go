@@ -13,11 +13,11 @@ import (
 )
 
 type ArtworkService struct {
-	repo       *repository.ArtworkRepository
+	repo       repository.ArtworkRepository
 	cloudinary cloudinary.CloudinaryService
 }
 
-func NewArtworkService(repo *repository.ArtworkRepository, cld cloudinary.CloudinaryService) *ArtworkService {
+func NewArtworkService(repo repository.ArtworkRepository, cld cloudinary.CloudinaryService) *ArtworkService {
 	return &ArtworkService{repo: repo, cloudinary: cld}
 }
 

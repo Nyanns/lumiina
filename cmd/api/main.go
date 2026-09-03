@@ -32,6 +32,11 @@ import (
 // @name Authorization
 func main() {
 	cfg := config.LoadConfig()
+	if err := cfg.Validate(); err != nil {
+		slog.Error("Configuration validation failed", "error", err)
+		os.Exit(1)
+	}
+
 	db := config.ConnectDB(cfg)
 	if db == nil {
 		slog.Error("Failed to connect to database")
@@ -39,11 +44,6 @@ func main() {
 	}
 
 	rdb := config.ConnectRedis(cfg)
-
-	if cfg.CloudinaryURL == "" || len(cfg.CloudinaryURL) < 13 || cfg.CloudinaryURL[:13] != "cloudinary://" {
-		slog.Error("Invalid CLOUDINARY_SECRET format in .env, must start with 'cloudinary://'")
-		os.Exit(1)
-	}
 
 	cldService, err := cloudinary.NewCloudinaryService(cfg.CloudinaryURL)
 	if err != nil {
@@ -71,10 +71,11 @@ func main() {
 	// Security: Configure trusted proxies to prevent IP spoofing & rate-limit bypass
 	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
 
-	// Security: Global middlewares (Recovery, CORS & Security Headers)
+	// Observability & Security: Global middlewares (RequestID, Recovery, CORS & Security Headers)
+	r.Use(middleware.RequestIDMiddleware())
 	r.Use(middleware.ErrorHandlerMiddleware())
 	r.Use(middleware.TimeoutMiddleware(15 * time.Second))
-	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigins...))
 	r.Use(middleware.SecurityHeadersMiddleware())
 
 	// Health Probes
