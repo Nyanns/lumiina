@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sandi/lumiina/config"
 	_ "github.com/sandi/lumiina/docs"
 	"github.com/sandi/lumiina/internal/handler"
@@ -112,6 +113,9 @@ func main() {
 			"redis":    "ok",
 		})
 	})
+
+	// Prometheus Metrics Probe
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	v1 := r.Group("/api/v1")
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, rdb)
