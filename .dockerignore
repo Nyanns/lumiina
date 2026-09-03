@@ -1,9 +1,11 @@
 .git
 .gitignore
-.env
-tmp
+.env*
+tmp/
+bin/
 api
-bin
+web/
 *.md
-docs/*.json
-docs/*.yaml
+coverage.out
+docs/
+

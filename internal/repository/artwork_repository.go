@@ -98,4 +98,3 @@ func (r *artworkRepository) Update(artwork *model.Artwork) error {
 func (r *artworkRepository) Delete(id uint) error {
 	return r.db.Delete(&model.Artwork{}, id).Error
 }
-
