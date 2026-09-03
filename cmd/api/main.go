@@ -82,12 +82,38 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 	r.GET("/readyz", func(c *gin.Context) {
-		// In a real app, you might want to ping the DB and Redis here
-		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+
+		var dbStatus = "ok"
+		sqlDB, err := db.DB()
+		if err != nil || sqlDB.PingContext(ctx) != nil {
+			dbStatus = "unhealthy"
+		}
+
+		var redisStatus = "ok"
+		if rdb == nil || rdb.Ping(ctx).Err() != nil {
+			redisStatus = "unhealthy"
+		}
+
+		if dbStatus != "ok" || redisStatus != "ok" {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status":   "not ready",
+				"database": dbStatus,
+				"redis":    redisStatus,
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"status":   "ready",
+			"database": "ok",
+			"redis":    "ok",
+		})
 	})
 
 	v1 := r.Group("/api/v1")
-	authGuard := middleware.AuthMiddleware(cfg.JWTSecret)
+	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, rdb)
 
 	// Swagger Docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -107,7 +133,7 @@ func main() {
 		users.GET("/:id", userHandler.GetUserProfile)
 	}
 
-	rateLimiter := middleware.RateLimiterMiddleware(rdb, 5, 1*time.Minute)
+	rateLimiter := middleware.RateLimiterMiddleware(rdb, 10, 1*time.Minute)
 	auth := v1.Group("/auth")
 	auth.Use(rateLimiter)
 	{
@@ -122,6 +148,9 @@ func main() {
 	protected := v1.Group("/")
 	protected.Use(authGuard)
 	{
+		// Session management
+		protected.POST("/auth/logout", userHandler.Logout)
+
 		// User profile
 		protected.GET("/users/me", userHandler.GetMe)
 
@@ -141,14 +170,19 @@ func main() {
 		// Admin-only endpoints
 	}
 
-	// Server configuration and graceful shutdown
+	// Server configuration: Hardened against Slowloris & resource exhaustion
 	srv := &http.Server{
-		Addr:    ":" + cfg.Port,
-		Handler: r,
+		Addr:              ":" + cfg.Port,
+		Handler:           r,
+		ReadHeaderTimeout: 5 * time.Second,  // Neutralizes Slowloris header stalls
+		ReadTimeout:       30 * time.Second, // Maximum duration reading request
+		WriteTimeout:      30 * time.Second, // Maximum duration writing response
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1 MB max header size
 	}
 
 	go func() {
-		slog.Info("Server is running", "port", cfg.Port)
+		slog.Info("Server is running with hardened timeouts", "port", cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("Failed to start server", "error", err)
 			os.Exit(1)

@@ -434,6 +434,36 @@ paths:
       summary: Authenticate user
       tags:
       - auth
+  /auth/logout:
+    post:
+      description: Revokes the caller's JWT token, rendering it invalid for future
+        requests.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Logged out successfully
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Missing token
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Revocation failure
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:
