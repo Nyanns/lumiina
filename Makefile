@@ -25,12 +25,16 @@ swagger:
 	swag init -g cmd/api/main.go
 
 docker-up:
-	@echo "Starting Docker Compose services..."
-	docker compose up -d
+	@echo "Starting Docker Compose services (auto-building if code changed)..."
+	docker compose up -d --build
 
 docker-down:
 	@echo "Stopping Docker Compose services..."
 	docker compose down
+
+docker-restart:
+	@echo "Restarting Docker Compose services with fresh build..."
+	docker compose down && docker compose up -d --build
 
 docker-logs:
 	@echo "Following Docker Compose logs..."
