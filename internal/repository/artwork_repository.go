@@ -7,15 +7,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type ArtworkRepository struct {
+type ArtworkRepository interface {
+	GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error)
+	Create(artwork *model.Artwork, tagNames []string) error
+	GetByID(id uint) (*model.Artwork, error)
+	Update(artwork *model.Artwork) error
+	Delete(id uint) error
+}
+
+type artworkRepository struct {
 	db *gorm.DB
 }
 
-func NewArtworkRepository(db *gorm.DB) *ArtworkRepository {
-	return &ArtworkRepository{db: db}
+func NewArtworkRepository(db *gorm.DB) ArtworkRepository {
+	return &artworkRepository{db: db}
 }
 
-func (r *ArtworkRepository) GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error) {
+func (r *artworkRepository) GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error) {
 	var artworks []model.Artwork
 	var total int64
 
@@ -52,7 +60,7 @@ func (r *ArtworkRepository) GetAllArtworks(limit int, offset int, search string,
 	return artworks, total, err
 }
 
-func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) error {
+func (r *artworkRepository) Create(artwork *model.Artwork, tagNames []string) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		var tags []model.Tag
 
@@ -73,7 +81,7 @@ func (r *ArtworkRepository) Create(artwork *model.Artwork, tagNames []string) er
 	})
 }
 
-func (r *ArtworkRepository) GetByID(id uint) (*model.Artwork, error) {
+func (r *artworkRepository) GetByID(id uint) (*model.Artwork, error) {
 	var artwork model.Artwork
 	err := r.db.Preload("Tags").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
@@ -83,10 +91,11 @@ func (r *ArtworkRepository) GetByID(id uint) (*model.Artwork, error) {
 	return &artwork, err
 }
 
-func (r *ArtworkRepository) Update(artwork *model.Artwork) error {
+func (r *artworkRepository) Update(artwork *model.Artwork) error {
 	return r.db.Save(artwork).Error
 }
 
-func (r *ArtworkRepository) Delete(id uint) error {
+func (r *artworkRepository) Delete(id uint) error {
 	return r.db.Delete(&model.Artwork{}, id).Error
 }
+
