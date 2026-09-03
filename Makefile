@@ -1,11 +1,11 @@
-.PHONY: run build test test-race lint psql docker-up docker-down docker-logs docker-build swagger migrate-up migrate-down
+.PHONY: run build test test-race lint fmt tidy clean coverage verify psql docker-up docker-down docker-logs docker-build swagger migrate-up migrate-down web-dev web-build
 
 run:
 	@echo "Starting Lumiina API..."
 	go run cmd/api/main.go
 
 build:
-	@echo "Building binary..."
+	@echo "Building production binary..."
 	go build -ldflags="-w -s" -o bin/api cmd/api/main.go
 
 test:
@@ -15,6 +15,31 @@ test:
 test-race:
 	@echo "Running unit tests with data race detector..."
 	go test -v -race ./...
+
+coverage:
+	@echo "Generating test coverage report..."
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+
+coverage-html:
+	@echo "Opening HTML test coverage report..."
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+
+fmt:
+	@echo "Formatting Go code according to Uber / Google Go style..."
+	gofmt -s -w .
+
+tidy:
+	@echo "Tidying module dependencies..."
+	go mod tidy
+
+clean:
+	@echo "Cleaning binaries and build artifacts..."
+	rm -rf bin/ tmp/ coverage.out coverage.html
+
+verify: fmt tidy test-race
+	@echo "All pre-commit quality gates passed successfully!"
 
 lint:
 	@echo "Running linter..."
@@ -63,5 +88,6 @@ web-dev:
 web-build:
 	@echo "Building frontend production assets..."
 	cd web && npm run build
+
 
 

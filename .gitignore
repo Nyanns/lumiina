@@ -1,11 +1,30 @@
+# Environment variables
 .env
-tmp/
+.env.local
+.env.production
+
+# Build artifacts & Binaries
 /api
 /bin/
+tmp/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Test artifacts & Coverage
 *.test
 *.out
+coverage.html
+
+# IDE & Editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating System junk
+.DS_Store
+Thumbs.db
