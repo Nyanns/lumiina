@@ -22,10 +22,10 @@ type LoginRequest struct {
 }
 
 type RegisterRequest struct {
-	Username        string `json:"username" binding:"required"`
+	Username        string `json:"username" binding:"required,alphanum,min=3,max=30"`
 	Email           string `json:"email" binding:"required,email"`
-	Password        string `json:"password" binding:"required,min=6"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,min=6"`
+	Password        string `json:"password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=8,eqfield=Password"`
 }
 
 type ForgotPasswordRequest struct {
@@ -34,6 +34,6 @@ type ForgotPasswordRequest struct {
 
 type ResetPasswordRequest struct {
 	Token           string `json:"token" binding:"required"`
-	NewPassword     string `json:"new_password" binding:"required,min=6"`
-	ConfirmPassword string `json:"confirm_password" binding:"required,min=6"`
+	NewPassword     string `json:"new_password" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" binding:"required,min=8,eqfield=NewPassword"`
 }

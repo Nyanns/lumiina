@@ -7,5 +7,4 @@ api
 web/
 *.md
 coverage.out
-docs/
 

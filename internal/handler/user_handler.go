@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
+	"github.com/sandi/lumiina/internal/pkg/apperror"
 	"github.com/sandi/lumiina/internal/service"
 )
 
@@ -18,6 +22,18 @@ type UserHandler struct {
 
 func NewUserHandler(service service.UserService, jwtSecret string) *UserHandler {
 	return &UserHandler{service: service, jwtSecret: jwtSecret}
+}
+
+// respondAppError writes standardized RFC 7807-inspired JSON error envelope with correlation ID
+func respondAppError(c *gin.Context, appErr *apperror.AppError) {
+	reqID := middleware.GetRequestID(c)
+	c.JSON(appErr.Status, gin.H{
+		"error": gin.H{
+			"code":       appErr.Code,
+			"message":    appErr.Message,
+			"request_id": reqID,
+		},
+	})
 }
 
 // Register handles new user registration and dispatches email verification.
@@ -32,14 +48,13 @@ func NewUserHandler(service service.UserService, jwtSecret string) *UserHandler 
 func (h *UserHandler) Register(c *gin.Context) {
 	var req model.RegisterRequest
 
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondAppError(c, apperror.New("VALIDATION_ERROR", err.Error(), http.StatusBadRequest, err))
 		return
 	}
 
 	if req.Password != req.ConfirmPassword {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Konfirmasi password tidak cocok dengan password yang dimasukkan"})
+		respondAppError(c, apperror.New("VALIDATION_ERROR", "Konfirmasi password tidak cocok dengan password yang dimasukkan", http.StatusBadRequest, nil))
 		return
 	}
 
@@ -49,11 +64,22 @@ func (h *UserHandler) Register(c *gin.Context) {
 		Password: req.Password,
 	}
 
-	err = h.service.Register(&user)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if err := h.service.Register(&user); err != nil {
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			respondAppError(c, appErr)
+			return
+		}
+		respondAppError(c, apperror.New("INTERNAL_ERROR", err.Error(), http.StatusInternalServerError, err))
 		return
 	}
+
+	slog.Info("Security Audit: New user registered",
+		"username", user.Username,
+		"email", user.Email,
+		"ip", c.ClientIP(),
+		"request_id", middleware.GetRequestID(c),
+	)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Registrasi berhasil! Tautan verifikasi telah dikirimkan ke email Anda.",
@@ -75,18 +101,33 @@ func (h *UserHandler) Register(c *gin.Context) {
 func (h *UserHandler) Login(c *gin.Context) {
 	var loginRequest model.LoginRequest
 
-	err := c.ShouldBindJSON(&loginRequest)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error()})
+	if err := c.ShouldBindJSON(&loginRequest); err != nil {
+		respondAppError(c, apperror.New("VALIDATION_ERROR", err.Error(), http.StatusBadRequest, err))
 		return
 	}
 
 	user, err := h.service.Login(loginRequest.Identifier, loginRequest.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		slog.Warn("Security Audit: Failed authentication attempt",
+			"identifier", loginRequest.Identifier,
+			"ip", c.ClientIP(),
+			"request_id", middleware.GetRequestID(c),
+		)
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			respondAppError(c, appErr)
+			return
+		}
+		respondAppError(c, apperror.ErrInvalidCredentials)
 		return
 	}
+
+	slog.Info("Security Audit: User logged in successfully",
+		"user_id", user.ID,
+		"username", user.Username,
+		"ip", c.ClientIP(),
+		"request_id", middleware.GetRequestID(c),
+	)
 
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

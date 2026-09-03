@@ -1,4 +1,5 @@
-.PHONY: run build test test-race lint fmt tidy clean coverage verify psql docker-up docker-down docker-logs docker-build swagger migrate-up migrate-down web-dev web-build
+.PHONY: run build test test-race lint fmt tidy clean coverage verify psql docker-up docker-down docker-logs docker-build swagger migrate-up migrate-down migrate-version web-dev web-build
+
 
 run:
 	@echo "Starting Lumiina API..."
@@ -80,6 +81,10 @@ migrate-up:
 migrate-down:
 	@echo "Rolling back 1 migration step..."
 	migrate -path db/migrations -database "postgresql://postgres:lumina_rahasia@localhost:5432/lumiina_db?sslmode=disable" -verbose down 1
+
+migrate-version:
+	@echo "Checking current database migration version..."
+	migrate -path db/migrations -database "postgresql://postgres:lumina_rahasia@localhost:5432/lumiina_db?sslmode=disable" version
 
 web-dev:
 	@echo "Starting Vite React frontend..."
