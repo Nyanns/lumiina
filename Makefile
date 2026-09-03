@@ -58,7 +58,7 @@ migrate-down:
 
 web-dev:
 	@echo "Starting Vite React frontend..."
-	cd web && npm run dev
+	cd web && (test -d node_modules || npm install) && npm run dev
 
 web-build:
 	@echo "Building frontend production assets..."
