@@ -65,7 +65,7 @@ jobs:
 
       # 9. Verify Multi-Stage Production Docker Build
       - name: Verify Dockerfile Build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: false
