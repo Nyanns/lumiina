@@ -13,7 +13,9 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
+	"github.com/sandi/lumiina/internal/pkg/apperror"
 	"github.com/sandi/lumiina/internal/pkg/mailer"
+	"github.com/sandi/lumiina/internal/pkg/validator"
 	"github.com/sandi/lumiina/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -65,9 +67,14 @@ func (s *userService) Register(user *model.User) error {
 	user.Username = strings.TrimSpace(user.Username)
 	user.Email = strings.ToLower(strings.TrimSpace(user.Email))
 
+	// Enforce password strength complexity
+	if err := validator.ValidatePasswordStrength(user.Password); err != nil {
+		return apperror.New("AUTH_WEAK_PASSWORD", err.Error(), 400, err)
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return apperror.New("INTERNAL_ERROR", "gagal memproses kata sandi", 500, err)
 	}
 
 	user.Password = string(hashedPassword)
@@ -77,7 +84,7 @@ func (s *userService) Register(user *model.User) error {
 	user.IsVerified = false
 
 	if err := s.repo.CreateUser(user); err != nil {
-		return err
+		return apperror.New("AUTH_USER_EXISTS", "username atau email sudah terdaftar", 409, err)
 	}
 
 	// Generate 32-byte secure verification token
@@ -114,16 +121,16 @@ func (s *userService) Login(identifier, password string) (*model.User, error) {
 		// Constant-time mitigation against timing attacks:
 		// Always execute bcrypt comparison against precomputed hash even when user is not found.
 		_ = bcrypt.CompareHashAndPassword(dummyBcryptHash, []byte(password))
-		return nil, errors.New("kombinasi username/email atau password salah")
+		return nil, apperror.ErrInvalidCredentials
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
-		return nil, errors.New("kombinasi username/email atau password salah")
+		return nil, apperror.ErrInvalidCredentials
 	}
 
 	if !user.IsVerified {
-		return nil, errors.New("akun belum diverifikasi. Silakan periksa inbox email Anda untuk tautan aktivasi")
+		return nil, apperror.ErrUserUnverified
 	}
 
 	return user, nil
@@ -199,6 +206,11 @@ func (s *userService) ForgotPassword(email string) error {
 func (s *userService) ResetPassword(token, newPassword string) error {
 	if s.rdb == nil {
 		return errors.New("redis client is not initialized")
+	}
+
+	// Enforce password strength complexity
+	if err := validator.ValidatePasswordStrength(newPassword); err != nil {
+		return apperror.New("AUTH_WEAK_PASSWORD", err.Error(), 400, err)
 	}
 
 	ctx := context.Background()

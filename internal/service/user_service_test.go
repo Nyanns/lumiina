@@ -71,7 +71,7 @@ func TestRegister_Success(t *testing.T) {
 	dummyUser := &model.User{
 		Username: "sandi",
 		Email:    "sandi@htb.com",
-		Password: "passwordrahasia",
+		Password: "P@ssword123!",
 	}
 
 	mockRepo.On("CreateUser", mock.Anything).Return(nil)
@@ -81,12 +81,27 @@ func TestRegister_Success(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	assert.NotEqual(t, "passwordrahasia", dummyUser.Password)
+	assert.NotEqual(t, "P@ssword123!", dummyUser.Password)
 	assert.NotEmpty(t, dummyUser.Password)
 	assert.Equal(t, "regular", dummyUser.Role)
 	assert.False(t, dummyUser.IsVerified)
 
 	mockRepo.AssertExpectations(t)
+}
+
+func TestRegister_WeakPasswordRejected(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	dummyUser := &model.User{
+		Username: "sandi",
+		Email:    "sandi@htb.com",
+		Password: "onlylowercase",
+	}
+
+	err := userService.Register(dummyUser)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "password must contain at least one uppercase letter")
 }
 
 func TestLogin_Unverified(t *testing.T) {
@@ -97,7 +112,7 @@ func TestLogin_Unverified(t *testing.T) {
 	dummyUser := &model.User{
 		Username: "sandi",
 		Email:    "sandi@htb.com",
-		Password: "passwordrahasia",
+		Password: "P@ssword123!",
 	}
 	mockRepo.On("CreateUser", mock.Anything).Return(nil)
 	_ = userService.Register(dummyUser)
@@ -105,7 +120,7 @@ func TestLogin_Unverified(t *testing.T) {
 	mockRepo.On("FindByIdentifier", "sandi").Return(dummyUser, nil)
 
 	// Act
-	user, err := userService.Login("sandi", "passwordrahasia")
+	user, err := userService.Login("sandi", "P@ssword123!")
 
 	// Assert
 	assert.Error(t, err)
