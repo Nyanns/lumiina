@@ -61,7 +61,7 @@ jobs:
 
       # 8. Setup Docker Buildx for cached multi-stage verification
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # 9. Verify Multi-Stage Production Docker Build
       - name: Verify Dockerfile Build
