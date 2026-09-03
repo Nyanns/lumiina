@@ -2,7 +2,9 @@ package mailer
 
 import (
 	"fmt"
+	"net/mail"
 	"net/smtp"
+	"strings"
 )
 
 type MailerService interface {
@@ -31,24 +33,34 @@ func (m *mailerService) sendEmail(toEmail, subject, htmlBody string) error {
 		return fmt.Errorf("SMTP configuration is incomplete: host=%q, port=%q, email=%q, pass_set=%v", m.host, m.port, m.email, m.password != "")
 	}
 
+	// Sanitize recipient and subject against CRLF Injection (CWE-093 / CWE-20)
+	cleanToEmail := strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(toEmail), "\r", ""), "\n", "")
+	cleanSubject := strings.ReplaceAll(strings.ReplaceAll(strings.TrimSpace(subject), "\r", ""), "\n", "")
+
+	parsedAddr, err := mail.ParseAddress(cleanToEmail)
+	if err != nil {
+		return fmt.Errorf("invalid recipient email address: %w", err)
+	}
+
 	auth := smtp.PlainAuth("", m.email, m.password, m.host)
 	addr := fmt.Sprintf("%s:%s", m.host, m.port)
 
 	// Format MIME Header untuk Email HTML
 	header := make(map[string]string)
 	header["From"] = fmt.Sprintf("Lumiina Official <%s>", m.email)
-	header["To"] = toEmail
-	header["Subject"] = subject
+	header["To"] = parsedAddr.Address
+	header["Subject"] = cleanSubject
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/html; charset=\"UTF-8\""
 
-	message := ""
+	var message strings.Builder
 	for k, v := range header {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
+		message.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
 	}
-	message += "\r\n" + htmlBody
+	message.WriteString("\r\n")
+	message.WriteString(htmlBody)
 
-	return smtp.SendMail(addr, auth, m.email, []string{toEmail}, []byte(message))
+	return smtp.SendMail(addr, auth, m.email, []string{parsedAddr.Address}, []byte(message.String()))
 }
 
 func (m *mailerService) SendVerificationEmail(toEmail, username, token, baseURL string) error {

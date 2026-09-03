@@ -1,8 +1,12 @@
 package mailer
 
-import "fmt"
+import (
+	"fmt"
+	"html"
+)
 
 func buildVerificationEmailHTML(username, verifyURL string) string {
+	safeUsername := html.EscapeString(username)
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -68,10 +72,11 @@ func buildVerificationEmailHTML(username, verifyURL string) string {
 		</tr>
 	</table>
 </body>
-</html>`, username, verifyURL, verifyURL)
+</html>`, safeUsername, verifyURL, verifyURL)
 }
 
 func buildPasswordResetEmailHTML(username, resetURL string) string {
+	safeUsername := html.EscapeString(username)
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -141,5 +146,5 @@ func buildPasswordResetEmailHTML(username, resetURL string) string {
 		</tr>
 	</table>
 </body>
-</html>`, username, resetURL, resetURL)
+</html>`, safeUsername, resetURL, resetURL)
 }

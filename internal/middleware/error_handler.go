@@ -6,6 +6,7 @@ import (
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sandi/lumiina/internal/pkg/sanitize"
 )
 
 // ErrorHandlerMiddleware intercepts unhandled panics and returns a structured 500 JSON response,
@@ -17,7 +18,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 				// Log the error and the stack trace internally
 				slog.Error("Panic recovered",
 					"error", err,
-					"path", c.Request.URL.Path,
+					"path", sanitize.Log(c.Request.URL.Path),
 					"stack", string(debug.Stack()),
 				)
 

@@ -10,7 +10,7 @@ import { AuthModal } from './components/AuthModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { artworksAPI } from './api/client';
 import { useAuth } from './context/AuthContext';
-import { Sparkles, Layers, ChevronLeft, ChevronRight, RefreshCw, Upload, Compass } from 'lucide-react';
+import { Layers, ChevronLeft, ChevronRight, RefreshCw, Upload, Compass } from 'lucide-react';
 
 export default function App() {
   const { isAuthenticated } = useAuth();
