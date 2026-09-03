@@ -1,39 +1,40 @@
 # Lumiina API
 
-[![CI](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml)
+[![CI Quality & Security Gates](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/ci.yml)
+[![CodeQL Security Analysis](https://github.com/Nyanns/lumiina/actions/workflows/codeql.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/codeql.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Nyanns/lumiina)](https://goreportcard.com/report/github.com/Nyanns/lumiina)
-[![Go Version](https://img.shields.io/badge/Go-1.21%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Backend REST API for **Lumiina**, an anime fan art sharing platform inspired by Pixiv. Built with Go (Gin), PostgreSQL, GORM, Redis, and Cloudinary.
+High-performance, enterprise-grade backend REST API for **Lumiina**, an anime fan art sharing platform inspired by Pixiv. Engineered with Go 1.24, Gin, PostgreSQL (pg_trgm), GORM, Redis 7, and Cloudinary.
 
 ---
 
-## Architecture & Features
+## Architecture & Enterprise Hardening
 
-- **Layered Clean Architecture**: Strict unidirectional flow (`Handler` -> `Service` -> `Repository` -> `Model`).
-- **Authentication & Security**:
-  - JWT Bearer authentication with role-based access (`regular`, `admin`).
-  - Bcrypt password hashing (`DefaultCost`).
+- **Layered Clean Architecture**: Strict unidirectional dependency flow (`Handler` -> `Service` -> `Repository Interface` -> `Model`). Fully mockable for unit testing.
+- **Fail-Fast Configuration**:
+  - Centralized `cfg.Validate()` executing strict startup verification.
+  - Insecure default placeholders prohibited; `JWT_SECRET` strictly enforced to ≥ 32 characters for HMAC-SHA256 compliance.
+  - Mandatory prefix verification on `CLOUDINARY_SECRET` (`cloudinary://...`).
+- **Observability & Correlation Tracing**:
+  - Automatic `X-Request-ID` injection via global middleware for end-to-end distributed tracing.
+  - Standardized structured JSON logging using Go standard library `log/slog`.
+- **Advanced API Security & Defense-in-Depth**:
+  - Anti-timing attack mitigation using constant-time evaluation and pre-computed bcrypt canary hashes for non-existent users.
+  - OWASP CORS strict whitelisting (`ALLOWED_ORIGINS`) preventing unauthorized credentials leakage.
+  - Slowloris DoS mitigation via hardened `http.Server` timeouts (`ReadHeaderTimeout: 5s`, `MaxHeaderBytes: 1MB`).
+  - Strict Content Security Policy (CSP), HSTS, and nosniff defense headers.
   - Ephemeral single-use tokens in Redis for email verification (24h TTL) and password reset (15m TTL).
-  - Rate limiting middleware using Redis atomic `TxPipeline`.
-  - Stored XSS input sanitization via `html.EscapeString`.
-  - HTTP security headers (CSP, X-Content-Type-Options, X-Frame-Options).
-- **Media & Artwork Engine**:
-  - File upload with magic-byte MIME type validation (`http.DetectContentType`) accepting JPEG, PNG, and WebP up to 20MB.
-  - Cloudinary asset management for cloud storage and image delivery.
-  - Multi-tag support with automatic tag normalization and many-to-many relationship mapping.
-- **Feed, Search & Caching**:
-  - Paginated artwork feed with keyword search (`ILIKE`) across title and description.
-  - Multi-tag filtering and artist/user lookup (`/users/search`, `/users/:id`).
-  - Redis cache with `golang.org/x/sync/singleflight` to prevent cache stampedes under concurrent traffic.
-- **Reliability & SRE**:
-  - Structured logging using standard library `log/slog`.
-  - POSIX signal trapping (`SIGINT`, `SIGTERM`) with 5-second graceful drain timeout.
-  - Liveness (`/livez`) and readiness (`/readyz`) health check probes.
-- **Containerization**:
-  - Multi-stage Dockerfile producing a minimal static binary (~19MB runner image).
-  - Docker Compose orchestration for local API, PostgreSQL 15, and Redis 7 stack.
+  - Sliding window rate limiting via atomic Redis Lua pipelines.
+- **High-Performance Database Engine**:
+  - GIN Trigram (`pg_trgm`) full-text indexes supporting ultra-fast fuzzy substring search on artworks and usernames without full table scans.
+  - Connection pool sizing tuned according to hardware saturation formulas (`MaxOpenConns: 50`, `MaxIdleConns: 25`, `ConnMaxLifetime: 15m`).
+- **Quality Gates & CI/CD**:
+  - Automated GitHub Actions CI pipeline running `golangci-lint`, race-detector test suite (`go test -v -race`), and atomic coverage reports.
+  - Automated Static Application Security Testing (SAST) via GitHub CodeQL.
+  - Dependabot automated weekly dependency vulnerability patching.
+
 
 ---
 

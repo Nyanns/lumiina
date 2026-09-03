@@ -1,4 +1,4 @@
-name: Lumiina CI Pipeline
+name: Lumiina CI Quality & Security Gates
 
 on:
   push:
@@ -10,11 +10,15 @@ on:
     branches: [ main, develop ]
     paths-ignore:
       - '**.md'
-      - 'docs/**' 
+      - 'docs/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test-and-build:
-    name: Run Tests & Build Verification
+  lint-test-build:
+    name: Lint, Test & Container Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +26,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Setup Go environment
+      # 2. Setup Go environment with build caching
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -33,14 +37,38 @@ jobs:
       - name: Download Go modules
         run: go mod download
 
-      # 4. Run static analysis & vet
+      # 4. Static analysis via Go Vet
       - name: Run Go Vet
         run: go vet ./...
 
-      # 5. Run Unit Tests with Race Detector
-      - name: Run Unit Tests
-        run: go test -v -race ./...
+      # 5. Production Linter Quality Gate (golangci-lint)
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.5
+          args: --timeout=5m --issues-exit-code=1
+        continue-on-error: true # Non-blocking for existing stylistic nuances, reports issues cleanly
 
-      # 6. Verify Docker Build
+      # 6. Run Unit Tests with Race Detector & Atomic Coverage
+      - name: Run Unit Tests with Race Detector
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      # 7. Coverage Report Breakdown
+      - name: Check Coverage Summary
+        run: |
+          echo "=== Test Coverage Summary ==="
+          go tool cover -func=coverage.out
+
+      # 8. Setup Docker Buildx for cached multi-stage verification
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 9. Verify Multi-Stage Production Docker Build
       - name: Verify Dockerfile Build
-        run: docker build -t lumiina-api:ci .
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: lumiina-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

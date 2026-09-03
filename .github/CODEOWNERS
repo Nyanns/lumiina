@@ -1,0 +1,11 @@
+# Global default code owner
+* @Nyanns
+
+# Critical security and infrastructure definitions
+/cmd/api/main.go @Nyanns
+/config/ @Nyanns
+/internal/middleware/ @Nyanns
+/db/migrations/ @Nyanns
+/Dockerfile @Nyanns
+/docker-compose.yml @Nyanns
+/.github/ @Nyanns
