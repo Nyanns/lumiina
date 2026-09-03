@@ -42,15 +42,30 @@ High-performance, enterprise-grade backend REST API for **Lumiina**, an anime fa
 
 | Component | Technology |
 | :--- | :--- |
-| Runtime | Go 1.21+ |
+| Runtime | Go 1.24+ |
 | HTTP Framework | [Gin](https://github.com/gin-gonic/gin) |
-| Database & ORM | PostgreSQL 15, [GORM](https://gorm.io/) |
+| Database & ORM | PostgreSQL 15/16 with `pg_trgm`, [GORM](https://gorm.io/) |
 | Cache & Ephemeral Store | Redis 7 |
 | Image Hosting | Cloudinary SDK |
 | Email Service | Standard `net/smtp` |
 | Migrations | [golang-migrate](https://github.com/golang-migrate/migrate) |
 | Documentation | OpenAPI 2.0 / Swagger ([swaggo/swag](https://github.com/swaggo/swag)) |
 | Testing | [testify](https://github.com/stretchr/testify) (mock & suite) |
+| Metrics & Monitoring | [Prometheus client_golang](https://github.com/prometheus/client_golang) |
+
+---
+
+## 📚 Documentation & Engineering Runbooks
+
+- **[Architecture Decision Records (ADRs)](docs/adr/)**: Architectural rationale, trade-offs, and design choices.
+  - [ADR 0001: Record Architecture Decisions](docs/adr/0001-record-architecture-decisions.md)
+  - [ADR 0002: Clean Architecture and Dependency Inversion](docs/adr/0002-clean-architecture-and-dependency-inversion.md)
+  - [ADR 0003: Redis Atomic Rate Limiting & Ephemeral Tokens](docs/adr/0003-redis-atomic-rate-limiting-and-ephemeral-tokens.md)
+  - [ADR 0004: PostgreSQL Trigram GIN Indexes for Substring Search](docs/adr/0004-postgresql-trigram-gin-indexes-for-search.md)
+- **[Deployment Runbook](docs/DEPLOYMENT.md)**: Production deployment instructions, cloud platform setup, and zero-downtime healthcheck probes.
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)**: Step-by-step diagnostics for database connection, fail-fast aborts, CORS, and Cloudinary.
+- **[Error Handling Specification](docs/ERROR_HANDLING.md)**: Standardized RFC 7807-inspired JSON error envelopes and status code mappings.
+- **[Contributing Guidelines](CONTRIBUTING.md)**: Gitflow branching rules, Conventional Commits, and PR checklists.
 
 ---
 
@@ -58,28 +73,14 @@ High-performance, enterprise-grade backend REST API for **Lumiina**, an anime fa
 
 ### Prerequisites
 - Docker & Docker Compose
-- Go 1.21+ (for native local development)
+- Go 1.24+ (for native local development)
 
 ### 1. Environment Configuration
-Create a `.env` file in the root directory:
-
-```env
-PORT=8080
-DB_HOST=postgres
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
-DB_NAME=lumiina_db
-REDIS_HOST=redis
-REDIS_PORT=6379
-JWT_SECRET=replace_with_a_secure_random_key
-CLOUDINARY_SECRET=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_EMAIL=your_email@gmail.com
-SMTP_PASSWORD=your_app_password
-APP_BASE_URL=http://localhost:8080
+Copy the template and populate with your credentials:
+```bash
+cp .env.example .env
 ```
+> **Notice**: The server enforces **Fail-Fast** startup validation. Missing mandatory variables (`JWT_SECRET` >= 32 chars, valid `CLOUDINARY_SECRET`) will intentionally halt the process with a descriptive error.
 
 ### 2. Run with Docker Compose
 ```bash
@@ -98,7 +99,7 @@ make docker-down
 # Start API locally
 make run
 
-# Run test suite with race detector
+# Run test suite with data race detector
 make test-race
 
 # Regenerate Swagger documentation
@@ -107,21 +108,24 @@ make swagger
 
 ---
 
-## API Reference
+## API Standards & Reference
 
+### Versioning Strategy
+Lumiina follows **URL Path Versioning** (`/api/v1/`). Major breaking changes introduce a new path segment (`/api/v2/`), while non-breaking changes (additive fields, optional query parameters) are released backward-compatibly within the current version.
+
+### Interactive Swagger UI
 Interactive OpenAPI documentation is available at `/swagger/index.html` when the service is running:
-
 **[http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)**
 
 ### Endpoints Summary
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/api/v1/auth/register` | Register new user and send activation email | Public |
-| `POST` | `/api/v1/auth/login` | Authenticate credentials and return JWT token | Public |
+| `POST` | `/api/v1/auth/register` | Register new user and send activation email | Public (Rate Limited) |
+| `POST` | `/api/v1/auth/login` | Authenticate credentials and return JWT token | Public (Rate Limited) |
 | `GET` | `/api/v1/auth/verify-email` | Verify account via email token | Public |
-| `POST` | `/api/v1/auth/forgot-password` | Request password reset token | Public |
-| `POST` | `/api/v1/auth/reset-password` | Set new password with reset token | Public |
+| `POST` | `/api/v1/auth/forgot-password` | Request password reset token | Public (Rate Limited) |
+| `POST` | `/api/v1/auth/reset-password` | Set new password with reset token | Public (Rate Limited) |
 | `GET` | `/api/v1/artworks` | Get artwork feed with search and tag filters | Public |
 | `GET` | `/api/v1/artworks/:id` | Get artwork by ID with author and tags | Public |
 | `POST` | `/api/v1/artworks` | Upload artwork (`multipart/form-data`) | Bearer |
@@ -134,7 +138,8 @@ Interactive OpenAPI documentation is available at `/swagger/index.html` when the
 | `GET` | `/api/v1/users/search` | Search users by username keyword (`?q=`) | Public |
 | `GET` | `/api/v1/users/:id` | Get public artist profile with uploaded artworks | Public |
 | `GET` | `/livez` | Liveness health probe | Public |
-| `GET` | `/readyz` | Readiness health probe | Public |
+| `GET` | `/readyz` | Readiness health probe (DB & Redis ping) | Public |
+| `GET` | `/metrics` | Prometheus metrics scrape endpoint | Public |
 
 ---
 
