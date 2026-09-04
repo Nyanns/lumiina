@@ -67,3 +67,52 @@ func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// OptionalAuthMiddleware extracts user_id if Bearer token is valid, but allows guest access without blocking
+func OptionalAuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
+	var redisClient *redis.Client
+	if len(rdb) > 0 {
+		redisClient = rdb[0]
+	}
+
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.Next()
+			return
+		}
+		tokenString := parts[1]
+
+		if redisClient != nil {
+			revokedKey := fmt.Sprintf("revoked_token:%s", tokenString)
+			if exists, err := redisClient.Exists(c.Request.Context(), revokedKey).Result(); err == nil && exists > 0 {
+				c.Next()
+				return
+			}
+		}
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+			return []byte(jwtSecret), nil
+		})
+
+		if err == nil && token.Valid {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				c.Set("user_id", claims["user_id"])
+				c.Set("role", claims["role"])
+				c.Set("raw_token", tokenString)
+			}
+		}
+
+		c.Next()
+	}
+}
+

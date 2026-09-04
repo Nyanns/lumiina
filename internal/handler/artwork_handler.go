@@ -30,6 +30,23 @@ func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client) *Artw
 	}
 }
 
+// extractCurrentUserID extracts user_id from JWT context (set by OptionalAuth or AuthGuard middleware).
+func extractCurrentUserID(c *gin.Context) uint {
+	if uidVal, exists := c.Get("user_id"); exists {
+		switch v := uidVal.(type) {
+		case float64:
+			return uint(v)
+		case uint:
+			return v
+		case int:
+			return uint(v)
+		case int64:
+			return uint(v)
+		}
+	}
+	return 0
+}
+
 // GetAllArtworks retrieves a paginated feed of artworks with search, tag filtering, and singleflight Redis caching.
 // @Summary Get artwork feed & search
 // @Description Fetches public anime fan art artworks with pagination, keyword search, tag filtering, and artist filtering.
@@ -53,6 +70,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
 	userID, _ := strconv.Atoi(userIDStr)
+	currentUserID := extractCurrentUserID(c)
 
 	// Clamp pagination to prevent excessive DB memory exhaustion
 	if page < 1 {
@@ -66,7 +84,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	}
 	offset := (page - 1) * limit
 
-	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d:s:%s:t:%s:u:%d", page, limit, search, tag, userID)
+	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d:s:%s:t:%s:u:%d:cu:%d", page, limit, search, tag, userID, currentUserID)
 	ctx := c.Request.Context()
 
 	// Check cache
@@ -78,7 +96,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 
 	// Singleflight: Collapses concurrent cache-miss queries to protect DB from cache stampede
 	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
-		artworks, total, err := h.service.GetAllArtworks(limit, offset, search, tag, uint(userID))
+		artworks, total, err := h.service.GetAllArtworks(limit, offset, search, tag, uint(userID), currentUserID)
 		if err != nil {
 			return nil, err
 		}
@@ -241,7 +259,8 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 		return
 	}
 
-	artwork, err := h.service.GetArtworkByID(uint(id))
+	currentUserID := extractCurrentUserID(c)
+	artwork, err := h.service.GetArtworkByID(uint(id), currentUserID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Artwork not found"})
 		return
@@ -327,6 +346,171 @@ func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
 }
 
+// GetTrendingArtworks fetches popular artworks ranked by engagement and recency.
+func (h *ArtworkHandler) GetTrendingArtworks(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit < 1 || limit > 30 {
+		limit = 10
+	}
+
+	currentUserID := extractCurrentUserID(c)
+	cacheKey := fmt.Sprintf("artworks:trending:limit:%d:cu:%d", limit, currentUserID)
+	ctx := c.Request.Context()
+
+	if h.rdb != nil {
+		if cached, err := h.rdb.Get(ctx, cacheKey).Result(); err == nil {
+			c.Data(http.StatusOK, "application/json", []byte(cached))
+			return
+		}
+	}
+
+	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
+		artworks, err := h.service.GetTrendingArtworks(limit, currentUserID)
+		if err != nil {
+			return nil, err
+		}
+
+		response := gin.H{
+			"message": "Successfully fetched trending artworks",
+			"total":   len(artworks),
+			"data":    artworks,
+		}
+
+		resJSON, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
+
+		if h.rdb != nil {
+			h.rdb.Set(ctx, cacheKey, resJSON, 2*time.Minute)
+		}
+		return resJSON, nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch trending artworks"})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
+}
+
+// GetRecommendedArtworks fetches tailored artworks based on user tags and diversity discovery.
+func (h *ArtworkHandler) GetRecommendedArtworks(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "10")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit < 1 || limit > 30 {
+		limit = 10
+	}
+
+	currentUserID := extractCurrentUserID(c)
+	cacheKey := fmt.Sprintf("artworks:recommended:u:%d:limit:%d", currentUserID, limit)
+	ctx := c.Request.Context()
+
+	if h.rdb != nil {
+		if cached, err := h.rdb.Get(ctx, cacheKey).Result(); err == nil {
+			c.Data(http.StatusOK, "application/json", []byte(cached))
+			return
+		}
+	}
+
+	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
+		artworks, err := h.service.GetRecommendedArtworks(currentUserID, limit)
+		if err != nil {
+			return nil, err
+		}
+
+		response := gin.H{
+			"message": "Successfully fetched recommended artworks",
+			"total":   len(artworks),
+			"data":    artworks,
+		}
+
+		resJSON, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
+
+		if h.rdb != nil {
+			h.rdb.Set(ctx, cacheKey, resJSON, 1*time.Minute)
+		}
+		return resJSON, nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch recommended artworks"})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
+}
+
+// GetPopularTags retrieves popular tags dynamically from database ordered by usage and user affinity.
+func (h *ArtworkHandler) GetPopularTags(c *gin.Context) {
+	limitStr := c.DefaultQuery("limit", "15")
+	limit, _ := strconv.Atoi(limitStr)
+	if limit < 1 || limit > 30 {
+		limit = 15
+	}
+
+	var userID uint
+	if uidVal, exists := c.Get("user_id"); exists {
+		if uidFloat, ok := uidVal.(float64); ok {
+			userID = uint(uidFloat)
+		}
+	}
+
+	cacheKey := fmt.Sprintf("tags:popular:u:%d:limit:%d", userID, limit)
+	ctx := c.Request.Context()
+
+	if h.rdb != nil {
+		if cached, err := h.rdb.Get(ctx, cacheKey).Result(); err == nil {
+			c.Data(http.StatusOK, "application/json", []byte(cached))
+			return
+		}
+	}
+
+	responseBytes, err, _ := h.requestGroup.Do(cacheKey, func() (interface{}, error) {
+		tags, err := h.service.GetPopularTags(userID, limit)
+		if err != nil {
+			return nil, err
+		}
+
+		var tagNames []string
+		for _, t := range tags {
+			tagNames = append(tagNames, t.Name)
+		}
+		if tagNames == nil {
+			tagNames = []string{}
+		}
+
+		response := gin.H{
+			"message": "Successfully fetched popular tags",
+			"total":   len(tags),
+			"data":    tagNames,
+			"tags":    tags,
+		}
+
+		resJSON, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
+
+		if h.rdb != nil {
+			h.rdb.Set(ctx, cacheKey, resJSON, 3*time.Minute)
+		}
+		return resJSON, nil
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch popular tags"})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
+}
+
 func (h *ArtworkHandler) invalidateArtworkCache(ctx context.Context) {
 	if h.rdb == nil {
 		return
@@ -337,17 +521,21 @@ func (h *ArtworkHandler) invalidateArtworkCache(ctx context.Context) {
 		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		var batchKeys []string
-		iter := h.rdb.Scan(bgCtx, 0, "artworks:page:*", 100).Iterator()
-		for iter.Next(bgCtx) {
-			batchKeys = append(batchKeys, iter.Val())
-			if len(batchKeys) >= 100 {
-				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-				batchKeys = batchKeys[:0]
+		patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*", "tags:popular:*"}
+		for _, pattern := range patterns {
+			var batchKeys []string
+			iter := h.rdb.Scan(bgCtx, 0, pattern, 100).Iterator()
+			for iter.Next(bgCtx) {
+				batchKeys = append(batchKeys, iter.Val())
+				if len(batchKeys) >= 100 {
+					_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+					batchKeys = batchKeys[:0]
+				}
 			}
-		}
-		if len(batchKeys) > 0 {
-			_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+			if len(batchKeys) > 0 {
+				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+			}
 		}
 	}()
 }
+

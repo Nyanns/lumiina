@@ -52,6 +52,8 @@ export const authAPI = {
 // Artworks endpoints
 export const artworksAPI = {
   getAll: (params) => api.get('/artworks', { params }),
+  getTrending: (params) => api.get('/artworks/trending', { params }),
+  getRecommended: (params) => api.get('/artworks/recommended', { params }),
   getByID: (id) => api.get(`/artworks/${id}`),
   create: (formData) =>
     api.post('/artworks', formData, {
@@ -61,6 +63,11 @@ export const artworksAPI = {
   delete: (id) => api.delete(`/artworks/${id}`),
 };
 
+// Tags endpoints
+export const tagsAPI = {
+  getPopular: (params) => api.get('/tags/popular', { params }),
+};
+
 // Comments endpoints
 export const commentsAPI = {
   getByArtwork: (artworkId, params) =>
@@ -68,6 +75,11 @@ export const commentsAPI = {
   create: (artworkId, content) =>
     api.post(`/artworks/${artworkId}/comments`, { content }),
   delete: (commentId) => api.delete(`/comments/${commentId}`),
+};
+
+// Likes endpoints
+export const likesAPI = {
+  toggle: (artworkId) => api.post(`/artworks/${artworkId}/like`),
 };
 
 // User Profile & Discovery endpoints

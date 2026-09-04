@@ -15,8 +15,8 @@ type MockArtworkRepository struct {
 	mock.Mock
 }
 
-func (m *MockArtworkRepository) GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error) {
-	args := m.Called(limit, offset, search, tag, userID)
+func (m *MockArtworkRepository) GetAllArtworks(limit int, offset int, search string, tag string, userID uint, currentUserID uint) ([]model.Artwork, int64, error) {
+	args := m.Called(limit, offset, search, tag, userID, currentUserID)
 	if args.Get(0) != nil {
 		return args.Get(0).([]model.Artwork), args.Get(1).(int64), args.Error(2)
 	}
@@ -36,6 +36,14 @@ func (m *MockArtworkRepository) GetByID(id uint) (*model.Artwork, error) {
 	return nil, args.Error(1)
 }
 
+func (m *MockArtworkRepository) GetByIDForUser(id uint, currentUserID uint) (*model.Artwork, error) {
+	args := m.Called(id, currentUserID)
+	if args.Get(0) != nil {
+		return args.Get(0).(*model.Artwork), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func (m *MockArtworkRepository) Update(artwork *model.Artwork) error {
 	args := m.Called(artwork)
 	return args.Error(0)
@@ -44,6 +52,30 @@ func (m *MockArtworkRepository) Update(artwork *model.Artwork) error {
 func (m *MockArtworkRepository) Delete(id uint) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+
+func (m *MockArtworkRepository) GetTrendingArtworks(limit int, currentUserID uint) ([]model.Artwork, error) {
+	args := m.Called(limit, currentUserID)
+	if args.Get(0) != nil {
+		return args.Get(0).([]model.Artwork), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockArtworkRepository) GetRecommendedArtworks(userID uint, limit int) ([]model.Artwork, error) {
+	args := m.Called(userID, limit)
+	if args.Get(0) != nil {
+		return args.Get(0).([]model.Artwork), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
+func (m *MockArtworkRepository) GetPopularTags(userID uint, limit int) ([]model.Tag, error) {
+	args := m.Called(userID, limit)
+	if args.Get(0) != nil {
+		return args.Get(0).([]model.Tag), args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
 // MockCloudinaryService mocks cloudinary.CloudinaryService
@@ -62,19 +94,19 @@ func TestGetAllArtworks_ClampingLimits(t *testing.T) {
 
 	// Test limit <= 0 clamped to 20, offset < 0 clamped to 0
 	expectedArtworks := []model.Artwork{{ID: 1, Title: "Lumi Art"}}
-	mockRepo.On("GetAllArtworks", 20, 0, "lumi", "anime", uint(0)).
+	mockRepo.On("GetAllArtworks", 20, 0, "lumi", "anime", uint(0), uint(0)).
 		Return(expectedArtworks, int64(1), nil)
 
-	artworks, total, err := svc.GetAllArtworks(0, -5, " lumi ", " anime ", 0)
+	artworks, total, err := svc.GetAllArtworks(0, -5, " lumi ", " anime ", 0, 0)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), total)
 	assert.Len(t, artworks, 1)
 
 	// Test limit > 50 clamped to 50
-	mockRepo.On("GetAllArtworks", 50, 10, "", "", uint(0)).
+	mockRepo.On("GetAllArtworks", 50, 10, "", "", uint(0), uint(0)).
 		Return(expectedArtworks, int64(1), nil)
 
-	artworks, total, err = svc.GetAllArtworks(100, 10, "", "", 0)
+	artworks, total, err = svc.GetAllArtworks(100, 10, "", "", 0, 0)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(1), total)
 
