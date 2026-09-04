@@ -426,7 +426,7 @@ export const HomePage = () => {
                       return (
                         <div key={u.id} className="flex items-center justify-between gap-3">
                           <Link
-                            to={`/profile/${u.id}`}
+                            to={`/profile/${u.username || u.id}`}
                             className="flex items-center gap-2.5 min-w-0 group"
                           >
                             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center uppercase shrink-0 border border-slate-200 dark:border-slate-600">
@@ -468,7 +468,7 @@ export const HomePage = () => {
                 <img src="/logo_icon.png" alt="Lumiina" className="w-7 h-7 object-contain rounded-md shadow-xs" />
                 <div className="flex flex-col leading-none">
                   <span className="font-extrabold text-xs text-slate-900 dark:text-white tracking-tight">Lumiina</span>
-                  <span className="text-[9px] text-slate-400 font-medium mt-0.5">Fan Art Community</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Illustration & Creator Community</span>
                 </div>
               </div>
 

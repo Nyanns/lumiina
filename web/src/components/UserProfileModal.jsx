@@ -17,8 +17,8 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
         if (res.data?.data) {
           setProfile(res.data.data);
         }
-      } catch (err) {
-        setError('Gagal memuat profil artist');
+      } catch {
+        setError('Failed to load artist profile.');
       } finally {
         setLoading(false);
       }
@@ -34,7 +34,7 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
         {/* Modal Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            Profil Artist Komunitas
+            Creator Profile
           </span>
           <button
             onClick={onClose}
@@ -48,11 +48,11 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
         <div className="p-6 overflow-y-auto flex flex-col gap-6">
           {loading ? (
             <div className="py-16 text-center text-slate-400 text-sm">
-              Memuat profil artist...
+              Loading creator profile...
             </div>
           ) : error || !profile ? (
             <div className="py-16 text-center text-rose-600 text-sm">
-              {error || 'Profil tidak ditemukan'}
+              {error || 'Profile not found'}
             </div>
           ) : (
             <>
@@ -67,7 +67,7 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
                     <h2 className="text-lg font-bold text-slate-900">{profile.username}</h2>
                     {profile.is_verified && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-700 bg-sky-100 px-2 py-0.5 rounded-md">
-                        <BadgeCheck className="w-3.5 h-3.5 text-sky-600" /> Terverifikasi
+                        <BadgeCheck className="w-3.5 h-3.5 text-sky-600" /> Verified
                       </span>
                     )}
                     <span className="text-[11px] font-semibold uppercase px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">
@@ -77,11 +77,11 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
 
                   <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    Bergabung sejak {profile.created_at ? new Date(profile.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long' }) : '-'}
+                    Joined {profile.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : '-'}
                   </p>
 
                   <p className="text-xs text-slate-600 mt-1">
-                    Koleksi karya ilustrasi fan art dari <span className="font-semibold text-slate-800">{profile.username}</span> di platform Lumiina.
+                    Illustration gallery and portfolio of <span className="font-semibold text-slate-800">{profile.username}</span> on Lumiina.
                   </p>
                 </div>
               </div>
@@ -90,12 +90,12 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
               <div className="flex flex-col gap-3">
                 <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <ImageIcon className="w-4 h-4 text-sky-600" />
-                  Karya yang Telah Diunggah ({profile.artworks?.length || 0})
+                  Uploaded Works ({profile.artworks?.length || 0})
                 </h3>
 
                 {!profile.artworks || profile.artworks.length === 0 ? (
                   <div className="py-12 text-center bg-slate-50/50 rounded-xl border border-slate-100 text-xs text-slate-400">
-                    Artist ini belum mengunggah karya publik.
+                    This artist hasn't published any public artworks yet.
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

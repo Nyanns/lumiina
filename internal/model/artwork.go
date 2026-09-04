@@ -1,6 +1,11 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/sandi/lumiina/internal/pkg/hashid"
+)
 
 type Artwork struct {
 	ID          uint      `json:"id" gorm:"primaryKey"`
@@ -19,3 +24,41 @@ type Artwork struct {
 	IsLiked      bool      `json:"is_liked" gorm:"-"`
 }
 
+// MarshalJSON serializes the Artwork model with an obfuscated string ID (e.g. "H1rJsY")
+// to prevent ID enumeration and scraping attacks. The outer ID field shadows the embedded
+// Alias.ID uint field per Go encoding/json precedence rules.
+func (a Artwork) MarshalJSON() ([]byte, error) {
+	type Alias Artwork
+	return json.Marshal(&struct {
+		ID string `json:"id"`
+		Alias
+	}{
+		ID:    hashid.Encode(a.ID),
+		Alias: (Alias)(a),
+	})
+}
+
+// UnmarshalJSON deserializes an Artwork model supporting both hash strings and numeric IDs.
+func (a *Artwork) UnmarshalJSON(data []byte) error {
+	type Alias Artwork
+	aux := &struct {
+		ID interface{} `json:"id"`
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	switch v := aux.ID.(type) {
+	case string:
+		id, err := hashid.Decode(v)
+		if err != nil {
+			return err
+		}
+		a.ID = id
+	case float64:
+		a.ID = uint(v)
+	}
+	return nil
+}

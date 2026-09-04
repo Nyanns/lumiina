@@ -12,12 +12,12 @@ import { ProfilePage } from './pages/ProfilePage';
 export default function App() {
   const location = useLocation();
 
-  // Hide Navbar on dedicated auth pages for focused onboarding experience (like X / Pixiv)
-  const isAuthPage = ['/login', '/register', '/forgot-password'].includes(location.pathname);
+  // Hide global browsing Navbar on dedicated auth pages and upload studio for a focused workspace
+  const hideGlobalNavbar = ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-900">
-      {!isAuthPage && <Navbar />}
+      {!hideGlobalNavbar && <Navbar />}
 
       <div className="flex-1 flex flex-col">
         <Routes>

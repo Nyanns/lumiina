@@ -37,12 +37,12 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
     setError('');
     if (!selectedFile) return;
     if (selectedFile.size > 20 * 1024 * 1024) {
-      triggerError('Maksimal ukuran file 20MB');
+      triggerError('Maximum file size is 20MB.');
       return;
     }
     const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!validTypes.includes(selectedFile.type)) {
-      triggerError('Hanya mendukung format JPEG, PNG, atau WebP');
+      triggerError('Only JPEG, PNG, or WebP formats are supported.');
       return;
     }
     setFile(selectedFile);
@@ -60,7 +60,7 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
     const cleanTag = tagInput.trim().replace(/^#/, '');
     if (cleanTag && !tags.includes(cleanTag)) {
       if (tags.length >= 10) {
-        triggerError('Maksimal 10 tag per karya');
+        triggerError('Maximum 10 tags per artwork.');
         return;
       }
       setTags([...tags, cleanTag]);
@@ -70,8 +70,8 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return triggerError('Silakan pilih gambar terlebih dahulu');
-    if (!title.trim()) return triggerError('Judul wajib diisi');
+    if (!file) return triggerError('Please select an illustration image to upload.');
+    if (!title.trim()) return triggerError('Title is required.');
 
     setUploading(true);
     setError('');
@@ -89,7 +89,7 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
         onClose();
       }
     } catch (err) {
-      triggerError(err.response?.data?.error || 'Gagal mengunggah. Coba lagi.');
+      triggerError(err.response?.data?.error || 'Failed to upload. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -108,10 +108,10 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
       >
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
-            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Unggah Karya</h2>
-            <p className="text-sm text-slate-500 font-medium mt-1">Bagikan keajaiban ilustrasimu ke komunitas Lumiina</p>
+            <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Upload Artwork</h2>
+            <p className="text-sm text-slate-500 font-medium mt-1">Share your creative illustrations with the Lumiina community</p>
           </div>
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -144,7 +144,7 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
                 <div className="relative group flex flex-col items-center">
                   <img src={safePreviewUrl} alt="Preview" className="max-h-[300px] rounded-xl shadow-md object-contain group-hover:opacity-50 transition-opacity" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">Ganti Gambar</span>
+                    <span className="bg-slate-900 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">Change Image</span>
                   </div>
                 </div>
               ) : (
@@ -152,33 +152,33 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
                   <div className="w-16 h-16 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mb-4">
                     <UploadCloud className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-800">Tarik & Lepas Gambar di Sini</h3>
-                  <p className="text-sm font-medium text-slate-400 mt-1">Mendukung JPEG, PNG, WebP (Maks. 20MB)</p>
+                  <h3 className="text-lg font-bold text-slate-800">Drag & Drop Image Here</h3>
+                  <p className="text-sm font-medium text-slate-400 mt-1">Supports JPEG, PNG, WebP (Max 20MB)</p>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">Judul Ilustrasi <span className="text-rose-500">*</span></label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Berikan judul yang menarik" className="px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" required />
+              <label className="text-sm font-bold text-slate-700">Illustration Title <span className="text-rose-500">*</span></label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Provide an engaging title" className="px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" required />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-bold text-slate-700">Cerita / Deskripsi</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Ceritakan tool yang dipakai atau inspirasi di balik karya ini..." rows={3} className="px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" />
+              <label className="text-sm font-bold text-slate-700">Caption & Creator Notes</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your creative process, tools used, or inspirations..." rows={3} className="px-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-bold text-slate-700">Tags Kategori</label>
+              <label className="text-sm font-bold text-slate-700">Category Tags</label>
               <div className="relative flex items-center gap-2">
                 <TagIcon className="absolute left-4 text-slate-400 w-4 h-4" />
-                <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTag(e)} placeholder="Ketik tag lalu tekan Enter..." className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" />
+                <input type="text" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddTag(e)} placeholder="Type tag and press Enter..." className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-xl font-medium outline-none transition-all" />
               </div>
               <div className="flex flex-wrap gap-2 pt-2">
                 {tags.map((tag) => (
                   <span key={tag} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-sky-100 text-sky-800">
                     #{tag}
-                    <button type="button" onClick={() => setTags(tags.filter(t => t !== tag))} className="hover:text-rose-600 transition-colors">
+                    <button type="button" onClick={() => setTags(tags.filter(t => t !== tag))} className="hover:text-rose-600 transition-colors cursor-pointer">
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </span>
@@ -187,9 +187,9 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
             </div>
 
             <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-slate-100">
-              <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-full transition-colors">Batal</button>
-              <button type="submit" disabled={uploading || !file || !title} className="px-8 py-3 font-bold text-white bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 rounded-full shadow-md transition-colors flex items-center gap-2">
-                {uploading ? 'Mengunggah...' : 'Publikasikan'}
+              <button type="button" onClick={onClose} className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">Cancel</button>
+              <button type="submit" disabled={uploading || !file || !title} className="px-8 py-3 font-bold text-white bg-sky-600 hover:bg-sky-500 disabled:bg-slate-300 rounded-full shadow-md transition-colors flex items-center gap-2 cursor-pointer">
+                {uploading ? 'Publishing...' : 'Publish'}
               </button>
             </div>
           </motion.form>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
   Calendar, 
@@ -7,7 +7,9 @@ import {
   Image as ImageIcon, 
   ArrowLeft, 
   Sparkles,
-  Upload
+  Upload,
+  Share2,
+  Check
 } from 'lucide-react';
 import { usersAPI } from '../api/client';
 import { ArtworkCard } from '../components/ArtworkCard';
@@ -15,12 +17,22 @@ import { useAuth } from '../context/AuthContext';
 
 export const ProfilePage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [following, setFollowing] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShareProfile = () => {
+    if (!profile?.username) return;
+    const url = `${window.location.origin}/profile/${profile.username}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,7 +40,12 @@ export const ProfilePage = () => {
       try {
         const res = await usersAPI.getProfile(id);
         if (res.data?.data) {
-          setProfile(res.data.data);
+          const prof = res.data.data;
+          setProfile(prof);
+          // Canonical URL canonicalization: if visited with numeric or legacy id (e.g. /profile/1), replace URL to vanity handle (/profile/Nyanns)
+          if (prof.username && id.toLowerCase() !== prof.username.toLowerCase()) {
+            navigate(`/profile/${prof.username}`, { replace: true });
+          }
         }
       } catch {
         setError('Artist profile not found.');
@@ -41,7 +58,7 @@ export const ProfilePage = () => {
       fetchProfile();
       window.scrollTo(0, 0);
     }
-  }, [id]);
+  }, [id, navigate]);
 
   if (loading) {
     return (
@@ -71,7 +88,10 @@ export const ProfilePage = () => {
     );
   }
 
-  const isOwnProfile = currentUser && currentUser.id === profile.id;
+  const isOwnProfile =
+    currentUser &&
+    (String(currentUser.id) === String(profile.id) ||
+      currentUser.username?.toLowerCase() === profile.username?.toLowerCase());
   const artworksList = profile.artworks || [];
 
   return (
@@ -106,7 +126,17 @@ export const ProfilePage = () => {
             </div>
 
             {/* Profile Action Buttons */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleShareProfile}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full font-bold text-xs transition-colors cursor-pointer"
+                title="Share artist profile"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-400" />}
+                <span>{copied ? 'Link Copied!' : 'Share'}</span>
+              </button>
+
               {isOwnProfile ? (
                 <Link
                   to="/upload"

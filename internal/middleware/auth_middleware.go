@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -53,6 +54,25 @@ func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			// Check user-level revocation epoch (set after password reset)
+			if redisClient != nil {
+				if uid, ok := claims["user_id"].(float64); ok {
+					if iat, ok := claims["iat"].(float64); ok {
+						revKey := fmt.Sprintf("user_revocation:%d", uint(uid))
+						if epochStr, err := redisClient.Get(c.Request.Context(), revKey).Result(); err == nil {
+							if epoch, err := strconv.ParseInt(epochStr, 10, 64); err == nil {
+								if int64(iat) < epoch {
+									c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+										"error": "Session invalidated due to password change. Please login again.",
+									})
+									return
+								}
+							}
+						}
+					}
+				}
+			}
+
 			c.Set("user_id", claims["user_id"])
 			c.Set("role", claims["role"])
 			c.Set("raw_token", tokenString)

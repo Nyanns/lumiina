@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +36,7 @@ type UserService interface {
 	ResetPassword(token, newPassword string) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
+	GetProfileByIdentifier(identifier string) (*model.User, error)
 	RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error
 	IsTokenRevoked(ctx context.Context, tokenString string) bool
 }
@@ -75,7 +76,7 @@ func (s *userService) Register(user *model.User) error {
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return apperror.New("INTERNAL_ERROR", "gagal memproses kata sandi", 500, err)
+		return apperror.New("INTERNAL_ERROR", "failed to process password", 500, err)
 	}
 
 	user.Password = string(hashedPassword)
@@ -85,7 +86,7 @@ func (s *userService) Register(user *model.User) error {
 	user.IsVerified = false
 
 	if err := s.repo.CreateUser(user); err != nil {
-		return apperror.New("AUTH_USER_EXISTS", "username atau email sudah terdaftar", 409, err)
+		return apperror.New("AUTH_USER_EXISTS", "username or email is already registered", 409, err)
 	}
 
 	// Generate 32-byte secure verification token
@@ -106,9 +107,9 @@ func (s *userService) Register(user *model.User) error {
 			err := s.mailer.SendVerificationEmail(toEmail, username, verToken, baseURL)
 			cleanEmail := sanitize.Log(toEmail)
 			if err != nil {
-				log.Printf("[MAILER ERROR] Failed to send verification email to %s: %v\n", cleanEmail, err)
+				slog.Error("Mailer: verification email dispatch failed", "email", cleanEmail, "error", err)
 			} else {
-				log.Printf("[MAILER SUCCESS] Verification email sent to %s\n", cleanEmail)
+				slog.Info("Mailer: verification email sent", "email", cleanEmail)
 			}
 		}(user.Email, user.Username, token, s.baseURL)
 	}
@@ -148,7 +149,7 @@ func (s *userService) VerifyEmail(token string) error {
 
 	userIDStr, err := s.rdb.Get(ctx, key).Result()
 	if err != nil {
-		return errors.New("tautan verifikasi tidak valid atau sudah kedaluwarsa")
+		return errors.New("verification link is invalid or expired")
 	}
 
 	userIDInt, err := strconv.Atoi(userIDStr)
@@ -158,7 +159,7 @@ func (s *userService) VerifyEmail(token string) error {
 
 	user, err := s.repo.FindByID(uint(userIDInt))
 	if err != nil {
-		return errors.New("pengguna tidak ditemukan")
+		return errors.New("user not found")
 	}
 
 	user.IsVerified = true
@@ -196,9 +197,9 @@ func (s *userService) ForgotPassword(email string) error {
 			err := s.mailer.SendPasswordResetEmail(toEmail, username, resetToken, baseURL)
 			cleanEmail := sanitize.Log(toEmail)
 			if err != nil {
-				log.Printf("[MAILER ERROR] Failed to send reset password email to %s: %v\n", cleanEmail, err)
+				slog.Error("Mailer: password reset email dispatch failed", "email", cleanEmail, "error", err)
 			} else {
-				log.Printf("[MAILER SUCCESS] Reset password email sent to %s\n", cleanEmail)
+				slog.Info("Mailer: password reset email sent", "email", cleanEmail)
 			}
 		}(user.Email, user.Username, token, s.baseURL)
 	}
@@ -221,7 +222,7 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 
 	userIDStr, err := s.rdb.Get(ctx, key).Result()
 	if err != nil {
-		return errors.New("tautan reset password tidak valid atau sudah kedaluwarsa (berlaku 15 menit)")
+		return errors.New("password reset link is invalid or expired (valid for 15 minutes)")
 	}
 
 	userIDInt, err := strconv.Atoi(userIDStr)
@@ -231,7 +232,7 @@ func (s *userService) ResetPassword(token, newPassword string) error {
 
 	user, err := s.repo.FindByID(uint(userIDInt))
 	if err != nil {
-		return errors.New("pengguna tidak ditemukan")
+		return errors.New("user not found")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
@@ -270,6 +271,10 @@ func (s *userService) SearchUsers(query string, limit int, offset int) ([]model.
 
 func (s *userService) GetProfileByID(id uint) (*model.User, error) {
 	return s.repo.GetProfileByID(id)
+}
+
+func (s *userService) GetProfileByIdentifier(identifier string) (*model.User, error) {
+	return s.repo.GetProfileByIdentifier(identifier)
 }
 
 func (s *userService) RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error {

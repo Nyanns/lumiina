@@ -45,8 +45,13 @@ export const ArtworkDetailPage = () => {
           commentsAPI.getByArtwork(id),
         ]);
         if (artRes.data?.data) {
-          setArtwork(artRes.data.data);
-          syncFromServer(artRes.data.data);
+          const art = artRes.data.data;
+          setArtwork(art);
+          syncFromServer(art);
+          // Canonical URL canonicalization: if visited with numeric/legacy id (e.g. /artworks/1), replace URL to HashID (/artworks/H1rJsY)
+          if (art.id && String(id) !== String(art.id)) {
+            navigate(`/artworks/${art.id}`, { replace: true });
+          }
         }
         if (comRes.data?.data) setComments(comRes.data.data);
       } catch (err) {
@@ -136,7 +141,13 @@ export const ArtworkDetailPage = () => {
     );
   }
 
-  const isOwnerOrAdmin = user && (user.id === artwork.user_id || user.role === 'admin');
+  const isOwnerOrAdmin =
+    user &&
+    (String(user.id) === String(artwork.user_id) ||
+      (user.username &&
+        artwork.user?.username &&
+        user.username.toLowerCase() === artwork.user.username.toLowerCase()) ||
+      user.role === 'admin');
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
@@ -211,7 +222,7 @@ export const ArtworkDetailPage = () => {
               {/* Creator Info Bar */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                 <Link
-                  to={`/profile/${artwork.user?.id || artwork.user_id}`}
+                  to={`/profile/${artwork.user?.username || artwork.user_id}`}
                   className="flex items-center gap-3 group"
                 >
                   <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-base flex items-center justify-center uppercase shrink-0 shadow-sm">
@@ -235,7 +246,7 @@ export const ArtworkDetailPage = () => {
                 </Link>
 
                 <Link
-                  to={`/profile/${artwork.user?.id || artwork.user_id}`}
+                  to={`/profile/${artwork.user?.username || artwork.user_id}`}
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
                 >
                   Profile
@@ -354,9 +365,15 @@ export const ArtworkDetailPage = () => {
                   comments.map((c) => {
                     const canDelete =
                       user &&
-                      (user.id === c.user_id ||
+                      (String(user.id) === String(c.user_id) ||
+                        (user.username &&
+                          c.user?.username &&
+                          user.username.toLowerCase() === c.user.username.toLowerCase()) ||
                         user.role === 'admin' ||
-                        user.id === artwork.user_id);
+                        String(user.id) === String(artwork.user_id) ||
+                        (user.username &&
+                          artwork.user?.username &&
+                          user.username.toLowerCase() === artwork.user.username.toLowerCase()));
                     return (
                       <div key={c.id} className="flex items-start gap-2.5 p-2 rounded-xl group hover:bg-slate-50 dark:hover:bg-slate-850 transition-colors">
                         <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 mt-0.5">

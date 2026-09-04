@@ -65,7 +65,7 @@ func (m *mailerService) sendEmail(toEmail, subject, htmlBody string) error {
 
 func (m *mailerService) SendVerificationEmail(toEmail, username, token, baseURL string) error {
 	verifyURL := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", baseURL, token)
-	subject := "Verifikasi Alamat Email Anda | Lumiina"
+	subject := "Verify Your Email Address | Lumiina"
 	htmlBody := buildVerificationEmailHTML(username, verifyURL)
 
 	return m.sendEmail(toEmail, subject, htmlBody)
@@ -73,7 +73,7 @@ func (m *mailerService) SendVerificationEmail(toEmail, username, token, baseURL 
 
 func (m *mailerService) SendPasswordResetEmail(toEmail, username, token, baseURL string) error {
 	resetURL := fmt.Sprintf("%s/api/v1/auth/reset-password?token=%s", baseURL, token)
-	subject := "Atur Ulang Kata Sandi Akun Lumiina"
+	subject := "Reset Your Lumiina Account Password"
 	htmlBody := buildPasswordResetEmailHTML(username, resetURL)
 
 	return m.sendEmail(toEmail, subject, htmlBody)

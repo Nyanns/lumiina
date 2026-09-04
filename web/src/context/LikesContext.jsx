@@ -33,7 +33,7 @@ export const LikesProvider = ({ children }) => {
       const updates = {};
       for (const art of list) {
         if (!art || art.id == null) continue;
-        const key = Number(art.id);
+        const key = String(art.id);
         updates[key] = {
           isLiked: isAuthenticated ? Boolean(art.is_liked) : false,
           count: typeof art.like_count === 'number' ? art.like_count : (prev[key]?.count ?? 0),
@@ -44,7 +44,7 @@ export const LikesProvider = ({ children }) => {
   };
 
   const getLikeInfo = (artworkId, defaultCount = 0) => {
-    const key = Number(artworkId);
+    const key = String(artworkId);
     const existing = likesMap[key];
 
     // Guests: isLiked is ALWAYS false, but count reflects real community like count
@@ -66,7 +66,7 @@ export const LikesProvider = ({ children }) => {
       return false;
     }
 
-    const key = Number(artworkId);
+    const key = String(artworkId);
     const current = likesMap[key] || { isLiked: false, count: defaultCount };
     const optimisticIsLiked = !current.isLiked;
     const optimisticCount = optimisticIsLiked

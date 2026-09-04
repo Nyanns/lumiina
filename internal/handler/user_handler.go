@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,7 @@ import (
 	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/service"
 )
@@ -55,7 +57,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	}
 
 	if req.Password != req.ConfirmPassword {
-		respondAppError(c, apperror.New("VALIDATION_ERROR", "Konfirmasi password tidak cocok dengan password yang dimasukkan", http.StatusBadRequest, nil))
+		respondAppError(c, apperror.New("VALIDATION_ERROR", "Password confirmation does not match the entered password", http.StatusBadRequest, nil))
 		return
 	}
 
@@ -83,8 +85,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	)
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Registrasi berhasil! Tautan verifikasi telah dikirimkan ke email Anda.",
-		"data":    user,
+		"message": "Registration successful! A verification link has been sent to your email address.",
 	})
 }
 
@@ -151,6 +152,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   tokenString,
+		"user": gin.H{
+			"id":       hashid.Encode(user.ID),
+			"username": user.Username,
+			"role":     user.Role,
+		},
 	})
 }
 
@@ -169,10 +175,10 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 
 	if token == "" {
 		if wantsJSON {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Token verifikasi wajib disertakan"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Verification token is required"})
 			return
 		}
-		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Token Tidak Ditemukan", "Tautan verifikasi tidak lengkap atau tidak memiliki parameter token yang valid.")))
+		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Token Not Found", "Verification link is incomplete or missing a valid token parameter.")))
 		return
 	}
 
@@ -182,13 +188,13 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Tautan Kedaluwarsa / Tidak Valid", err.Error())))
+		c.Data(http.StatusBadRequest, "text/html; charset=utf-8", []byte(renderVerificationErrorPage("Expired or Invalid Link", err.Error())))
 		return
 	}
 
 	if wantsJSON {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Email berhasil diverifikasi! Akun Anda kini sudah aktif. Silakan login.",
+			"message": "Email successfully verified! Your account is now active. Please sign in.",
 		})
 		return
 	}
@@ -215,12 +221,12 @@ func (h *UserHandler) ForgotPassword(c *gin.Context) {
 
 	err := h.service.ForgotPassword(req.Email)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses permintaan reset password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process password reset request"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Jika alamat email terdaftar di sistem kami, instruksi reset kata sandi telah dikirimkan ke email Anda.",
+		"message": "If the email address is registered, instructions to reset your password have been sent.",
 	})
 }
 
@@ -242,7 +248,7 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	}
 
 	if req.NewPassword != req.ConfirmPassword {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Konfirmasi password baru tidak cocok"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "New password confirmation does not match"})
 		return
 	}
 
@@ -253,7 +259,7 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Kata sandi berhasil diperbarui! Silakan login menggunakan kata sandi baru Anda.",
+		"message": "Password successfully updated! Please sign in using your new password.",
 	})
 }
 
@@ -268,12 +274,11 @@ func (h *UserHandler) ResetPassword(c *gin.Context) {
 // @Failure 404 {object} map[string]string "User not found"
 // @Router /users/me [get]
 func (h *UserHandler) GetMe(c *gin.Context) {
-	userIDFloat, exists := c.Get("user_id")
-	if !exists {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	userID := uint(userIDFloat.(float64))
 
 	user, err := h.service.GetProfileByID(userID)
 	if err != nil {
@@ -302,6 +307,15 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
 	offset := (page - 1) * limit
 
 	users, total, err := h.service.SearchUsers(q, limit, offset)
@@ -318,25 +332,24 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 	})
 }
 
-// GetUserProfile returns the public profile and artworks of a user by ID.
+// GetUserProfile returns the public profile and artworks of a user by username or ID.
 // @Summary Get public user profile
-// @Description Fetches public artist profile and their uploaded artworks.
+// @Description Fetches public artist profile and their uploaded artworks by username or ID.
 // @Tags users
 // @Produce json
-// @Param id path int true "User ID"
+// @Param id path string true "User username or ID"
 // @Success 200 {object} map[string]interface{} "Public artist profile"
-// @Failure 400 {object} map[string]string "Invalid user ID"
+// @Failure 400 {object} map[string]string "Invalid user identifier"
 // @Failure 404 {object} map[string]string "User not found"
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUserProfile(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+	identifier := strings.TrimSpace(c.Param("id"))
+	if identifier == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User identifier is required"})
 		return
 	}
 
-	user, err := h.service.GetProfileByID(uint(id))
+	user, err := h.service.GetProfileByIdentifier(identifier)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
 		return
@@ -362,13 +375,18 @@ func (h *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	tokenStr := rawToken.(string)
-	tokenExp, exists := c.Get("token_exp")
+	tokenStr, ok := rawToken.(string)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid token context"})
+		return
+	}
+
 	ttl := 24 * time.Hour
-	if exists {
-		remaining := time.Until(time.Unix(tokenExp.(int64), 0))
-		if remaining > 0 {
-			ttl = remaining
+	if tokenExp, exists := c.Get("token_exp"); exists {
+		if exp, ok := tokenExp.(int64); ok {
+			if remaining := time.Until(time.Unix(exp, 0)); remaining > 0 {
+				ttl = remaining
+			}
 		}
 	}
 
@@ -378,5 +396,5 @@ func (h *UserHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Logout berhasil. Sesi Anda telah diakhiri."})
+	c.JSON(http.StatusOK, gin.H{"message": "Logout successful. Your session has ended."})
 }

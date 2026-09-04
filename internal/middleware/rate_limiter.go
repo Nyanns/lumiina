@@ -59,8 +59,8 @@ func RateLimiterMiddleware(rdb *redis.Client, limit int, window time.Duration) g
 		if count > int64(limit) {
 			c.Header("Retry-After", strconv.FormatInt(ttl, 10))
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error":       "Terlalu banyak permintaan. Silakan coba lagi nanti.",
-				"retry_after": fmt.Sprintf("%d detik", ttl),
+				"error":       "Too many requests. Please try again later.",
+				"retry_after": fmt.Sprintf("%d seconds", ttl),
 			})
 			return
 		}
