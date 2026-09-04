@@ -12,8 +12,10 @@ import { ProfilePage } from './pages/ProfilePage';
 export default function App() {
   const location = useLocation();
 
-  // Hide global browsing Navbar on dedicated auth pages and upload studio for a focused workspace
-  const hideGlobalNavbar = ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname);
+  // Hide global browsing Navbar on dedicated auth pages, upload studio, and artwork viewer for a focused gallery workspace
+  const hideGlobalNavbar = 
+    ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname) ||
+    location.pathname.startsWith('/artworks/');
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-900">
