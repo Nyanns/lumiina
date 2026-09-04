@@ -21,7 +21,7 @@ func NewArtworkService(repo repository.ArtworkRepository, cld cloudinary.Cloudin
 	return &ArtworkService{repo: repo, cloudinary: cld}
 }
 
-func (s *ArtworkService) GetAllArtworks(limit int, offset int, search string, tag string, userID uint) ([]model.Artwork, int64, error) {
+func (s *ArtworkService) GetAllArtworks(limit int, offset int, search string, tag string, userID uint, currentUserID uint) ([]model.Artwork, int64, error) {
 	if limit <= 0 {
 		limit = 20
 	}
@@ -33,7 +33,7 @@ func (s *ArtworkService) GetAllArtworks(limit int, offset int, search string, ta
 	}
 	search = strings.TrimSpace(search)
 	tag = strings.TrimSpace(tag)
-	return s.repo.GetAllArtworks(limit, offset, search, tag, userID)
+	return s.repo.GetAllArtworks(limit, offset, search, tag, userID, currentUserID)
 }
 
 func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwork, file multipart.File, tagNames []string) error {
@@ -49,7 +49,14 @@ func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwo
 	return s.repo.Create(artwork, tagNames)
 }
 
-func (s *ArtworkService) GetArtworkByID(id uint) (*model.Artwork, error) {
+func (s *ArtworkService) GetArtworkByID(id uint, currentUserID ...uint) (*model.Artwork, error) {
+	var uid uint
+	if len(currentUserID) > 0 {
+		uid = currentUserID[0]
+	}
+	if uid > 0 {
+		return s.repo.GetByIDForUser(id, uid)
+	}
 	return s.repo.GetByID(id)
 }
 
@@ -81,3 +88,25 @@ func (s *ArtworkService) DeleteArtwork(id uint, userID uint, role string) error 
 
 	return s.repo.Delete(id)
 }
+
+func (s *ArtworkService) GetTrendingArtworks(limit int, currentUserID uint) ([]model.Artwork, error) {
+	if limit <= 0 || limit > 30 {
+		limit = 10
+	}
+	return s.repo.GetTrendingArtworks(limit, currentUserID)
+}
+
+func (s *ArtworkService) GetRecommendedArtworks(userID uint, limit int) ([]model.Artwork, error) {
+	if limit <= 0 || limit > 30 {
+		limit = 10
+	}
+	return s.repo.GetRecommendedArtworks(userID, limit)
+}
+
+func (s *ArtworkService) GetPopularTags(userID uint, limit int) ([]model.Tag, error) {
+	if limit <= 0 || limit > 30 {
+		limit = 15
+	}
+	return s.repo.GetPopularTags(userID, limit)
+}
+

@@ -1,21 +1,51 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/service"
 )
 
 type CommentHandler struct {
 	service service.CommentService
+	rdb     *redis.Client
 }
 
-func NewCommentHandler(service service.CommentService) *CommentHandler {
-	return &CommentHandler{service: service}
+func NewCommentHandler(service service.CommentService, rdb *redis.Client) *CommentHandler {
+	return &CommentHandler{service: service, rdb: rdb}
+}
+
+func (h *CommentHandler) invalidateArtworkCache() {
+	if h.rdb == nil {
+		return
+	}
+	go func() {
+		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*"}
+		for _, pattern := range patterns {
+			var batchKeys []string
+			iter := h.rdb.Scan(bgCtx, 0, pattern, 100).Iterator()
+			for iter.Next(bgCtx) {
+				batchKeys = append(batchKeys, iter.Val())
+				if len(batchKeys) >= 100 {
+					_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+					batchKeys = batchKeys[:0]
+				}
+			}
+			if len(batchKeys) > 0 {
+				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
+			}
+		}
+	}()
 }
 
 // CreateComment adds a sanitized comment to an artwork.
@@ -67,6 +97,8 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to post comment: " + err.Error()})
 		return
 	}
+
+	h.invalidateArtworkCache()
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Comment posted successfully",
@@ -152,6 +184,8 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Comment not found"})
 		return
 	}
+
+	h.invalidateArtworkCache()
 
 	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted successfully"})
 }

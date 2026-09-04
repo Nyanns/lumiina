@@ -12,6 +12,10 @@ type Artwork struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 
-	Tags     []Tag     `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
-	Comments []Comment `json:"comments,omitempty"`
+	Tags         []Tag     `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
+	Comments     []Comment `json:"comments,omitempty"`
+	CommentCount int64     `json:"comment_count" gorm:"-"`
+	LikeCount    int64     `json:"like_count" gorm:"-"`
+	IsLiked      bool      `json:"is_liked" gorm:"-"`
 }
+

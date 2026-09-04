@@ -65,7 +65,11 @@ func main() {
 
 	commentRepo := repository.NewCommentRepository(db)
 	commentService := service.NewCommentService(commentRepo)
-	commentHandler := handler.NewCommentHandler(commentService)
+	commentHandler := handler.NewCommentHandler(commentService, rdb)
+
+	likeRepo := repository.NewLikeRepository(db)
+	likeService := service.NewLikeService(likeRepo)
+	likeHandler := handler.NewLikeHandler(likeService, rdb)
 
 	r := gin.Default()
 
@@ -119,16 +123,25 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, rdb)
+	optionalAuth := middleware.OptionalAuthMiddleware(cfg.JWTSecret, rdb)
 
 	// Swagger Docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Public routes
+	// Public routes (optionalAuth extracts user_id for is_liked population)
 	artwork := v1.Group("/artworks")
 	{
-		artwork.GET("", ArtworkHandler.GetAllArtworks)
-		artwork.GET("/:id", ArtworkHandler.GetArtworkByID)
+		artwork.GET("", optionalAuth, ArtworkHandler.GetAllArtworks)
+		artwork.GET("/trending", optionalAuth, ArtworkHandler.GetTrendingArtworks)
+		artwork.GET("/recommended", optionalAuth, ArtworkHandler.GetRecommendedArtworks)
+		artwork.GET("/:id", optionalAuth, ArtworkHandler.GetArtworkByID)
 		artwork.GET("/:id/comments", commentHandler.GetCommentsByArtwork)
+	}
+
+	// Tags discovery routes
+	tags := v1.Group("/tags")
+	{
+		tags.GET("/popular", optionalAuth, ArtworkHandler.GetPopularTags)
 	}
 
 	// User & Artist discovery routes
@@ -166,6 +179,9 @@ func main() {
 		// Comment routes
 		protected.POST("/artworks/:id/comments", commentHandler.CreateComment)
 		protected.DELETE("/comments/:id", commentHandler.DeleteComment)
+
+		// Like routes
+		protected.POST("/artworks/:id/like", likeHandler.ToggleLike)
 	}
 
 	// Admin routes

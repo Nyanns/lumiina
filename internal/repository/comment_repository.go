@@ -21,7 +21,12 @@ func NewCommentRepository(db *gorm.DB) CommentRepository {
 }
 
 func (r *commentRepository) Create(comment *model.Comment) error {
-	return r.db.Create(comment).Error
+	if err := r.db.Create(comment).Error; err != nil {
+		return err
+	}
+	return r.db.Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, username")
+	}).First(comment, comment.ID).Error
 }
 
 func (r *commentRepository) GetByArtworkID(artworkID uint, limit int, offset int) ([]model.Comment, int64, error) {
