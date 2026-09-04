@@ -63,6 +63,14 @@ func (m *MockUserRepository) GetProfileByID(id uint) (*model.User, error) {
 	return nil, args.Error(1)
 }
 
+func (m *MockUserRepository) GetProfileByIdentifier(identifier string) (*model.User, error) {
+	args := m.Called(identifier)
+	if args.Get(0) != nil {
+		return args.Get(0).(*model.User), args.Error(1)
+	}
+	return nil, args.Error(1)
+}
+
 func TestRegister_Success(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockUserRepository)
@@ -125,7 +133,7 @@ func TestLogin_Unverified(t *testing.T) {
 	// Assert
 	assert.Error(t, err)
 	assert.Nil(t, user)
-	assert.Contains(t, err.Error(), "belum diverifikasi")
+	assert.Contains(t, err.Error(), "Your account is not verified yet")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -157,7 +165,7 @@ func TestLogin_NonExistentUser_ConstantTimeMitigation(t *testing.T) {
 	// Assert: Returns sanitized generic error
 	assert.Error(t, err)
 	assert.Nil(t, user)
-	assert.Equal(t, "kombinasi username/email atau password salah", err.Error())
+	assert.Equal(t, "Invalid username/email or password combination.", err.Error())
 	mockRepo.AssertExpectations(t)
 }
 

@@ -1,7 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, MessageSquare, Share2, MoreHorizontal, Check, Calendar } from 'lucide-react';
+import { 
+  Heart, 
+  MessageSquare, 
+  Share2, 
+  Bookmark, 
+  MoreHorizontal, 
+  Check, 
+  Calendar,
+  User,
+  Link as LinkIcon
+} from 'lucide-react';
 import { useLikes } from '../context/LikesContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,8 +21,33 @@ export const FeedPostCard = ({ artwork, index }) => {
   const { getLikeInfo, toggleLike } = useLikes();
   const [copied, setCopied] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  // Persistent Client Bookmark State
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('lumiina_bookmarks') || '[]');
+      return Array.isArray(saved) && saved.includes(artwork.id);
+    } catch {
+      return false;
+    }
+  });
 
   const { isLiked, count: likeCount } = getLikeInfo(artwork.id, artwork.like_count || 0);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [menuOpen]);
 
   const handleLike = () => {
     if (!isAuthenticated) {
@@ -23,11 +58,29 @@ export const FeedPostCard = ({ artwork, index }) => {
   };
 
   const handleShare = (e) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     const url = `${window.location.origin}/artworks/${artwork.id}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleBookmark = (e) => {
+    e.stopPropagation();
+    try {
+      const saved = JSON.parse(localStorage.getItem('lumiina_bookmarks') || '[]');
+      let updated;
+      if (saved.includes(artwork.id)) {
+        updated = saved.filter((id) => id !== artwork.id);
+        setIsBookmarked(false);
+      } else {
+        updated = [...saved, artwork.id];
+        setIsBookmarked(true);
+      }
+      localStorage.setItem('lumiina_bookmarks', JSON.stringify(updated));
+    } catch {
+      setIsBookmarked(!isBookmarked);
+    }
   };
 
   return (
@@ -37,10 +90,10 @@ export const FeedPostCard = ({ artwork, index }) => {
       transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.25), ease: 'easeOut' }}
       className="bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col transition-colors"
     >
-      {/* Top Header: Creator Info (Instagram & Pixiv Style) */}
+      {/* Top Header: Creator Info & More Options (World-Class Feed Standard) */}
       <div className="p-4 flex items-center justify-between">
         <Link
-          to={`/profile/${artwork.user?.id || artwork.user_id}`}
+          to={`/profile/${artwork.user?.username || artwork.user_id}`}
           className="flex items-center gap-3 group min-w-0"
         >
           <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center uppercase shrink-0 shadow-xs">
@@ -62,19 +115,45 @@ export const FeedPostCard = ({ artwork, index }) => {
           </div>
         </Link>
 
-        <div className="flex items-center gap-1 text-slate-400">
+        {/* Top-Right Context Menu (Replacing isolated share button) */}
+        <div className="relative" ref={menuRef}>
           <button
             type="button"
-            onClick={handleShare}
-            className="p-1.5 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Share artwork"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="More options"
+            aria-label="More options"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+            <MoreHorizontal className="w-4 h-4" />
           </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 mt-1.5 w-44 bg-white dark:bg-[#1f242c] rounded-xl shadow-lg border border-slate-200 dark:border-slate-700/80 py-1.5 z-30">
+              <button
+                type="button"
+                onClick={(e) => {
+                  handleShare(e);
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors cursor-pointer"
+              >
+                <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                <span>Copy artwork link</span>
+              </button>
+              <Link
+                to={`/profile/${artwork.user?.username || artwork.user_id}`}
+                onClick={() => setMenuOpen(false)}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors"
+              >
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                <span>View artist profile</span>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main Illustration Display */}
+      {/* Main Illustration Display (Clicking anywhere opens detail) */}
       <div 
         onClick={() => navigate(`/artworks/${artwork.id}`)}
         className="relative w-full bg-[#0e1115] flex items-center justify-center cursor-pointer group overflow-hidden max-h-[700px]"
@@ -93,39 +172,68 @@ export const FeedPostCard = ({ artwork, index }) => {
         />
       </div>
 
-      {/* Action Row & Metadata (Instagram & Pixiv Style) */}
+      {/* Action Row & Metadata (Instagram, Cara & Pixiv Gold Standard) */}
       <div className="p-4 sm:p-5 flex flex-col gap-3">
-        {/* Engagement Actions (Heart Like, Comment Bubble, Share) */}
+        {/* Engagement Actions: Like, Comment, Share on Left | Bookmark on Right */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 sm:gap-5">
+            {/* Heart Like */}
             <button
               type="button"
               onClick={handleLike}
-              className={`flex items-center gap-1.5 text-sm font-bold transition-all cursor-pointer ${
+              className={`group flex items-center gap-1.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 isLiked
                   ? 'text-rose-600 dark:text-rose-500'
                   : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-500'
               }`}
+              title={isLiked ? 'Unlike' : 'Like'}
             >
-              <Heart className={`w-5 h-5 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+              <Heart className={`w-5 h-5 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : 'group-hover:scale-110'}`} />
               <span>{likeCount}</span>
             </button>
 
+            {/* Comment Bubble */}
             <Link
               to={`/artworks/${artwork.id}`}
-              className="flex items-center gap-1.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+              title="View comments"
             >
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-5 h-5 transition-transform group-hover:scale-110" />
               <span>{artwork.comment_count ?? artwork.comments?.length ?? 0}</span>
             </Link>
+
+            {/* Share / Copy Link Action (Placed with engagement actions!) */}
+            <button
+              type="button"
+              onClick={handleShare}
+              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+              title="Share artwork"
+            >
+              {copied ? (
+                <Check className="w-5 h-5 text-emerald-500" />
+              ) : (
+                <Share2 className="w-5 h-5 transition-transform group-hover:scale-110" />
+              )}
+              {copied && (
+                <span className="text-xs text-emerald-500 font-semibold">Copied!</span>
+              )}
+            </button>
           </div>
 
-          <Link
-            to={`/artworks/${artwork.id}`}
-            className="text-xs font-bold text-sky-600 dark:text-sky-400 hover:underline"
+          {/* Bookmark Action on Right (Standard across Instagram, Twitter, Cara) */}
+          <button
+            type="button"
+            onClick={handleBookmark}
+            className={`p-1.5 rounded-full transition-all cursor-pointer ${
+              isBookmarked
+                ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+            title={isBookmarked ? 'Remove bookmark' : 'Bookmark artwork'}
+            aria-label="Bookmark artwork"
           >
-            View Details →
-          </Link>
+            <Bookmark className={`w-5 h-5 transition-transform active:scale-125 ${isBookmarked ? 'fill-amber-500 text-amber-500' : ''}`} />
+          </button>
         </div>
 
         {/* Title & Caption */}

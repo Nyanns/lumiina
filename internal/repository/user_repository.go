@@ -1,7 +1,11 @@
 package repository
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/sandi/lumiina/internal/model"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"gorm.io/gorm"
 )
 
@@ -13,6 +17,7 @@ type UserRepository interface {
 	UpdateUser(user *model.User) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
+	GetProfileByIdentifier(identifier string) (*model.User, error)
 }
 
 type userRepository struct {
@@ -81,4 +86,42 @@ func (r *userRepository) GetProfileByID(id uint) (*model.User, error) {
 		Preload("Artworks.Tags").
 		First(&user, id).Error
 	return &user, err
+}
+
+func (r *userRepository) GetProfileByIdentifier(identifier string) (*model.User, error) {
+	clean := strings.TrimPrefix(strings.TrimSpace(identifier), "@")
+	if clean == "" {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	query := r.db.Select("id, username, role, is_verified, created_at").
+		Preload("Artworks", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC").Limit(20)
+		}).
+		Preload("Artworks.Tags")
+
+	var user model.User
+
+	// 1. If identifier is purely digits (e.g. legacy numeric URL /profile/1), resolve by ID directly
+	if hashid.IsAllDigits(clean) {
+		if num, err := strconv.ParseUint(clean, 10, 64); err == nil && num > 0 {
+			if err := query.First(&user, uint(num)).Error; err == nil {
+				return &user, nil
+			}
+		}
+	}
+
+	// 2. Primary lookup: Vanity username (case-insensitive, e.g. /profile/Nyanns or /profile/@Nyanns)
+	if err := query.Where("LOWER(username) = LOWER(?)", clean).First(&user).Error; err == nil {
+		return &user, nil
+	}
+
+	// 3. Fallback: Obfuscated HashID slug
+	if decodedID, err := hashid.Decode(clean); err == nil && decodedID > 0 {
+		if err := query.First(&user, decodedID).Error; err == nil {
+			return &user, nil
+		}
+	}
+
+	return nil, gorm.ErrRecordNotFound
 }

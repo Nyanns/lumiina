@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
+	"github.com/sandi/lumiina/internal/pkg/cache"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/service"
 	"golang.org/x/sync/singleflight"
 )
@@ -65,11 +67,22 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	pageStr := c.DefaultQuery("page", "1")
 	search := c.Query("search")
 	tag := c.Query("tag")
-	userIDStr := c.Query("user_id")
+	userIDParam := c.Query("user_id")
+	if userIDParam == "" {
+		userIDParam = c.Query("user")
+	}
+	if userIDParam == "" {
+		userIDParam = c.Query("username")
+	}
 
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
-	userID, _ := strconv.Atoi(userIDStr)
+	var userID uint
+	if userIDParam != "" {
+		if uid, err := hashid.Decode(userIDParam); err == nil && uid > 0 {
+			userID = uid
+		}
+	}
 	currentUserID := extractCurrentUserID(c)
 
 	// Clamp pagination to prevent excessive DB memory exhaustion
@@ -150,11 +163,11 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	description := strings.TrimSpace(c.PostForm("description"))
 
 	if title == "" || len(title) > 150 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Judul karya wajib diisi dan maksimal 150 karakter"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Artwork title is required and cannot exceed 150 characters"})
 		return
 	}
 	if len(description) > 3000 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Deskripsi karya maksimal 3000 karakter"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Artwork description cannot exceed 3000 characters"})
 		return
 	}
 
@@ -195,12 +208,11 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 		return
 	}
 
-	userIDFloat, exists := c.Get("user_id")
-	if !exists {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized: user_id not found in token"})
 		return
 	}
-	userID := uint(userIDFloat.(float64))
 
 	// Parse tags
 	rawTags := c.PostFormArray("tags")
@@ -232,11 +244,12 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 
 	err = h.service.CreateArtwork(c.Request.Context(), artwork, uploadedFile, finalTags)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image: " + err.Error()})
+		slog.Error("Artwork upload failed", "error", err, "user_id", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload image. Please try again."})
 		return
 	}
 
-	h.invalidateArtworkCache(c.Request.Context())
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Artwork uploaded successfully", "data": artwork})
 }
@@ -253,9 +266,9 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 // @Router /artworks/{id} [get]
 func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := hashid.Decode(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artwork ID"})
 		return
 	}
 
@@ -284,9 +297,9 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 // @Router /artworks/{id} [put]
 func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := hashid.Decode(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artwork ID"})
 		return
 	}
 
@@ -299,16 +312,16 @@ func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 		return
 	}
 
-	userIDFloat, _ := c.Get("user_id")
-	role, _ := c.Get("role")
+	userID := extractCurrentUserID(c)
+	roleVal := c.GetString("role")
 
-	err = h.service.UpdateArtwork(uint(id), uint(userIDFloat.(float64)), role.(string), updateData.Title, updateData.Description)
+	err = h.service.UpdateArtwork(uint(id), userID, roleVal, updateData.Title, updateData.Description)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
-	h.invalidateArtworkCache(c.Request.Context())
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork updated successfully"})
 }
@@ -326,22 +339,22 @@ func (h *ArtworkHandler) UpdateArtwork(c *gin.Context) {
 // @Router /artworks/{id} [delete]
 func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
+	id, err := hashid.Decode(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artwork ID"})
 		return
 	}
 
-	userIDFloat, _ := c.Get("user_id")
-	role, _ := c.Get("role")
+	userID := extractCurrentUserID(c)
+	roleVal := c.GetString("role")
 
-	err = h.service.DeleteArtwork(uint(id), uint(userIDFloat.(float64)), role.(string))
+	err = h.service.DeleteArtwork(uint(id), userID, roleVal)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
-	h.invalidateArtworkCache(c.Request.Context())
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Artwork deleted successfully"})
 }
@@ -511,31 +524,5 @@ func (h *ArtworkHandler) GetPopularTags(c *gin.Context) {
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
-func (h *ArtworkHandler) invalidateArtworkCache(ctx context.Context) {
-	if h.rdb == nil {
-		return
-	}
 
-	// High-Throughput: Perform batch invalidation in background without blocking HTTP response
-	go func() {
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*", "tags:popular:*"}
-		for _, pattern := range patterns {
-			var batchKeys []string
-			iter := h.rdb.Scan(bgCtx, 0, pattern, 100).Iterator()
-			for iter.Next(bgCtx) {
-				batchKeys = append(batchKeys, iter.Val())
-				if len(batchKeys) >= 100 {
-					_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-					batchKeys = batchKeys[:0]
-				}
-			}
-			if len(batchKeys) > 0 {
-				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-			}
-		}
-	}()
-}
 

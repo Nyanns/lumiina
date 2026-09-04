@@ -50,30 +50,30 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
         setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
       }
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || 'Gagal mengirim komentar');
+      setErrorMsg(err.response?.data?.error || 'Failed to submit comment.');
     } finally {
       setSubmittingComment(false);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Hapus komentar ini?')) return;
+    if (!window.confirm('Delete this comment?')) return;
     try {
       await commentsAPI.delete(commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch (err) {
-      alert(err.response?.data?.error || 'Gagal menghapus komentar');
+      alert(err.response?.data?.error || 'Failed to delete comment.');
     }
   };
 
   const handleDeleteArtwork = async () => {
-    if (!window.confirm('Hapus karya ini secara permanen?')) return;
+    if (!window.confirm('Permanently delete this artwork?')) return;
     try {
       await artworksAPI.delete(artwork.id);
       onArtworkDeleted(artwork.id);
       onClose();
     } catch (err) {
-      alert(err.response?.data?.error || 'Gagal menghapus karya');
+      alert(err.response?.data?.error || 'Failed to delete artwork.');
     }
   };
 
@@ -82,8 +82,8 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/80 backdrop-blur-sm">
       <Helmet>
-        <title>{artwork.title} oleh {artwork.user?.username} - Lumiina</title>
-        <meta name="description" content={artwork.description || `Ilustrasi fan art berjudul ${artwork.title} oleh kreator komunitas Lumiina.`} />
+        <title>{artwork.title} by {artwork.user?.username || 'Artist'} — Lumiina</title>
+        <meta name="description" content={artwork.description || `Anime illustration titled ${artwork.title} on Lumiina.`} />
       </Helmet>
 
       {/* Backdrop Click Area */}
@@ -115,7 +115,7 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
         <div className="lg:flex-1 bg-black flex flex-col items-center justify-center relative overflow-hidden h-[45vh] lg:h-full">
           <img
             src={artwork.image_url}
-            alt={`Ilustrasi ${artwork.title} oleh ${artwork.user?.username}`}
+            alt={`${artwork.title} by ${artwork.user?.username}`}
             className="w-full h-full object-contain"
           />
           <a
@@ -123,9 +123,9 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
             target="_blank"
             rel="noopener noreferrer"
             className="absolute bottom-6 right-6 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs font-bold flex items-center gap-2 backdrop-blur-md transition-colors"
-            title="Resolusi Penuh"
+            title="Full Resolution"
           >
-            <ExternalLink className="w-4 h-4" /> Buka Asli
+            <ExternalLink className="w-4 h-4" /> Open Full Resolution
           </a>
         </div>
 
@@ -134,10 +134,10 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
           
           {/* Header Actions */}
           <div className="p-5 flex items-center justify-between border-b border-slate-100 shrink-0">
-            <h3 className="font-bold text-slate-800">Detail Karya</h3>
+            <h3 className="font-bold text-slate-800">Artwork Details</h3>
             <div className="flex items-center gap-2">
               {isOwnerOrAdmin && (
-                <button onClick={handleDeleteArtwork} className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors cursor-pointer" title="Hapus Karya">
+                <button onClick={handleDeleteArtwork} className="p-2 text-rose-500 hover:bg-rose-50 rounded-full transition-colors cursor-pointer" title="Delete Artwork">
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
@@ -163,7 +163,7 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
                   </h4>
                   <p className="text-xs text-slate-400 font-medium flex items-center gap-1.5 mt-0.5">
                     <Calendar className="w-3.5 h-3.5" />
-                    {artwork.created_at ? new Date(artwork.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Baru saja'}
+                    {artwork.created_at ? new Date(artwork.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Recently'}
                   </p>
                 </div>
               </div>
@@ -195,15 +195,15 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
             {/* Comments List */}
             <div className="p-6 flex flex-col gap-4 flex-1">
               <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-sky-600" /> Diskusi ({comments.length})
+                <MessageSquare className="w-4 h-4 text-sky-600" /> Discussion ({comments.length})
               </h4>
 
               {loadingComments ? (
-                <div className="text-center py-8 text-sm text-slate-400 font-medium animate-pulse">Memuat komentar...</div>
+                <div className="text-center py-8 text-sm text-slate-400 font-medium animate-pulse">Loading comments...</div>
               ) : comments.length === 0 ? (
                 <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-700">Belum ada komentar.</p>
-                  <p className="text-xs text-slate-500 mt-1">Jadilah yang pertama mengapresiasi karya ini!</p>
+                  <p className="text-sm font-bold text-slate-700">No comments yet.</p>
+                  <p className="text-xs text-slate-500 mt-1">Be the first to share your thoughts on this artwork!</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -216,15 +216,15 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-bold text-slate-900 text-sm">{c.user?.username || 'Pengguna'}</span>
+                            <span className="font-bold text-slate-900 text-sm">{c.user?.username || 'User'}</span>
                             <span className="text-[10px] font-semibold text-slate-400">
-                              {c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }) : ''}
+                              {c.created_at ? new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                             </span>
                           </div>
                           <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 p-3 rounded-2xl rounded-tl-sm border border-slate-100">{c.content}</p>
                           {canDelete && (
                             <button onClick={() => handleDeleteComment(c.id)} className="text-[11px] font-bold text-rose-500 hover:text-rose-700 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              Hapus
+                              Delete
                             </button>
                           )}
                         </div>
@@ -247,7 +247,7 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
                     type="text"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Tulis apresiasi di sini..."
+                    placeholder="Write your thoughts or appreciation..."
                     maxLength={500}
                     className="w-full pl-4 pr-12 py-3 text-sm bg-slate-100 focus:bg-white border border-transparent focus:border-sky-400 focus:ring-4 focus:ring-sky-50 rounded-full outline-none transition-all"
                   />
@@ -262,7 +262,7 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
               </form>
             ) : (
               <div className="text-center py-3 bg-slate-50 rounded-full border border-slate-200 text-sm font-semibold text-slate-500">
-                Silakan masuk untuk berkomentar.
+                Please sign in to join the discussion.
               </div>
             )}
           </div>

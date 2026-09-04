@@ -10,7 +10,6 @@ import {
   Moon, 
   Sun, 
   LayoutDashboard, 
-  Image as ImageIcon, 
   Bookmark, 
   Globe 
 } from 'lucide-react';
@@ -110,13 +109,31 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
           {/* Navigation & Action CTAs */}
           <div className="flex items-center gap-3 shrink-0">
             
-            {/* Quick Dark Mode Toggle (Desktop icon) */}
+            {/* Crafted Anti-Slop Theme Toggle (Segmented tactile control) */}
             <button
               onClick={toggleTheme}
-              className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+              className="flex items-center gap-0.5 p-1 rounded-full border border-slate-200 dark:border-slate-700/80 bg-slate-100 dark:bg-[#252a32] text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-xs"
+              title={isDark ? 'Switch to Light theme' : 'Switch to Dark theme'}
+              aria-label="Toggle color theme"
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+              <span 
+                className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${
+                  !isDark 
+                    ? 'bg-white text-amber-500 shadow-xs' 
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5" />
+              </span>
+              <span 
+                className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${
+                  isDark 
+                    ? 'bg-[#1a1e24] text-sky-400 shadow-xs' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </span>
             </button>
 
             {isAuthenticated ? (
@@ -192,7 +209,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                       {/* Primary Links */}
                       <div className="py-1.5">
                         <Link
-                          to={`/profile/${user?.id}`}
+                          to={`/profile/${user?.username || user?.id}`}
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >
@@ -200,15 +217,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                           <span>Dashboard</span>
                         </Link>
                         <Link
-                          to={`/profile/${user?.id}`}
-                          onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                        >
-                          <ImageIcon className="w-4 h-4 text-slate-400" />
-                          <span>My works</span>
-                        </Link>
-                        <Link
-                          to={`/profile/${user?.id}`}
+                          to={`/profile/${user?.username || user?.id}`}
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >
@@ -263,12 +272,18 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="px-4 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                  className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-[#0096fa] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-[#252a32] rounded-full transition-colors"
                 >
                   Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-[#0096fa] hover:bg-[#0084e0] active:scale-95 rounded-full shadow-xs transition-all"
+                >
+                  <span>Sign Up</span>
                 </Link>
               </div>
             )}

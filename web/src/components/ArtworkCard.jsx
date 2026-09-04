@@ -71,7 +71,7 @@ export const ArtworkCard = ({ artwork, index }) => {
         <div className="flex items-center justify-between gap-2 pt-0.5">
           {/* Creator Link */}
           <Link
-            to={`/profile/${artwork.user?.id || artwork.user_id}`}
+            to={`/profile/${artwork.user?.username || artwork.user_id}`}
             className="author-link flex items-center gap-1.5 hover:opacity-80 transition-opacity min-w-0"
             title={`View ${artwork.user?.username}'s profile`}
           >

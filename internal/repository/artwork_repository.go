@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/sandi/lumiina/internal/model"
@@ -176,7 +175,7 @@ func (r *artworkRepository) GetRecommendedArtworks(userID uint, limit int) ([]mo
 				Joins("JOIN artwork_tags ON artwork_tags.artwork_id = artworks.id").
 				Where("artwork_tags.tag_id IN (?)", userTagIDs).
 				Group("artworks.id").
-				Order(fmt.Sprintf("CASE WHEN artworks.user_id != %d THEN 0 ELSE 1 END, COUNT(artwork_tags.tag_id) DESC, artworks.created_at DESC", userID)).
+				Order(gorm.Expr("CASE WHEN artworks.user_id != ? THEN 0 ELSE 1 END, COUNT(artwork_tags.tag_id) DESC, artworks.created_at DESC", userID)).
 				Limit(limit).
 				Find(&artworks).Error
 
@@ -331,7 +330,7 @@ func (r *artworkRepository) GetPopularTags(userID uint, limit int) ([]model.Tag,
 	if userID > 0 {
 		query = query.Joins("JOIN artworks ON artworks.id = artwork_tags.artwork_id").
 			Group("tags.id, tags.name, tags.created_at").
-			Order(fmt.Sprintf("SUM(CASE WHEN artworks.user_id = %d THEN 1 ELSE 0 END) DESC, COUNT(artwork_tags.artwork_id) DESC, tags.name ASC", userID))
+			Order(gorm.Expr("SUM(CASE WHEN artworks.user_id = ? THEN 1 ELSE 0 END) DESC, COUNT(artwork_tags.artwork_id) DESC, tags.name ASC", userID))
 	} else {
 		query = query.Group("tags.id, tags.name, tags.created_at").
 			Order("COUNT(artwork_tags.artwork_id) DESC, tags.name ASC")

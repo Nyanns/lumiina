@@ -28,7 +28,7 @@ export const AuthModal = ({ onClose }) => {
         onClose();
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal masuk. Periksa kembali email/username dan kata sandi Anda.');
+      setError(err.response?.data?.error || 'Failed to sign in. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -37,7 +37,7 @@ export const AuthModal = ({ onClose }) => {
   const handleRegister = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Konfirmasi password tidak cocok');
+      setError('Password confirmation does not match.');
       return;
     }
 
@@ -52,13 +52,13 @@ export const AuthModal = ({ onClose }) => {
         password,
         confirm_password: confirmPassword,
       });
-      setSuccessMsg(res.data?.message || 'Registrasi berhasil! Silakan periksa email Anda untuk verifikasi.');
+      setSuccessMsg(res.data?.message || 'Registration successful! Please check your email inbox to verify your account.');
       setTab('login');
       setUsername('');
       setPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal mendaftar akun baru.');
+      setError(err.response?.data?.error || 'Failed to create a new account.');
     } finally {
       setLoading(false);
     }
@@ -72,9 +72,9 @@ export const AuthModal = ({ onClose }) => {
 
     try {
       const res = await authAPI.forgotPassword(email);
-      setSuccessMsg(res.data?.message || 'Instruksi reset password telah dikirim ke email Anda.');
+      setSuccessMsg(res.data?.message || 'Password reset instructions have been sent to your email.');
     } catch (err) {
-      setError(err.response?.data?.error || 'Gagal memproses permintaan.');
+      setError(err.response?.data?.error || 'Failed to process request.');
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ export const AuthModal = ({ onClose }) => {
               L
             </div>
             <h2 className="text-base font-bold text-slate-900">
-              {tab === 'login' ? 'Masuk ke Lumiina' : tab === 'register' ? 'Buat Akun Baru' : 'Lupa Kata Sandi'}
+              {tab === 'login' ? 'Sign In to Lumiina' : tab === 'register' ? 'Create Creator Account' : 'Password Recovery'}
             </h2>
           </div>
           <button
@@ -113,7 +113,7 @@ export const AuthModal = ({ onClose }) => {
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Masuk (Login)
+              Sign In
             </button>
             <button
               onClick={() => { setTab('register'); setError(''); }}
@@ -123,7 +123,7 @@ export const AuthModal = ({ onClose }) => {
                   : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Daftar (Register)
+              Sign Up
             </button>
           </div>
         )}
@@ -147,12 +147,12 @@ export const AuthModal = ({ onClose }) => {
           {tab === 'login' && (
             <form onSubmit={handleLogin} className="flex flex-col gap-3.5">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Email atau Username</label>
+                <label className="text-xs font-bold text-slate-700">Email or Username</label>
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="masukkan email atau username"
+                  placeholder="enter email or username"
                   required
                   className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
                 />
@@ -160,13 +160,13 @@ export const AuthModal = ({ onClose }) => {
 
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700">Kata Sandi</label>
+                  <label className="text-xs font-bold text-slate-700">Password</label>
                   <button
                     type="button"
                     onClick={() => { setTab('forgot'); setError(''); }}
                     className="text-[11px] font-semibold text-sky-600 hover:underline cursor-pointer"
                   >
-                    Lupa sandi?
+                    Forgot password?
                   </button>
                 </div>
                 <input
@@ -184,7 +184,7 @@ export const AuthModal = ({ onClose }) => {
                 disabled={loading}
                 className="w-full mt-2 py-2.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                {loading ? 'Memproses...' : 'Masuk Sekarang'}
+                {loading ? 'Authenticating...' : 'Sign In Now'}
               </button>
             </form>
           )}
@@ -192,24 +192,24 @@ export const AuthModal = ({ onClose }) => {
           {tab === 'register' && (
             <form onSubmit={handleRegister} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Username Artist *</label>
+                <label className="text-xs font-bold text-slate-700">Creator Username *</label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="contoh: kuro_illust"
+                  placeholder="e.g. kuro_illust"
                   required
                   className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Alamat Email *</label>
+                <label className="text-xs font-bold text-slate-700">Email Address *</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@domain.com"
+                  placeholder="name@domain.com"
                   required
                   className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
                 />
@@ -217,12 +217,12 @@ export const AuthModal = ({ onClose }) => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700">Kata Sandi *</label>
+                  <label className="text-xs font-bold text-slate-700">Password *</label>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 6 karakter"
+                    placeholder="Min 6 characters"
                     minLength={6}
                     required
                     className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
@@ -230,12 +230,12 @@ export const AuthModal = ({ onClose }) => {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-slate-700">Konfirmasi *</label>
+                  <label className="text-xs font-bold text-slate-700">Confirm *</label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Ketik ulang"
+                    placeholder="Retype password"
                     minLength={6}
                     required
                     className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
@@ -248,7 +248,7 @@ export const AuthModal = ({ onClose }) => {
                 disabled={loading}
                 className="w-full mt-2 py-2.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                {loading ? 'Mendaftarkan Akun...' : 'Daftar Sebagai Artist'}
+                {loading ? 'Creating Account...' : 'Sign Up as Creator'}
               </button>
             </form>
           )}
@@ -256,16 +256,16 @@ export const AuthModal = ({ onClose }) => {
           {tab === 'forgot' && (
             <form onSubmit={handleForgotPassword} className="flex flex-col gap-3">
               <p className="text-xs text-slate-500">
-                Masukkan alamat email yang terdaftar. Kami akan mengirimkan tautan reset kata sandi sementara (berlaku 15 menit).
+                Enter your registered email address. We will send you temporary password reset instructions (valid for 15 minutes).
               </p>
 
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-700">Email Akun</label>
+                <label className="text-xs font-bold text-slate-700">Account Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@domain.com"
+                  placeholder="name@domain.com"
                   required
                   className="px-3.5 py-2 text-sm bg-white rounded-xl border border-slate-200 focus:border-sky-500 focus:outline-none"
                 />
@@ -276,7 +276,7 @@ export const AuthModal = ({ onClose }) => {
                 disabled={loading}
                 className="w-full py-2.5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-sm rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                {loading ? 'Mengirim...' : 'Kirim Tautan Reset'}
+                {loading ? 'Sending...' : 'Send Reset Link'}
               </button>
 
               <button
@@ -284,7 +284,7 @@ export const AuthModal = ({ onClose }) => {
                 onClick={() => { setTab('login'); setError(''); }}
                 className="text-xs font-semibold text-slate-500 hover:text-slate-800 text-center mt-1 cursor-pointer"
               >
-                ← Kembali ke Halaman Masuk
+                ← Back to Sign In
               </button>
             </form>
           )}

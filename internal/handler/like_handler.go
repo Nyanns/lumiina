@@ -1,13 +1,12 @@
 package handler
 
 import (
-	"context"
 	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/sandi/lumiina/internal/pkg/cache"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/service"
 )
 
@@ -20,36 +19,12 @@ func NewLikeHandler(service service.LikeService, rdb *redis.Client) *LikeHandler
 	return &LikeHandler{service: service, rdb: rdb}
 }
 
-func (h *LikeHandler) invalidateArtworkCache() {
-	if h.rdb == nil {
-		return
-	}
-	go func() {
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
 
-		patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*"}
-		for _, pattern := range patterns {
-			var batchKeys []string
-			iter := h.rdb.Scan(bgCtx, 0, pattern, 100).Iterator()
-			for iter.Next(bgCtx) {
-				batchKeys = append(batchKeys, iter.Val())
-				if len(batchKeys) >= 100 {
-					_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-					batchKeys = batchKeys[:0]
-				}
-			}
-			if len(batchKeys) > 0 {
-				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-			}
-		}
-	}()
-}
 
 // ToggleLike toggles the like status of an artwork for the authenticated user
 func (h *LikeHandler) ToggleLike(c *gin.Context) {
 	artworkIDParam := c.Param("id")
-	artworkID, err := strconv.ParseUint(artworkIDParam, 10, 32)
+	artworkID, err := hashid.Decode(artworkIDParam)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -94,12 +69,12 @@ func (h *LikeHandler) ToggleLike(c *gin.Context) {
 		return
 	}
 
-	h.invalidateArtworkCache()
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data": gin.H{
-			"artwork_id": artworkID,
+			"artwork_id": hashid.Encode(artworkID),
 			"is_liked":   isLiked,
 			"like_count": newCount,
 		},

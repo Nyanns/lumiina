@@ -1,15 +1,15 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
+	"github.com/sandi/lumiina/internal/pkg/cache"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/service"
 )
 
@@ -22,31 +22,7 @@ func NewCommentHandler(service service.CommentService, rdb *redis.Client) *Comme
 	return &CommentHandler{service: service, rdb: rdb}
 }
 
-func (h *CommentHandler) invalidateArtworkCache() {
-	if h.rdb == nil {
-		return
-	}
-	go func() {
-		bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
 
-		patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*"}
-		for _, pattern := range patterns {
-			var batchKeys []string
-			iter := h.rdb.Scan(bgCtx, 0, pattern, 100).Iterator()
-			for iter.Next(bgCtx) {
-				batchKeys = append(batchKeys, iter.Val())
-				if len(batchKeys) >= 100 {
-					_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-					batchKeys = batchKeys[:0]
-				}
-			}
-			if len(batchKeys) > 0 {
-				_ = h.rdb.Del(bgCtx, batchKeys...).Err()
-			}
-		}
-	}()
-}
 
 // CreateComment adds a sanitized comment to an artwork.
 // @Summary Post a comment on artwork
@@ -64,7 +40,7 @@ func (h *CommentHandler) invalidateArtworkCache() {
 // @Router /artworks/{id}/comments [post]
 func (h *CommentHandler) CreateComment(c *gin.Context) {
 	artworkIDStr := c.Param("id")
-	artworkID, err := strconv.Atoi(artworkIDStr)
+	artworkID, err := hashid.Decode(artworkIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artwork ID"})
 		return
@@ -76,12 +52,11 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
-	userIDFloat, exists := c.Get("user_id")
-	if !exists {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	userID := uint(userIDFloat.(float64))
 
 	comment := &model.Comment{
 		Content:   req.Content,
@@ -98,7 +73,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 		return
 	}
 
-	h.invalidateArtworkCache()
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Comment posted successfully",
@@ -120,7 +95,7 @@ func (h *CommentHandler) CreateComment(c *gin.Context) {
 // @Router /artworks/{id}/comments [get]
 func (h *CommentHandler) GetCommentsByArtwork(c *gin.Context) {
 	artworkIDStr := c.Param("id")
-	artworkID, err := strconv.Atoi(artworkIDStr)
+	artworkID, err := hashid.Decode(artworkIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid artwork ID"})
 		return
@@ -131,6 +106,15 @@ func (h *CommentHandler) GetCommentsByArtwork(c *gin.Context) {
 
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 20
+	}
+	if limit > 50 {
+		limit = 50
+	}
 	offset := (page - 1) * limit
 
 	comments, total, err := h.service.GetCommentsByArtwork(uint(artworkID), limit, offset)
@@ -162,18 +146,17 @@ func (h *CommentHandler) GetCommentsByArtwork(c *gin.Context) {
 // @Router /comments/{id} [delete]
 func (h *CommentHandler) DeleteComment(c *gin.Context) {
 	commentIDStr := c.Param("id")
-	commentID, err := strconv.Atoi(commentIDStr)
+	commentID, err := hashid.Decode(commentIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid comment ID"})
 		return
 	}
 
-	userIDFloat, exists := c.Get("user_id")
-	if !exists {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	userID := uint(userIDFloat.(float64))
 	role := c.GetString("role")
 
 	if err := h.service.DeleteComment(uint(commentID), userID, role); err != nil {
@@ -185,7 +168,7 @@ func (h *CommentHandler) DeleteComment(c *gin.Context) {
 		return
 	}
 
-	h.invalidateArtworkCache()
+	cache.InvalidateArtworkCache(h.rdb)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Comment deleted successfully"})
 }

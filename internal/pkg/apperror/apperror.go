@@ -36,11 +36,11 @@ func New(code, message string, status int, err error) *AppError {
 
 // Pre-defined enterprise standard errors
 var (
-	ErrInvalidCredentials = New("AUTH_INVALID_CREDS", "kombinasi username/email atau password salah", http.StatusUnauthorized, nil)
-	ErrUserUnverified     = New("AUTH_UNVERIFIED", "akun Anda belum diverifikasi. Silakan periksa email untuk tautan aktivasi.", http.StatusForbidden, nil)
-	ErrUserAlreadyExists  = New("AUTH_USER_EXISTS", "username atau email sudah terdaftar", http.StatusConflict, nil)
-	ErrWeakPassword       = New("AUTH_WEAK_PASSWORD", "password minimal 8 karakter dan harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial", http.StatusBadRequest, nil)
-	ErrNotFound           = New("NOT_FOUND", "data yang dicari tidak ditemukan", http.StatusNotFound, nil)
-	ErrForbidden          = New("FORBIDDEN", "Anda tidak memiliki izin untuk melakukan aksi ini", http.StatusForbidden, nil)
-	ErrInternal           = New("INTERNAL_SERVER_ERROR", "terjadi kesalahan internal pada server", http.StatusInternalServerError, nil)
+	ErrInvalidCredentials = New("AUTH_INVALID_CREDS", "Invalid username/email or password combination.", http.StatusUnauthorized, nil)
+	ErrUserUnverified     = New("AUTH_UNVERIFIED", "Your account is not verified yet. Please check your email for the activation link.", http.StatusForbidden, nil)
+	ErrUserAlreadyExists  = New("AUTH_USER_EXISTS", "Username or email is already registered.", http.StatusConflict, nil)
+	ErrWeakPassword       = New("AUTH_WEAK_PASSWORD", "Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.", http.StatusBadRequest, nil)
+	ErrNotFound           = New("NOT_FOUND", "The requested resource was not found.", http.StatusNotFound, nil)
+	ErrForbidden          = New("FORBIDDEN", "You do not have permission to perform this action.", http.StatusForbidden, nil)
+	ErrInternal           = New("INTERNAL_SERVER_ERROR", "An internal server error occurred.", http.StatusInternalServerError, nil)
 )
