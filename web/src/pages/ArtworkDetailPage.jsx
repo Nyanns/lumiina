@@ -17,7 +17,10 @@ import {
   Sun,
   Moon,
   Sparkles,
-  Image as ImageIcon
+  Image as ImageIcon,
+  MoreVertical,
+  UserPlus,
+  UserCheck
 } from 'lucide-react';
 import { artworksAPI, commentsAPI, usersAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -43,11 +46,13 @@ export const ArtworkDetailPage = () => {
   const [lightboxFit, setLightboxFit] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Comment state
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentError, setCommentError] = useState('');
+  const [activeCommentMenu, setActiveCommentMenu] = useState(null);
   const commentsEndRef = useRef(null);
 
   const { isLiked, count: likeCount } = getLikeInfo(id, artwork?.like_count || 0);
@@ -67,6 +72,26 @@ export const ArtworkDetailPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxOpen, deleteModalOpen]);
 
+  const handleToggleFollow = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setIsFollowing((prev) => !prev);
+  };
+
+  // Close comment 3-dots menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('[data-comment-menu]')) {
+        setActiveCommentMenu(null);
+      }
+    };
+    if (activeCommentMenu !== null) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [activeCommentMenu]);
   useEffect(() => {
     const fetchArtworkAndComments = async () => {
       setLoading(true);
@@ -217,13 +242,14 @@ export const ArtworkDetailPage = () => {
     );
   }
 
-  const isOwnerOrAdmin =
+  const isOwner =
     user &&
     (String(user.id) === String(artwork.user_id) ||
       (user.username &&
         artwork.user?.username &&
-        user.username.toLowerCase() === artwork.user.username.toLowerCase()) ||
-      user.role === 'admin');
+        user.username.toLowerCase() === artwork.user.username.toLowerCase()));
+
+  const isOwnerOrAdmin = isOwner || user?.role === 'admin';
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-sky-100 selection:text-sky-900">
@@ -265,50 +291,33 @@ export const ArtworkDetailPage = () => {
             </div>
           </div>
 
-          {/* Top-Right: Actions (Canvas Backdrop, Share, Theme, Delete, User Profile) */}
+          {/* Top-Right: Minimal Actions (Theme, Delete, Profile) */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Backdrop Switcher (Quick Toggle) */}
-            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-              <button
-                onClick={() => setCanvasBg('oled')}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'oled' ? 'bg-slate-900 text-white shadow-xs' : 'hover:text-slate-900 dark:hover:text-white'}`}
-                title="OLED Dark Canvas"
-              >
-                Dark
-              </button>
-              <button
-                onClick={() => setCanvasBg('studio')}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'studio' ? 'bg-slate-700 text-white shadow-xs' : 'hover:text-slate-900 dark:hover:text-white'}`}
-                title="18% Neutral Studio Gray Canvas"
-              >
-                Gray
-              </button>
-              <button
-                onClick={() => setCanvasBg('clean')}
-                className={`px-2 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'clean' ? 'bg-white text-slate-900 dark:bg-slate-600 dark:text-white shadow-xs' : 'hover:text-slate-900 dark:hover:text-white'}`}
-                title="Clean Bright Canvas"
-              >
-                Light
-              </button>
-            </div>
-
-            {/* Share Button */}
-            <button
-              onClick={handleShare}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
-              title="Share illustration link"
-            >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
-              <span>{copied ? 'Link Copied!' : 'Share'}</span>
-            </button>
-
-            {/* Theme Toggle (Sun / Moon) */}
+            {/* Crafted Anti-Slop Theme Toggle (Segmented tactile control) */}
             <button
               onClick={toggleTheme}
-              className="p-1.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors cursor-pointer"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="flex items-center gap-0.5 p-1 rounded-full border border-slate-200 dark:border-slate-700/80 bg-slate-100 dark:bg-[#252a32] text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 transition-all cursor-pointer shadow-xs"
+              title={isDark ? 'Switch to Light theme' : 'Switch to Dark theme'}
+              aria-label="Toggle color theme"
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+              <span 
+                className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${
+                  !isDark 
+                    ? 'bg-white text-amber-500 shadow-xs' 
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5" />
+              </span>
+              <span 
+                className={`flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 ${
+                  isDark 
+                    ? 'bg-[#1a1e24] text-sky-400 shadow-xs' 
+                    : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </span>
             </button>
 
             {/* Delete Button (Owner/Admin Only) */}
@@ -369,6 +378,31 @@ export const ArtworkDetailPage = () => {
                 className="max-h-[85vh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"
                 title="Click to inspect in fullscreen"
               />
+
+              {/* Floating Backdrop Switcher (Top Center) */}
+              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/80 backdrop-blur-sm p-0.5 rounded-lg border border-white/10 text-[11px] font-semibold text-slate-300 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => setCanvasBg('oled')}
+                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'oled' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  title="OLED Dark Canvas"
+                >
+                  Dark
+                </button>
+                <button
+                  onClick={() => setCanvasBg('studio')}
+                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'studio' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  title="18% Neutral Studio Gray Canvas"
+                >
+                  Gray
+                </button>
+                <button
+                  onClick={() => setCanvasBg('clean')}
+                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'clean' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  title="Clean Bright Canvas"
+                >
+                  Light
+                </button>
+              </div>
 
               {/* Floating Quick Action Overlay (Bottom Right) */}
               <div className="absolute bottom-3.5 right-3.5 flex items-center gap-2">
@@ -478,12 +512,36 @@ export const ArtworkDetailPage = () => {
                   </div>
                 </Link>
 
-                <Link
-                  to={`/profile/${artwork.user?.username || artwork.user_id}`}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full transition-colors shrink-0"
-                >
-                  Profile
-                </Link>
+                {isOwner ? (
+                  <Link
+                    to={`/profile/${artwork.user?.username || artwork.user_id}`}
+                    className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-full transition-colors shrink-0"
+                  >
+                    Profile
+                  </Link>
+                ) : (
+                  <button
+                    onClick={handleToggleFollow}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full transition-all shrink-0 cursor-pointer ${
+                      isFollowing
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700'
+                        : 'bg-[#0096fa] hover:bg-[#0085df] text-white shadow-xs hover:shadow active:scale-95'
+                    }`}
+                    title={isFollowing ? 'Click to unfollow' : 'Follow this creator'}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserCheck className="w-3.5 h-3.5" />
+                        <span>Following</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span>Follow</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
 
               {/* Title & Description */}
@@ -515,39 +573,43 @@ export const ArtworkDetailPage = () => {
                 </div>
               )}
 
-              {/* Tactile Engagement Dock (Like & Comments) */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800/80">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        navigate('/login');
-                        return;
-                      }
-                      toggleLike(id, artwork.like_count || 0);
-                    }}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                      isLiked
-                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shadow-2xs'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80'
-                    }`}
-                  >
-                    <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                    <span>{isLiked ? `Liked (${likeCount})` : `Like (${likeCount})`}</span>
-                  </button>
+              {/* Tactile Engagement Dock (Like + Share) */}
+              <div className="flex items-center gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+                <button
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      navigate('/login');
+                      return;
+                    }
+                    toggleLike(id, artwork.like_count || 0);
+                  }}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isLiked
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  <span>{isLiked ? `Liked (${likeCount})` : `Like (${likeCount})`}</span>
+                </button>
 
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    <MessageSquare className="w-4 h-4 text-slate-400" />
-                    <span>{comments.length} Comments</span>
-                  </span>
-                </div>
+                <button
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
+                  title="Share illustration link"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
+                  <span>{copied ? 'Copied!' : 'Share'}</span>
+                </button>
               </div>
 
             </div>
 
             {/* Discussion & Comments Thread */}
-            <div className="bg-white dark:bg-[#141820] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs flex flex-col gap-4 transition-colors">
-              <div className="flex items-center justify-between">
+            <div className="bg-white dark:bg-[#141820] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col transition-colors">
+              
+              {/* Header */}
+              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800/80">
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-sky-500" />
                   <span>Discussion ({comments.length})</span>
@@ -555,45 +617,53 @@ export const ArtworkDetailPage = () => {
               </div>
 
               {/* Post Comment Input */}
-              {isAuthenticated ? (
-                <form onSubmit={handlePostComment} className="flex flex-col gap-2">
-                  {commentError && (
-                    <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{commentError}</p>
-                  )}
-                  <div className="relative flex items-center">
-                    <input
-                      type="text"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Write your thoughts or appreciation..."
-                      maxLength={500}
-                      className="w-full pl-4 pr-11 py-2.5 text-xs bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200/50 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!newComment.trim() || submittingComment}
-                      className="absolute right-1.5 p-1.5 bg-[#0096fa] hover:bg-[#0085df] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
-                      title="Send comment"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                    </button>
+              <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800/80">
+                {isAuthenticated ? (
+                  <form onSubmit={handlePostComment} className="flex flex-col gap-2">
+                    {commentError && (
+                      <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{commentError}</p>
+                    )}
+                    <div className="flex items-center gap-3">
+                      {/* Current user avatar (aligns with comment avatars below) */}
+                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0">
+                        {user?.username?.[0] || 'U'}
+                      </div>
+                      <div className="relative flex-1 flex items-center">
+                        <input
+                          type="text"
+                          value={newComment}
+                          onChange={(e) => setNewComment(e.target.value)}
+                          placeholder="Write your thoughts..."
+                          maxLength={500}
+                          className="w-full pl-4 pr-10 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!newComment.trim() || submittingComment}
+                          className="absolute right-1 p-1.5 bg-[#0096fa] hover:bg-[#0085df] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
+                          title="Send comment"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/80 text-center">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                      Want to join?{' '}
+                      <Link to="/login" className="font-bold text-sky-600 dark:text-sky-400 hover:underline">
+                        Sign in
+                      </Link>
+                    </p>
                   </div>
-                </form>
-              ) : (
-                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/80 text-center">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    Want to leave a comment?{' '}
-                    <Link to="/login" className="font-bold text-sky-600 dark:text-sky-400 hover:underline">
-                      Sign in to your account
-                    </Link>
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Comments Scrollable Stream */}
-              <div className="flex flex-col gap-3 max-h-[360px] overflow-y-auto pr-1">
+              {/* Comments List */}
+              <div className="flex flex-col max-h-[380px] overflow-y-auto">
                 {comments.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-slate-400">
+                  <div className="text-center py-10 text-xs text-slate-400">
                     No comments yet. Be the first to share your appreciation!
                   </div>
                 ) : (
@@ -616,42 +686,78 @@ export const ArtworkDetailPage = () => {
                           user.username.toLowerCase() === artwork.user.username.toLowerCase()));
 
                     return (
-                      <div key={c.id} className="flex items-start gap-2.5 p-2 rounded-xl group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 mt-0.5">
+                      <div key={c.id} className="flex items-start gap-3 px-5 py-2.5 group hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100/80 dark:border-slate-800/60 last:border-b-0">
+                        {/* Avatar */}
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 mt-0.5">
                           {c.user?.username?.[0] || 'U'}
                         </div>
+                        {/* Body */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {/* Top line: name + badge + date + 3-dots menu */}
+                          <div className="flex items-center justify-between gap-2 h-5">
+                            <div className="flex items-center gap-1.5 text-xs min-w-0 flex-wrap">
+                              <span className="font-bold text-slate-900 dark:text-white truncate">
                                 {c.user?.username || 'User'}
                               </span>
                               {isAuthor && (
-                                <span className="px-1.5 py-0.2 text-[9px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/60 rounded border border-sky-200 dark:border-sky-800">
+                                <span className="px-1.5 py-0.5 text-[9px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-950/60 rounded border border-sky-200 dark:border-sky-800 leading-none">
                                   Author
                                 </span>
                               )}
+                              <span className="text-slate-400 dark:text-slate-500">·</span>
+                              <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                                {c.created_at
+                                  ? new Date(c.created_at).toLocaleDateString('en-US', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                    })
+                                  : ''}
+                              </span>
                             </div>
-                            <span className="text-[10px] text-slate-400 shrink-0">
-                              {c.created_at
-                                ? new Date(c.created_at).toLocaleDateString('en-US', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                  })
-                                : ''}
-                            </span>
+
+                            {/* 3-dots Menu (YouTube style) */}
+                            {canDelete && (
+                              <div className="relative shrink-0" data-comment-menu>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveCommentMenu(activeCommentMenu === c.id ? null : c.id);
+                                  }}
+                                  className={`p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-all cursor-pointer ${
+                                    activeCommentMenu === c.id
+                                      ? 'opacity-100 bg-slate-200/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-200'
+                                      : 'opacity-0 group-hover:opacity-100'
+                                  }`}
+                                  title="Comment options"
+                                >
+                                  <MoreVertical className="w-3.5 h-3.5" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {activeCommentMenu === c.id && (
+                                  <div className="absolute right-0 top-full mt-1 w-28 bg-white dark:bg-[#1e232d] rounded-xl shadow-lg border border-slate-200 dark:border-slate-700/80 py-1 z-30 animate-in fade-in zoom-in-95 duration-150">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setActiveCommentMenu(null);
+                                        handleDeleteComment(c.id);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left transition-colors cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                      <span>Delete</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed mt-0.5 break-words">
+
+                          {/* Content */}
+                          <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-snug mt-1 break-words">
                             {c.content}
                           </p>
-                          {canDelete && (
-                            <button
-                              onClick={() => handleDeleteComment(c.id)}
-                              className="text-[10px] font-bold text-rose-500 hover:underline mt-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            >
-                              Delete
-                            </button>
-                          )}
                         </div>
                       </div>
                     );
