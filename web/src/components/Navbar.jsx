@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
 export const Navbar = ({ searchQuery, onSearchChange }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, refreshUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -164,7 +164,11 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                 {/* Pixiv-style User Profile Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    onClick={() => {
+                      const next = !profileDropdownOpen;
+                      setProfileDropdownOpen(next);
+                      if (next && refreshUser) refreshUser();
+                    }}
                     className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-sky-400 transition-all cursor-pointer"
                     aria-label="User profile menu"
                   >
@@ -211,8 +215,20 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
 
                           {/* Stats Row */}
                           <div className="flex items-center gap-4 mt-2.5 text-xs text-slate-600 dark:text-slate-400">
-                            <span><strong className="text-slate-900 dark:text-white font-bold">0</strong> Following</span>
-                            <span><strong className="text-slate-900 dark:text-white font-bold">0</strong> Followers</span>
+                            <Link
+                              to={`/profile/${user?.username || user?.id}?tab=following`}
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="hover:text-[#0096fa] transition-colors cursor-pointer"
+                            >
+                              <strong className="text-slate-900 dark:text-white font-bold">{user?.following_count ?? 0}</strong> Following
+                            </Link>
+                            <Link
+                              to={`/profile/${user?.username || user?.id}?tab=followers`}
+                              onClick={() => setProfileDropdownOpen(false)}
+                              className="hover:text-[#0096fa] transition-colors cursor-pointer"
+                            >
+                              <strong className="text-slate-900 dark:text-white font-bold">{user?.followers_count ?? 0}</strong> Followers
+                            </Link>
                           </div>
                         </div>
                       </div>

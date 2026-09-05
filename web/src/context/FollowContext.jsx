@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const FollowContext = createContext(null);
 
 export function FollowProvider({ children }) {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
   const navigate = useNavigate();
 
   // followedMap stores boolean status keyed by numeric ID and/or username
@@ -46,22 +46,40 @@ export function FollowProvider({ children }) {
   const setInitialFollowState = useCallback((targetKey, isFollowing, count) => {
     if (!targetKey) return;
     const key = String(targetKey).toLowerCase();
-    setFollowedMap((prev) => ({
-      ...prev,
-      [key]: Boolean(isFollowing),
-    }));
-    if (typeof count === 'number') {
-      setFollowersCountMap((prev) => ({
+    setFollowedMap((prev) => {
+      if (typeof prev[key] !== 'undefined') {
+        if (isFollowing && !prev[key]) {
+          return { ...prev, [key]: true };
+        }
+        return prev;
+      }
+      return {
         ...prev,
-        [key]: count,
-      }));
+        [key]: Boolean(isFollowing),
+      };
+    });
+    if (typeof count === 'number') {
+      setFollowersCountMap((prev) => {
+        if (typeof prev[key] !== 'undefined') return prev;
+        return {
+          ...prev,
+          [key]: count,
+        };
+      });
     }
   }, []);
 
   const isFollowed = useCallback(
-    (targetKey, fallback = false) => {
-      if (!targetKey) return fallback;
-      const key = String(targetKey).toLowerCase();
+    (target, fallback = false) => {
+      if (!target) return fallback;
+      if (typeof target === 'object') {
+        const uKey = target.username ? String(target.username).toLowerCase() : null;
+        const idKey = target.id ? String(target.id).toLowerCase() : null;
+        if (uKey && typeof followedMap[uKey] !== 'undefined') return followedMap[uKey];
+        if (idKey && typeof followedMap[idKey] !== 'undefined') return followedMap[idKey];
+        return target.is_following ?? fallback;
+      }
+      const key = String(target).toLowerCase();
       if (typeof followedMap[key] !== 'undefined') {
         return followedMap[key];
       }
@@ -71,9 +89,16 @@ export function FollowProvider({ children }) {
   );
 
   const getFollowerCount = useCallback(
-    (targetKey, fallback = 0) => {
-      if (!targetKey) return fallback;
-      const key = String(targetKey).toLowerCase();
+    (target, fallback = 0) => {
+      if (!target) return fallback;
+      if (typeof target === 'object') {
+        const uKey = target.username ? String(target.username).toLowerCase() : null;
+        const idKey = target.id ? String(target.id).toLowerCase() : null;
+        if (uKey && typeof followersCountMap[uKey] !== 'undefined') return followersCountMap[uKey];
+        if (idKey && typeof followersCountMap[idKey] !== 'undefined') return followersCountMap[idKey];
+        return target.followers_count ?? fallback;
+      }
+      const key = String(target).toLowerCase();
       if (typeof followersCountMap[key] !== 'undefined') {
         return followersCountMap[key];
       }
@@ -114,8 +139,8 @@ export function FollowProvider({ children }) {
       setLoadingMap((prev) => ({ ...prev, [activeKey]: true }));
 
       // Current state before toggle
-      const prevFollowed = isFollowed(activeKey, target.is_following || false);
-      const prevCount = getFollowerCount(activeKey, target.followers_count || 0);
+      const prevFollowed = isFollowed(target, target.is_following || false);
+      const prevCount = getFollowerCount(target, target.followers_count || 0);
 
       const nextFollowed = !prevFollowed;
       const nextCount = nextFollowed ? prevCount + 1 : Math.max(0, prevCount - 1);
@@ -146,11 +171,14 @@ export function FollowProvider({ children }) {
 
           // Synchronize authenticated user's following count in global state
           if (updateUser) {
-            const currentCount = typeof user.following_count === 'number' ? user.following_count : 0;
+            const currentCount = typeof user?.following_count === 'number' ? user.following_count : 0;
             const updatedFollowing = data.is_following
               ? currentCount + 1
               : Math.max(0, currentCount - 1);
             updateUser({ following_count: updatedFollowing });
+          }
+          if (refreshUser) {
+            refreshUser();
           }
 
           return { success: true, isFollowing: data.is_following, count: data.followers_count };
@@ -165,7 +193,7 @@ export function FollowProvider({ children }) {
         setLoadingMap((prev) => ({ ...prev, [activeKey]: false }));
       }
     },
-    [user, updateUser, navigate, isFollowed, getFollowerCount, loadingMap]
+    [user, updateUser, refreshUser, navigate, isFollowed, getFollowerCount, loadingMap]
   );
 
   return (

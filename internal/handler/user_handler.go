@@ -14,7 +14,6 @@ import (
 	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
-	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
@@ -156,14 +155,15 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
+	fullUser, errProfile := h.service.GetProfileByID(user.ID)
+	if errProfile == nil && fullUser != nil {
+		user = fullUser
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   tokenString,
-		"user": gin.H{
-			"id":       hashid.Encode(user.ID),
-			"username": user.Username,
-			"role":     user.Role,
-		},
+		"user":    user,
 	})
 }
 

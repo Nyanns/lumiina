@@ -38,6 +38,13 @@ export const AuthProvider = ({ children }) => {
     if (userData) {
       localStorage.setItem('lumiina_user', JSON.stringify(userData));
     }
+    // Immediately synchronize authoritative profile and counters from /users/me
+    authAPI.getMe().then((res) => {
+      if (res.data?.data) {
+        setUser(res.data.data);
+        localStorage.setItem('lumiina_user', JSON.stringify(res.data.data));
+      }
+    }).catch(() => {});
   };
 
   const logout = () => {

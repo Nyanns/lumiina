@@ -430,7 +430,7 @@ export const HomePage = () => {
                   {recommendedUsers.length > 0 ? (
                     recommendedUsers.map((u) => {
                       const userKey = u.username || String(u.id);
-                      const isFollowed = isFollowedGlobal(userKey, u.is_following || false);
+                      const isFollowed = isFollowedGlobal(u, u.is_following || false);
                       const isFollowLoading = userKey ? loadingMap[userKey.toLowerCase()] : false;
                       return (
                         <div key={u.id} className="flex items-center justify-between gap-3">
@@ -456,8 +456,13 @@ export const HomePage = () => {
                           </Link>
 
                           <button
+                            type="button"
                             disabled={isFollowLoading}
-                            onClick={() => handleFollowToggle(u)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleFollowToggle(u);
+                            }}
                             className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                               isFollowed
                                 ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400'

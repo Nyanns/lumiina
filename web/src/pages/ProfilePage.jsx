@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
   Calendar, 
@@ -55,6 +55,7 @@ const formatSocialUrl = (platform, handle) => {
 export const ProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user: currentUser, updateUser, refreshUser } = useAuth();
 
   const [profile, setProfile] = useState(null);
@@ -64,6 +65,14 @@ export const ProfilePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [followModal, setFollowModal] = useState({ isOpen: false, tab: 'followers' });
+
+  // Sync tab parameter from URL (e.g. ?tab=following or ?tab=followers from Navbar)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'followers' || tabParam === 'following') {
+      setFollowModal({ isOpen: true, tab: tabParam });
+    }
+  }, [searchParams]);
 
   const { isFollowed, getFollowerCount, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
 
