@@ -89,4 +89,24 @@ export const usersAPI = {
     api.get('/users/search', { params: { q: query, ...params } }),
 };
 
+// Follows & Relationship endpoints
+export const followsAPI = {
+  toggle: (userId) => api.post(`/users/${userId}/follow`),
+  getStatus: (userId) => api.get(`/users/${userId}/follow-status`),
+  getFollowers: (userId, pageOrParams = 1, limit = 20) => {
+    const params =
+      typeof pageOrParams === 'object' && pageOrParams !== null
+        ? pageOrParams
+        : { page: pageOrParams, limit };
+    return api.get(`/users/${userId}/followers`, { params });
+  },
+  getFollowing: (userId, pageOrParams = 1, limit = 20) => {
+    const params =
+      typeof pageOrParams === 'object' && pageOrParams !== null
+        ? pageOrParams
+        : { page: pageOrParams, limit };
+    return api.get(`/users/${userId}/following`, { params });
+  },
+};
+
 export default api;

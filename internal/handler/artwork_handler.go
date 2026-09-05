@@ -15,6 +15,7 @@ import (
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/cache"
 	"github.com/sandi/lumiina/internal/pkg/hashid"
+	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
 	"golang.org/x/sync/singleflight"
 )
@@ -23,13 +24,18 @@ type ArtworkHandler struct {
 	service      *service.ArtworkService
 	rdb          *redis.Client
 	requestGroup singleflight.Group
+	followRepo   repository.FollowRepository
 }
 
-func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client) *ArtworkHandler {
-	return &ArtworkHandler{
+func NewArtworkHandler(service *service.ArtworkService, rdb *redis.Client, followRepo ...repository.FollowRepository) *ArtworkHandler {
+	h := &ArtworkHandler{
 		service: service,
 		rdb:     rdb,
 	}
+	if len(followRepo) > 0 {
+		h.followRepo = followRepo[0]
+	}
+	return h
 }
 
 // extractCurrentUserID extracts user_id from JWT context (set by OptionalAuth or AuthGuard middleware).
@@ -277,6 +283,10 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Artwork not found"})
 		return
+	}
+
+	if currentUserID > 0 && h.followRepo != nil && artwork.UserID != currentUserID {
+		artwork.User.IsFollowing, _ = h.followRepo.IsFollowing(currentUserID, artwork.UserID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": artwork})

@@ -20,12 +20,14 @@ import {
   Image as ImageIcon,
   MoreVertical,
   UserPlus,
-  UserCheck
+  UserCheck,
+  Loader2,
 } from 'lucide-react';
 import { artworksAPI, commentsAPI, usersAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLikes } from '../context/LikesContext';
+import { useFollow } from '../context/FollowContext';
 
 export const ArtworkDetailPage = () => {
   const { id } = useParams();
@@ -33,6 +35,7 @@ export const ArtworkDetailPage = () => {
   const { user, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { getLikeInfo, toggleLike, syncFromServer } = useLikes();
+  const { isFollowed, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
 
   const [artwork, setArtwork] = useState(null);
   const [comments, setComments] = useState([]);
@@ -46,7 +49,6 @@ export const ArtworkDetailPage = () => {
   const [lightboxFit, setLightboxFit] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
 
   // Comment state
   const [newComment, setNewComment] = useState('');
@@ -72,12 +74,14 @@ export const ArtworkDetailPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxOpen, deleteModalOpen]);
 
-  const handleToggleFollow = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    setIsFollowing((prev) => !prev);
+  const authorKey = artwork?.user?.username || (artwork?.user_id ? String(artwork.user_id) : null);
+  const isFollowing = isFollowed(authorKey, artwork?.user?.is_following || false);
+  const isFollowLoading = authorKey ? loadingMap[authorKey.toLowerCase()] : false;
+
+  const handleToggleFollow = async () => {
+    if (!artwork?.user && !artwork?.user_id) return;
+    const target = artwork.user || { id: artwork.user_id };
+    await toggleFollow(target);
   };
 
   // Close comment 3-dots menu on click outside
@@ -92,6 +96,7 @@ export const ArtworkDetailPage = () => {
     }
     return () => document.removeEventListener('click', handleClickOutside);
   }, [activeCommentMenu]);
+
   useEffect(() => {
     const fetchArtworkAndComments = async () => {
       setLoading(true);
@@ -105,6 +110,11 @@ export const ArtworkDetailPage = () => {
           const art = artRes.data.data;
           setArtwork(art);
           syncFromServer(art);
+
+          if (art.user?.id) {
+            setInitialFollowState(art.user.id, art.user.is_following, art.user.followers_count);
+            setInitialFollowState(art.user.username, art.user.is_following, art.user.followers_count);
+          }
 
           // Canonical URL canonicalization: if visited with numeric/legacy id, replace URL to HashID
           if (art.id && String(id) !== String(art.id)) {
@@ -529,6 +539,7 @@ export const ArtworkDetailPage = () => {
                   </Link>
                 ) : (
                   <button
+                    disabled={isFollowLoading}
                     onClick={handleToggleFollow}
                     className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-full transition-all shrink-0 cursor-pointer ${
                       isFollowing
@@ -537,7 +548,9 @@ export const ArtworkDetailPage = () => {
                     }`}
                     title={isFollowing ? 'Click to unfollow' : 'Follow this creator'}
                   >
-                    {isFollowing ? (
+                    {isFollowLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : isFollowing ? (
                       <>
                         <UserCheck className="w-3.5 h-3.5" />
                         <span>Following</span>

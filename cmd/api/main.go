@@ -55,13 +55,16 @@ func main() {
 	mailerService := mailer.NewMailerService(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPEmail, cfg.SMTPPassword)
 
 	// Dependencies
+	followRepo := repository.NewFollowRepository(db)
+	followService := service.NewFollowService(followRepo)
+
 	artworkRepo := repository.NewArtworkRepository(db)
 	ArtworkService := service.NewArtworkService(artworkRepo, cldService)
-	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb)
+	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb, followRepo)
 
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo, rdb, mailerService, cfg.AppBaseURL, cldService)
-	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret)
+	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret, followRepo)
 
 	commentRepo := repository.NewCommentRepository(db)
 	commentService := service.NewCommentService(commentRepo)
@@ -70,6 +73,8 @@ func main() {
 	likeRepo := repository.NewLikeRepository(db)
 	likeService := service.NewLikeService(likeRepo)
 	likeHandler := handler.NewLikeHandler(likeService, rdb)
+
+	followHandler := handler.NewFollowHandler(followService, userRepo)
 
 	r := gin.Default()
 
@@ -147,8 +152,11 @@ func main() {
 	// User & Artist discovery routes
 	users := v1.Group("/users")
 	{
-		users.GET("/search", userHandler.SearchUsers)
-		users.GET("/:id", userHandler.GetUserProfile)
+		users.GET("/search", optionalAuth, userHandler.SearchUsers)
+		users.GET("/:id", optionalAuth, userHandler.GetUserProfile)
+		users.GET("/:id/follow-status", optionalAuth, followHandler.GetFollowStatus)
+		users.GET("/:id/followers", optionalAuth, followHandler.GetFollowers)
+		users.GET("/:id/following", optionalAuth, followHandler.GetFollowing)
 	}
 
 	rateLimiter := middleware.RateLimiterMiddleware(rdb, 10, 1*time.Minute)
@@ -174,6 +182,9 @@ func main() {
 		protected.PUT("/users/profile", userHandler.UpdateProfile)
 		protected.POST("/users/avatar", userHandler.UploadAvatar)
 		protected.POST("/users/banner", userHandler.UploadBanner)
+
+		// Follow actions
+		protected.POST("/users/:id/follow", followHandler.ToggleFollow)
 
 		protected.POST("/artworks", ArtworkHandler.CreateArtwork)
 		protected.PUT("/artworks/:id", ArtworkHandler.UpdateArtwork)

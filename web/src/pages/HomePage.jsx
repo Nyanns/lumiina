@@ -6,14 +6,17 @@ import { FeedPostCard } from '../components/FeedPostCard';
 import { HorizontalWorksCarousel } from '../components/HorizontalWorksCarousel';
 import { 
   Upload, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLikes } from '../context/LikesContext';
+import { useFollow } from '../context/FollowContext';
 
 export const HomePage = () => {
   const { user, isAuthenticated } = useAuth();
   const { syncFromServer } = useLikes();
+  const { isFollowed: isFollowedGlobal, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
   const [searchParams, setSearchParams] = useSearchParams();
   const querySearch = searchParams.get('search') || '';
   const queryTag = searchParams.get('tag') || '';
@@ -32,7 +35,6 @@ export const HomePage = () => {
   // Recommended users & dynamic database tags state
   const [recommendedUsers, setRecommendedUsers] = useState([]);
   const [popularTags, setPopularTags] = useState([]);
-  const [followedMap, setFollowedMap] = useState({});
 
   const LIMIT = 12;
   const loadMoreRef = useRef(null);
@@ -132,8 +134,16 @@ export const HomePage = () => {
       try {
         const res = await usersAPI.search('');
         if (res.data?.data && Array.isArray(res.data.data)) {
-          // Business Logic: Never recommend the current user to themselves
-          const otherUsers = res.data.data.filter((u) => u.id !== user.id);
+          // Business Logic: Strictly exclude the currently authenticated user
+          const otherUsers = res.data.data.filter((u) => {
+            if (user?.username && u.username?.toLowerCase() === user.username.toLowerCase()) return false;
+            if (user?.id && String(u.id) === String(user.id)) return false;
+            return true;
+          });
+          otherUsers.forEach((u) => {
+            if (u.id) setInitialFollowState(u.id, u.is_following, u.followers_count);
+            if (u.username) setInitialFollowState(u.username, u.is_following, u.followers_count);
+          });
           setRecommendedUsers(otherUsers.slice(0, 5));
         }
       } catch (err) {
@@ -141,7 +151,7 @@ export const HomePage = () => {
       }
     };
     fetchUsers();
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user?.id, user?.username, setInitialFollowState]);
 
   // Infinite Scroll Trigger (Y-Axis)
   useEffect(() => {
@@ -177,11 +187,8 @@ export const HomePage = () => {
     setSearchParams(newParams);
   };
 
-  const handleFollowToggle = (userId) => {
-    setFollowedMap((prev) => ({
-      ...prev,
-      [userId]: !prev[userId],
-    }));
+  const handleFollowToggle = async (targetUser) => {
+    await toggleFollow(targetUser);
   };
 
   let pageTitle = "Lumiina — Anime Fan Art & Illustration Platform";
@@ -422,7 +429,9 @@ export const HomePage = () => {
                 <div className="flex flex-col gap-3">
                   {recommendedUsers.length > 0 ? (
                     recommendedUsers.map((u) => {
-                      const isFollowed = followedMap[u.id];
+                      const userKey = u.username || String(u.id);
+                      const isFollowed = isFollowedGlobal(userKey, u.is_following || false);
+                      const isFollowLoading = userKey ? loadingMap[userKey.toLowerCase()] : false;
                       return (
                         <div key={u.id} className="flex items-center justify-between gap-3">
                           <Link
@@ -447,14 +456,21 @@ export const HomePage = () => {
                           </Link>
 
                           <button
-                            onClick={() => handleFollowToggle(u.id)}
-                            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                            disabled={isFollowLoading}
+                            onClick={() => handleFollowToggle(u)}
+                            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
                               isFollowed
-                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600'
+                                ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400'
                                 : 'bg-[#0096fa] hover:bg-[#0084e0] text-white shadow-xs'
                             }`}
                           >
-                            {isFollowed ? 'Following' : 'Follow'}
+                            {isFollowLoading ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : isFollowed ? (
+                              'Following'
+                            ) : (
+                              'Follow'
+                            )}
                           </button>
                         </div>
                       );

@@ -13,12 +13,17 @@ import {
   Globe,
   Camera,
   Loader2,
+  Users,
+  UserCheck,
+  UserPlus,
 } from 'lucide-react';
 import { usersAPI } from '../api/client';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useAuth } from '../context/AuthContext';
+import { useFollow } from '../context/FollowContext';
 import { EditProfileModal, SocialBrandIcon } from '../components/EditProfileModal';
 import { ImageCropModal } from '../components/ImageCropModal';
+import { FollowListModal } from '../components/FollowListModal';
 
 // Helper to format social platform destination URLs
 const formatSocialUrl = (platform, handle) => {
@@ -55,10 +60,12 @@ export const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [following, setFollowing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
+  const [followModal, setFollowModal] = useState({ isOpen: false, tab: 'followers' });
+
+  const { isFollowed, getFollowerCount, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
 
   // Direct banner & avatar upload states
   const [uploadingBanner, setUploadingBanner] = useState(false);
@@ -138,6 +145,10 @@ export const ProfilePage = () => {
       if (res.data?.data) {
         const prof = res.data.data;
         setProfile(prof);
+        if (prof.id) {
+          setInitialFollowState(prof.id, prof.is_following, prof.followers_count);
+          setInitialFollowState(prof.username, prof.is_following, prof.followers_count);
+        }
         if (prof.username && id.toLowerCase() !== prof.username.toLowerCase()) {
           navigate(`/profile/${prof.username}`, { replace: true });
         }
@@ -197,6 +208,20 @@ export const ProfilePage = () => {
     currentUser &&
     (String(currentUser.id) === String(profile.id) ||
       currentUser.username?.toLowerCase() === profile.username?.toLowerCase());
+
+  const targetKey = profile?.username || (profile?.id ? String(profile.id) : null);
+  const following = isFollowed(targetKey, profile?.is_following || false);
+  const followersCount = getFollowerCount(targetKey, profile?.followers_count || 0);
+  const followingCount = isOwnProfile
+    ? (typeof currentUser?.following_count === 'number' ? currentUser.following_count : (profile?.following_count || 0))
+    : (profile?.following_count || 0);
+  const isFollowLoading = targetKey ? loadingMap[targetKey.toLowerCase()] : false;
+
+  const handleFollowToggle = async () => {
+    if (!profile) return;
+    await toggleFollow(profile);
+  };
+
   const artworksList = profile.artworks || [];
 
   // Parse social links safely
@@ -339,14 +364,28 @@ export const ProfilePage = () => {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setFollowing(!following)}
-                  className={`px-6 py-2.5 rounded-full font-bold text-xs shadow-xs transition-all cursor-pointer ${
+                  disabled={isFollowLoading}
+                  onClick={handleFollowToggle}
+                  className={`px-6 py-2.5 rounded-full font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5 ${
                     following
-                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 group'
                       : 'bg-[#0096fa] hover:bg-[#0084e0] text-white'
                   }`}
                 >
-                  {following ? 'Following' : 'Follow'}
+                  {isFollowLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : following ? (
+                    <>
+                      <UserCheck className="w-3.5 h-3.5 group-hover:hidden" />
+                      <span className="group-hover:hidden">Following</span>
+                      <span className="hidden group-hover:inline">Unfollow</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Follow</span>
+                    </>
+                  )}
                 </button>
               )}
 
@@ -448,7 +487,32 @@ export const ProfilePage = () => {
             ) : null}
 
             {/* Metadata Badges */}
-            <div className="flex items-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <button
+                type="button"
+                onClick={() => setFollowModal({ isOpen: true, tab: 'followers' })}
+                className="flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer group"
+                title="View followers"
+              >
+                <Users className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400" />
+                <strong className="text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400">{followersCount}</strong> Followers
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFollowModal({ isOpen: true, tab: 'following' })}
+                className="flex items-center gap-1.5 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer group"
+                title="View following"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400" />
+                <strong className="text-slate-800 dark:text-slate-200 group-hover:text-sky-600 dark:group-hover:text-sky-400">{followingCount}</strong> Following
+              </button>
+
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                <strong className="text-slate-800 dark:text-slate-200">{artworksList.length}</strong> Works
+              </span>
+
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 Joined{' '}
@@ -458,11 +522,6 @@ export const ProfilePage = () => {
                       year: 'numeric',
                     })
                   : 'Recently'}
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                <strong className="text-slate-800 dark:text-slate-200">{artworksList.length}</strong> Works Uploaded
               </span>
             </div>
           </div>
@@ -537,6 +596,14 @@ export const ProfilePage = () => {
           onCropComplete={handleCropComplete}
         />
       )}
+
+      {/* Followers & Following List Modal */}
+      <FollowListModal
+        isOpen={followModal.isOpen}
+        initialTab={followModal.tab}
+        username={profile?.username}
+        onClose={() => setFollowModal({ isOpen: false, tab: 'followers' })}
+      />
     </div>
   );
 };

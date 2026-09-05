@@ -42,5 +42,6 @@ var (
 	ErrWeakPassword       = New("AUTH_WEAK_PASSWORD", "Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters.", http.StatusBadRequest, nil)
 	ErrNotFound           = New("NOT_FOUND", "The requested resource was not found.", http.StatusNotFound, nil)
 	ErrForbidden          = New("FORBIDDEN", "You do not have permission to perform this action.", http.StatusForbidden, nil)
+	ErrUnauthorized       = New("UNAUTHORIZED", "Authentication required to perform this action.", http.StatusUnauthorized, nil)
 	ErrInternal           = New("INTERNAL_SERVER_ERROR", "An internal server error occurred.", http.StatusInternalServerError, nil)
 )

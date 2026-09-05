@@ -111,6 +111,14 @@ func (r *userRepository) SearchUsers(searchQuery string, limit int, offset int) 
 	return users, total, err
 }
 
+func (r *userRepository) populateFollowCounts(user *model.User) {
+	if user == nil || user.ID == 0 {
+		return
+	}
+	_ = r.db.Table("follows").Where("following_id = ?", user.ID).Count(&user.FollowersCount)
+	_ = r.db.Table("follows").Where("follower_id = ?", user.ID).Count(&user.FollowingCount)
+}
+
 func (r *userRepository) GetProfileByID(id uint) (*model.User, error) {
 	var user model.User
 	err := r.db.Select("id, username, role, is_verified, display_name, bio, avatar_url, banner_url, location, website, social_links, created_at").
@@ -119,6 +127,9 @@ func (r *userRepository) GetProfileByID(id uint) (*model.User, error) {
 		}).
 		Preload("Artworks.Tags").
 		First(&user, id).Error
+	if err == nil {
+		r.populateFollowCounts(&user)
+	}
 	return &user, err
 }
 
@@ -140,6 +151,7 @@ func (r *userRepository) GetProfileByIdentifier(identifier string) (*model.User,
 	if hashid.IsAllDigits(clean) {
 		if num, err := strconv.ParseUint(clean, 10, 64); err == nil && num > 0 {
 			if err := query.First(&user, uint(num)).Error; err == nil {
+				r.populateFollowCounts(&user)
 				return &user, nil
 			}
 		}
@@ -147,12 +159,14 @@ func (r *userRepository) GetProfileByIdentifier(identifier string) (*model.User,
 
 	// 2. Primary lookup: Vanity username (case-insensitive, e.g. /profile/Nyanns or /profile/@Nyanns)
 	if err := query.Where("LOWER(username) = LOWER(?)", clean).First(&user).Error; err == nil {
+		r.populateFollowCounts(&user)
 		return &user, nil
 	}
 
 	// 3. Fallback: Obfuscated HashID slug
 	if decodedID, err := hashid.Decode(clean); err == nil && decodedID > 0 {
 		if err := query.First(&user, decodedID).Error; err == nil {
+			r.populateFollowCounts(&user)
 			return &user, nil
 		}
 	}

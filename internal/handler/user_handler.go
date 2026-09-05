@@ -16,16 +16,22 @@ import (
 	"github.com/sandi/lumiina/internal/pkg/apperror"
 	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/pkg/sanitize"
+	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
 )
 
 type UserHandler struct {
-	service   service.UserService
-	jwtSecret string
+	service    service.UserService
+	jwtSecret  string
+	followRepo repository.FollowRepository
 }
 
-func NewUserHandler(service service.UserService, jwtSecret string) *UserHandler {
-	return &UserHandler{service: service, jwtSecret: jwtSecret}
+func NewUserHandler(service service.UserService, jwtSecret string, followRepo ...repository.FollowRepository) *UserHandler {
+	h := &UserHandler{service: service, jwtSecret: jwtSecret}
+	if len(followRepo) > 0 {
+		h.followRepo = followRepo[0]
+	}
+	return h
 }
 
 // respondAppError writes standardized RFC 7807-inspired JSON error envelope with correlation ID
@@ -461,6 +467,20 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 		return
 	}
 
+	callerID := extractCurrentUserID(c)
+	if callerID > 0 && h.followRepo != nil && len(users) > 0 {
+		userIDs := make([]uint, len(users))
+		for i, u := range users {
+			userIDs[i] = u.ID
+		}
+		followingMap, err := h.followRepo.BatchCheckFollowing(callerID, userIDs)
+		if err == nil {
+			for i := range users {
+				users[i].IsFollowing = followingMap[users[i].ID]
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"page":  page,
 		"limit": limit,
@@ -490,6 +510,11 @@ func (h *UserHandler) GetUserProfile(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User profile not found"})
 		return
+	}
+
+	callerID := extractCurrentUserID(c)
+	if callerID > 0 && h.followRepo != nil && callerID != user.ID {
+		user.IsFollowing, _ = h.followRepo.IsFollowing(callerID, user.ID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
