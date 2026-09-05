@@ -1,10 +1,10 @@
-# 🤝 Contributing to Lumiina
+# Contributing to Lumiina
 
-Thank you for your interest in contributing to **Lumiina**! To maintain enterprise-grade reliability and high-performance backend engineering, all contributions must adhere to the standards outlined below.
+Thank you for your interest in contributing to **Lumiina**! To maintain enterprise-grade reliability and high-performance engineering, all contributions must adhere to the standards outlined below.
 
 ---
 
-## 🌿 Gitflow & Branching Strategy
+## Gitflow and Branching Strategy
 
 - **`main`**: Production releases only. Protected branch.
 - **`develop`**: Primary integration branch for active development.
@@ -19,7 +19,7 @@ Thank you for your interest in contributing to **Lumiina**! To maintain enterpri
 
 ---
 
-## 📝 Conventional Commits Standard
+## Conventional Commits Standard
 
 All commit messages must follow the [Conventional Commits v1.0.0](https://www.conventionalcommits.org/) specification:
 
@@ -42,27 +42,30 @@ All commit messages must follow the [Conventional Commits v1.0.0](https://www.co
 
 ---
 
-## 🧪 Local Testing & Verification Gates
+## Local Testing and Verification Gates
 
 Before submitting a PR, verify that all quality gates pass locally:
 
 ```bash
-# 1. Run all unit tests with race detector
+# 1. Run all backend unit tests with race detector
 make test-race
 
 # 2. Run Go vet static analysis
 go vet ./...
 
-# 3. Verify Docker build
-make docker-build
+# 3. Verify frontend production build
+cd web && npm run build && cd ..
 
-# 4. Regenerate Swagger documentation (if API routes or DTOs changed)
+# 4. Verify Docker Compose configuration
+docker compose config
+
+# 5. Regenerate Swagger documentation (if API routes or DTOs changed)
 make swagger
 ```
 
 ---
 
-## 🛡️ Security & Performance Principles
+## Security and Performance Principles
 
 1. **Defense-in-Depth**: Always validate request inputs and sanitize HTML content (`html.EscapeString`).
 2. **Timing Attacks**: Use `crypto/subtle.ConstantTimeCompare` and dummy bcrypt operations for credential checks.

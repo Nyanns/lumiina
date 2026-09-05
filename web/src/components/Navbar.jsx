@@ -66,7 +66,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
           <Link 
             to="/" 
             className="flex items-center shrink-0 py-1"
-            title="Lumiina — Anime Fan Art Platform"
+            title="Lumiina — Illustration & Creator Community"
           >
             <img 
               src="/logo_wordmark.png" 

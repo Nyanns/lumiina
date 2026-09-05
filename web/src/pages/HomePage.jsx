@@ -196,7 +196,7 @@ export const HomePage = () => {
     await toggleFollow(targetUser);
   };
 
-  let pageTitle = "Lumiina — Anime Fan Art & Illustration Platform";
+  let pageTitle = "Lumiina — Illustration & Creator Community";
   if (querySearch) pageTitle = `Search "${querySearch}" — Lumiina`;
   else if (queryTag) pageTitle = `#${queryTag} — Lumiina`;
 
@@ -204,7 +204,7 @@ export const HomePage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content="Explore high-quality anime illustrations and fan art by creators on Lumiina." />
+        <meta name="description" content="Explore high-quality illustrations and artwork by creators on Lumiina." />
       </Helmet>
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">

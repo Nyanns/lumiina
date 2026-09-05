@@ -8,38 +8,38 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Lumiina is a modern anime art sharing and discovery platform inspired by Pixiv and ArtStation. Built with a performance-focused Go backend and a responsive React frontend, Lumiina emphasizes creator ergonomics, authentic digital art curation, and defense-in-depth security.
+**Lumiina** is an illustration and creator community platform designed for digital artists, illustrators, and visual creators of all backgrounds to publish, curate, and discover original artworks. Engineered with a high-performance Go backend and a responsive React frontend, Lumiina focuses on digital artist workflows, community engagement, and defense-in-depth API security.
 
-Official mascots: **Lumi** & **Ina**.
+Official platform mascots: **Lumi** and **Ina**.
 
 ---
 
-## 🎨 Product Features & Creator Experience
+## Product Features and Creator Experience
 
 - **Curated Discovery Feeds**:
   - Dual-axis homepage featuring daily engagement carousels and an organic Masonry grid.
   - Dedicated galleries for **Trending** and **Recommended** artworks (`/trending`, `/recommended`) with real-time tag filters and 48-item batch pagination.
 - **Digital Artist Studio Tools (`/upload`)**:
-  - **Value Check Mode (明度/Grayscale)**: Instant high-contrast monochrome preview to audit light-to-shadow values before publication.
+  - **Value Check Mode (Grayscale)**: Instant high-contrast monochrome preview to audit light-to-shadow values before publication.
   - **Feed Crop Simulator**: 1:1 square preview with top, center, and bottom focal point anchoring.
   - **Harmonic Palette Extractor**: Automatic canvas extraction of 5 dominant HEX color codes from uploaded artwork.
   - **Studio Backdrop Switcher**: Preview illustrations against 18% Neutral Gray, OLED Deep Dark, Pure White, or Alpha Checkerboard.
   - **1:1 Native Resolution Inspector**: Full-screen modal for pixel-level lineart and brush texture inspection.
-- **Social & Community Interaction**:
-  - **Follow & Unfollow System**: End-to-end user subscriptions with optimistic UI updates and synchronized live follower counts.
-  - **Followers & Following Modal**: Interactive list modal on artist profiles with instant follow action toggles.
-  - **Pixiv-Style Bookmarks**: Ribbon collection system with a dedicated "Bookmarks" tab on user profiles (`/profile/:username?tab=bookmarks`).
+- **Social and Community Interaction**:
+  - **Follow and Unfollow System**: End-to-end user subscriptions with optimistic UI updates and synchronized live follower counts.
+  - **Followers and Following Modal**: Interactive list modal on artist profiles with instant follow action toggles.
+  - **Bookmarks and Collections**: Ribbon collection system with a dedicated Bookmarks tab on user profiles (`/profile/:username?tab=bookmarks`).
   - **Discussion Threads**: Compact, left-aligned comment section with author deletion controls and stored XSS sanitization.
-- **Entity Obfuscation & Vanity URLs**:
+- **Entity Obfuscation and Vanity URLs**:
   - Sequential database IDs are shielded using Sqids-based HashID strings (`/artworks/H1rJsY`).
   - Canonical creator profiles use case-insensitive vanity handles (`/profile/Nyanns`).
 - **Human-Crafted Visual Standard**:
   - Built strictly on clean slate surfaces, 1px tactile borders, and Pixiv Sky Blue (`#0096fa`) accents.
-  - Zero glassmorphism blur soup; content-first typography using **Inter** paired with native Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`).
+  - Zero glassmorphism blur; content-first typography using **Inter** paired with native Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`).
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
@@ -86,7 +86,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 - **Language**: Go 1.24+
@@ -108,7 +108,7 @@ flowchart TD
 
 ---
 
-## 🛡️ Enterprise Security & Hardening Highlights
+## Enterprise Security and Hardening
 
 1. **Timing-Attack Resilient Authentication**:
    - In non-existent user login attempts, a pre-computed bcrypt canary hash is evaluated in constant time (~70ms) to prevent username enumeration.
@@ -116,7 +116,7 @@ flowchart TD
    - Single round-trip Redis Lua script enforcing limits with standard RFC headers (`X-RateLimit-Remaining`, `Retry-After`).
 3. **Session Revocation Epoch**:
    - Password reset immediately sets a revocation timestamp in Redis. The authentication middleware rejects active JWTs issued prior to that epoch (`iat < epoch`).
-4. **Input Sanitization & Magic Bytes**:
+4. **Input Sanitization and Magic Bytes**:
    - Artwork and avatar uploads inspect file headers via `http.DetectContentType` to prevent malicious payloads masked with image extensions.
    - Text submissions undergo HTML escaping (`html.EscapeString`) to stop Stored XSS.
 5. **Fail-Fast Configuration**:
@@ -127,7 +127,7 @@ flowchart TD
 
 ---
 
-## 📚 Documentation & Engineering Runbooks
+## Documentation and Engineering Runbooks
 
 - **[Architecture Decision Records (ADRs)](docs/adr/)**: Architectural rationale, trade-offs, and design choices.
   - [ADR 0001: Record Architecture Decisions](docs/adr/0001-record-architecture-decisions.md)
@@ -141,10 +141,10 @@ flowchart TD
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 - *Optional for native development*: Go 1.24+, Node.js 20+, PostgreSQL 15+, Redis 7+
 
 ### 1. Environment Setup
@@ -164,7 +164,7 @@ Access the application:
 - **Backend API**: [http://localhost:8080](http://localhost:8080)
 - **Interactive Swagger Docs**: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 - **Prometheus Metrics**: [http://localhost:8080/metrics](http://localhost:8080/metrics)
-- **Health Probes**: [http://localhost:8080/livez](http://localhost:8080/livez) & [http://localhost:8080/readyz](http://localhost:8080/readyz)
+- **Health Probes**: [http://localhost:8080/livez](http://localhost:8080/livez) and [http://localhost:8080/readyz](http://localhost:8080/readyz)
 
 To shut down services:
 ```bash
@@ -191,11 +191,11 @@ npm run dev
 
 ---
 
-## 📡 API Reference Overview
+## API Reference Overview
 
 Base path: `/api/v1`
 
-### Authentication & Account
+### Authentication and Account
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/v1/auth/register` | Register new artist account | Public (Rate-Limited) |
@@ -205,7 +205,7 @@ Base path: `/api/v1`
 | `POST` | `/api/v1/auth/reset-password` | Reset password using token | Public (Rate-Limited) |
 | `POST` | `/api/v1/auth/logout` | Revoke session and blacklist token | Bearer |
 
-### Artworks & Discovery
+### Artworks and Discovery
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/api/v1/artworks` | Paginated feed with title search & tag filter | Public |
@@ -216,7 +216,7 @@ Base path: `/api/v1`
 | `PUT` | `/api/v1/artworks/:id` | Update title, description, or tags | Bearer (Owner) |
 | `DELETE` | `/api/v1/artworks/:id` | Delete artwork | Bearer (Owner/Admin) |
 
-### Social Engagement & Collections
+### Social Engagement and Collections
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/v1/artworks/:id/like` | Toggle artwork like | Bearer |
@@ -229,7 +229,7 @@ Base path: `/api/v1`
 | `GET` | `/api/v1/users/:id/followers` | Get followers list | Public |
 | `GET` | `/api/v1/users/:id/following` | Get creators followed by user | Public |
 
-### Discussions & Profiles
+### Discussions and Profiles
 | Method | Endpoint | Description | Access |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/api/v1/artworks/:id/comments` | List artwork comments | Public |
@@ -244,7 +244,7 @@ Base path: `/api/v1`
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 lumiina/
@@ -277,6 +277,6 @@ lumiina/
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
