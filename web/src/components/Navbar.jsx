@@ -244,7 +244,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                           <span>View Profile</span>
                         </Link>
                         <Link
-                          to={`/profile/${user?.username || user?.id}`}
+                          to={`/profile/${user?.username || user?.id}?tab=bookmarks`}
                           onClick={() => setProfileDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                         >

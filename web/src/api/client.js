@@ -109,4 +109,17 @@ export const followsAPI = {
   },
 };
 
+// Bookmarks endpoints
+export const bookmarksAPI = {
+  toggle: (artworkId) => api.post(`/artworks/${artworkId}/bookmark`),
+  getStatus: (artworkId) => api.get(`/artworks/${artworkId}/bookmark-status`),
+  getUserBookmarks: (userId, pageOrParams = 1, limit = 20) => {
+    const params =
+      typeof pageOrParams === 'object' && pageOrParams !== null
+        ? pageOrParams
+        : { page: pageOrParams, limit };
+    return api.get(`/users/${userId}/bookmarks`, { params });
+  },
+};
+
 export default api;

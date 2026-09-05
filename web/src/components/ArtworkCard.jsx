@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MessageSquare, Heart, Eye } from 'lucide-react';
+import { MessageSquare, Heart, Eye, Bookmark } from 'lucide-react';
 import { useLikes } from '../context/LikesContext';
+import { useBookmarks } from '../context/BookmarkContext';
 import { useAuth } from '../context/AuthContext';
 
 export const ArtworkCard = ({ artwork, index }) => {
@@ -10,8 +11,10 @@ export const ArtworkCard = ({ artwork, index }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { getLikeInfo, toggleLike } = useLikes();
+  const { getBookmarkInfo, toggleBookmark } = useBookmarks();
 
   const { isLiked, count: likeCount } = getLikeInfo(artwork.id, artwork.like_count || 0);
+  const { isBookmarked, count: bookmarkCount } = getBookmarkInfo(artwork.id, artwork.bookmark_count || 0);
 
   const handleCardClick = (e) => {
     if (e.target.closest('.author-link') || e.target.closest('.action-btn')) {
@@ -27,6 +30,11 @@ export const ArtworkCard = ({ artwork, index }) => {
       return;
     }
     toggleLike(artwork.id, artwork.like_count || 0);
+  };
+
+  const handleBookmarkToggle = (e) => {
+    e.stopPropagation();
+    toggleBookmark(artwork.id, artwork.bookmark_count || 0);
   };
 
   return (
@@ -99,6 +107,18 @@ export const ArtworkCard = ({ artwork, index }) => {
             >
               <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
               <span className="font-bold">{likeCount}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleBookmarkToggle}
+              className={`action-btn flex items-center gap-1 text-xs font-semibold hover:text-amber-600 transition-colors cursor-pointer p-0.5 ${
+                isBookmarked ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
+              }`}
+              title="Bookmark this artwork"
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-500 text-amber-500' : ''}`} />
+              {bookmarkCount > 0 && <span className="font-bold">{bookmarkCount}</span>}
             </button>
 
             {((artwork.comment_count || 0) > 0 || (artwork.comments && artwork.comments.length > 0)) && (

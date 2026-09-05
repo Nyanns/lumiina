@@ -110,6 +110,10 @@ func (r *artworkRepository) GetByID(id uint) (*model.Artwork, error) {
 	_ = r.db.Model(&model.Like{}).Where("artwork_id = ?", id).Count(&likeCount).Error
 	artwork.LikeCount = likeCount
 
+	var bookmarkCount int64
+	_ = r.db.Model(&model.Bookmark{}).Where("artwork_id = ?", id).Count(&bookmarkCount).Error
+	artwork.BookmarkCount = bookmarkCount
+
 	return &artwork, nil
 }
 
@@ -122,6 +126,10 @@ func (r *artworkRepository) GetByIDForUser(id uint, currentUserID uint) (*model.
 		var likedCount int64
 		_ = r.db.Model(&model.Like{}).Where("user_id = ? AND artwork_id = ?", currentUserID, id).Count(&likedCount).Error
 		artwork.IsLiked = likedCount > 0
+
+		var bookmarkedCount int64
+		_ = r.db.Model(&model.Bookmark{}).Where("user_id = ? AND artwork_id = ?", currentUserID, id).Count(&bookmarkedCount).Error
+		artwork.IsBookmarked = bookmarkedCount > 0
 	}
 	return artwork, nil
 }
@@ -291,9 +299,24 @@ func (r *artworkRepository) populateLikeCounts(artworks []model.Artwork) {
 			artworks[i].LikeCount = countMap[artworks[i].ID]
 		}
 	}
+
+	var bookmarkResults []countResult
+	if err := r.db.Table("bookmarks").
+		Select("artwork_id, COUNT(id) as count").
+		Where("artwork_id IN (?)", ids).
+		Group("artwork_id").
+		Scan(&bookmarkResults).Error; err == nil {
+		bCountMap := make(map[uint]int64, len(bookmarkResults))
+		for _, res := range bookmarkResults {
+			bCountMap[res.ArtworkID] = res.Count
+		}
+		for i := range artworks {
+			artworks[i].BookmarkCount = bCountMap[artworks[i].ID]
+		}
+	}
 }
 
-// populateUserLikeStatus batch-checks which artworks the given user has liked.
+// populateUserLikeStatus batch-checks which artworks the given user has liked and bookmarked.
 // Single IN-clause query instead of N+1 queries.
 func (r *artworkRepository) populateUserLikeStatus(artworks []model.Artwork, userID uint) {
 	if userID == 0 || len(artworks) == 0 {
@@ -316,6 +339,20 @@ func (r *artworkRepository) populateUserLikeStatus(artworks []model.Artwork, use
 		}
 		for i := range artworks {
 			artworks[i].IsLiked = likedSet[artworks[i].ID]
+		}
+	}
+
+	var bookmarkedIDs []uint
+	if err := r.db.Table("bookmarks").
+		Select("artwork_id").
+		Where("user_id = ? AND artwork_id IN (?)", userID, ids).
+		Pluck("artwork_id", &bookmarkedIDs).Error; err == nil {
+		bookmarkedSet := make(map[uint]bool, len(bookmarkedIDs))
+		for _, bid := range bookmarkedIDs {
+			bookmarkedSet[bid] = true
+		}
+		for i := range artworks {
+			artworks[i].IsBookmarked = bookmarkedSet[artworks[i].ID]
 		}
 	}
 }

@@ -16,8 +16,9 @@ import {
   Users,
   UserCheck,
   UserPlus,
+  Bookmark,
 } from 'lucide-react';
-import { usersAPI } from '../api/client';
+import { usersAPI, bookmarksAPI } from '../api/client';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useAuth } from '../context/AuthContext';
 import { useFollow } from '../context/FollowContext';
@@ -66,13 +67,42 @@ export const ProfilePage = () => {
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [followModal, setFollowModal] = useState({ isOpen: false, tab: 'followers' });
 
-  // Sync tab parameter from URL (e.g. ?tab=following or ?tab=followers from Navbar)
+  const [activeTab, setActiveTab] = useState('illustrations'); // 'illustrations' | 'bookmarks'
+  const [bookmarkedArtworks, setBookmarkedArtworks] = useState([]);
+  const [loadingBookmarks, setLoadingBookmarks] = useState(false);
+
+  // Sync tab parameter from URL (e.g. ?tab=following, ?tab=followers, or ?tab=bookmarks)
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam === 'followers' || tabParam === 'following') {
       setFollowModal({ isOpen: true, tab: tabParam });
+    } else if (tabParam === 'bookmarks') {
+      setActiveTab('bookmarks');
+    } else if (tabParam === 'illustrations') {
+      setActiveTab('illustrations');
     }
   }, [searchParams]);
+
+  // Load user bookmarks when Bookmarks tab is active
+  useEffect(() => {
+    if (activeTab === 'bookmarks' && profile) {
+      const loadBookmarks = async () => {
+        setLoadingBookmarks(true);
+        try {
+          const identifier = profile.username || profile.id;
+          const res = await bookmarksAPI.getUserBookmarks(identifier, 1, 50);
+          if (res.data?.data && Array.isArray(res.data.data)) {
+            setBookmarkedArtworks(res.data.data);
+          }
+        } catch (e) {
+          console.error('Failed to load bookmarks', e);
+        } finally {
+          setLoadingBookmarks(false);
+        }
+      };
+      loadBookmarks();
+    }
+  }, [activeTab, profile?.id, profile?.username]);
 
   const { isFollowed, getFollowerCount, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
 
@@ -538,50 +568,119 @@ export const ProfilePage = () => {
         </div>
 
         {/* Gallery Sub-Navigation Tabs (Pixiv Standard) */}
-        <div className="flex items-center gap-8 border-b border-slate-200 dark:border-slate-800 mb-6">
+        <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200 dark:border-slate-800 mb-6">
           <button
             type="button"
-            className="pb-3 text-sm font-extrabold text-[#0096fa] border-b-2 border-[#0096fa] flex items-center gap-2 cursor-pointer"
+            onClick={() => setActiveTab('illustrations')}
+            className={`pb-3 text-sm font-extrabold flex items-center gap-2 cursor-pointer transition-colors ${
+              activeTab === 'illustrations'
+                ? 'text-[#0096fa] border-b-2 border-[#0096fa]'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
           >
             <span>Illustrations</span>
-            <span className="text-xs px-2 py-0.5 bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 rounded-full font-bold">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+              activeTab === 'illustrations'
+                ? 'bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+            }`}>
               {artworksList.length}
             </span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('bookmarks')}
+            className={`pb-3 text-sm font-extrabold flex items-center gap-2 cursor-pointer transition-colors ${
+              activeTab === 'bookmarks'
+                ? 'text-[#0096fa] border-b-2 border-[#0096fa]'
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <Bookmark className="w-4 h-4" />
+            <span>Bookmarks</span>
+            {bookmarkedArtworks.length > 0 && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${
+                activeTab === 'bookmarks'
+                  ? 'bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+              }`}>
+                {bookmarkedArtworks.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Artworks Grid */}
+        {/* Artworks / Bookmarks Grid */}
         <section>
-          {artworksList.length === 0 ? (
-            <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
-                <ImageIcon className="w-6 h-6" />
+          {activeTab === 'illustrations' ? (
+            artworksList.length === 0 ? (
+              <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Artworks Published Yet</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4">
+                  {isOwnProfile
+                    ? "You haven't posted any illustrations yet. Share your artwork with the world!"
+                    : 'This artist has not posted any public illustrations yet.'}
+                </p>
+                {isOwnProfile && (
+                  <Link
+                    to="/upload"
+                    className="px-5 py-2 bg-[#0096fa] hover:bg-[#0084e0] text-white text-xs font-bold rounded-full transition-colors"
+                  >
+                    Upload Your First Artwork
+                  </Link>
+                )}
               </div>
-              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Artworks Published Yet</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4">
-                {isOwnProfile
-                  ? "You haven't posted any illustrations yet. Share your artwork with the world!"
-                  : 'This artist has not posted any public illustrations yet.'}
-              </p>
-              {isOwnProfile && (
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {artworksList.map((artwork, idx) => (
+                  <ArtworkCard
+                    key={artwork.id}
+                    artwork={{ ...artwork, user: profile }}
+                    index={idx}
+                  />
+                ))}
+              </div>
+            )
+          ) : (
+            /* Bookmarks Tab Content */
+            loadingBookmarks ? (
+              <div className="py-16 flex flex-col items-center justify-center gap-3">
+                <Loader2 className="w-7 h-7 text-sky-500 animate-spin" />
+                <p className="text-xs font-semibold text-slate-400">Loading bookmarked collection...</p>
+              </div>
+            ) : bookmarkedArtworks.length === 0 ? (
+              <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-3">
+                  <Bookmark className="w-6 h-6 fill-amber-500" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Bookmarked Artworks Yet</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4">
+                  {isOwnProfile
+                    ? 'Save your favorite artworks by clicking the bookmark icon on any illustration to build your personal collection.'
+                    : 'This user has not bookmarked any artworks yet.'}
+                </p>
                 <Link
-                  to="/upload"
+                  to="/"
                   className="px-5 py-2 bg-[#0096fa] hover:bg-[#0084e0] text-white text-xs font-bold rounded-full transition-colors"
                 >
-                  Upload Your First Artwork
+                  Explore Illustrations
                 </Link>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {artworksList.map((artwork, idx) => (
-                <ArtworkCard
-                  key={artwork.id}
-                  artwork={{ ...artwork, user: profile }}
-                  index={idx}
-                />
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {bookmarkedArtworks.map((artwork, idx) => (
+                  <ArtworkCard
+                    key={artwork.id}
+                    artwork={artwork}
+                    index={idx}
+                  />
+                ))}
+              </div>
+            )
           )}
         </section>
 

@@ -12,10 +12,12 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useLikes } from '../context/LikesContext';
 import { useFollow } from '../context/FollowContext';
+import { useBookmarks } from '../context/BookmarkContext';
 
 export const HomePage = () => {
   const { user, isAuthenticated } = useAuth();
-  const { syncFromServer } = useLikes();
+  const { syncFromServer: syncLikes } = useLikes();
+  const { syncFromServer: syncBookmarks } = useBookmarks();
   const { isFollowed: isFollowedGlobal, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
   const [searchParams, setSearchParams] = useSearchParams();
   const querySearch = searchParams.get('search') || '';
@@ -66,7 +68,8 @@ export const HomePage = () => {
           });
         }
 
-        syncFromServer(fetched);
+        syncLikes(fetched);
+        syncBookmarks(fetched);
 
         setTotal(totalCount);
         setHasMore(fetched.length === LIMIT);
@@ -93,11 +96,13 @@ export const HomePage = () => {
         ]);
         if (trendingRes.data?.data) {
           setTrendingArtworks(trendingRes.data.data);
-          syncFromServer(trendingRes.data.data);
+          syncLikes(trendingRes.data.data);
+          syncBookmarks(trendingRes.data.data);
         }
         if (recRes.data?.data) {
           setRecommendedArtworks(recRes.data.data);
-          syncFromServer(recRes.data.data);
+          syncLikes(recRes.data.data);
+          syncBookmarks(recRes.data.data);
         }
       } catch (err) {
         console.error('Failed to load carousel sections', err);

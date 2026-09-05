@@ -74,6 +74,10 @@ func main() {
 	likeService := service.NewLikeService(likeRepo)
 	likeHandler := handler.NewLikeHandler(likeService, rdb)
 
+	bookmarkRepo := repository.NewBookmarkRepository(db)
+	bookmarkService := service.NewBookmarkService(bookmarkRepo)
+	bookmarkHandler := handler.NewBookmarkHandler(bookmarkService, userRepo, likeRepo, rdb)
+
 	followHandler := handler.NewFollowHandler(followService, userRepo)
 
 	r := gin.Default()
@@ -141,6 +145,7 @@ func main() {
 		artwork.GET("/recommended", optionalAuth, ArtworkHandler.GetRecommendedArtworks)
 		artwork.GET("/:id", optionalAuth, ArtworkHandler.GetArtworkByID)
 		artwork.GET("/:id/comments", commentHandler.GetCommentsByArtwork)
+		artwork.GET("/:id/bookmark-status", optionalAuth, bookmarkHandler.GetBookmarkStatus)
 	}
 
 	// Tags discovery routes
@@ -157,6 +162,7 @@ func main() {
 		users.GET("/:id/follow-status", optionalAuth, followHandler.GetFollowStatus)
 		users.GET("/:id/followers", optionalAuth, followHandler.GetFollowers)
 		users.GET("/:id/following", optionalAuth, followHandler.GetFollowing)
+		users.GET("/:id/bookmarks", optionalAuth, bookmarkHandler.GetUserBookmarks)
 	}
 
 	rateLimiter := middleware.RateLimiterMiddleware(rdb, 10, 1*time.Minute)
@@ -196,6 +202,9 @@ func main() {
 
 		// Like routes
 		protected.POST("/artworks/:id/like", likeHandler.ToggleLike)
+
+		// Bookmark routes
+		protected.POST("/artworks/:id/bookmark", bookmarkHandler.ToggleBookmark)
 	}
 
 	// Admin routes

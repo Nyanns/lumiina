@@ -17,11 +17,13 @@ type Artwork struct {
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 
-	Tags         []Tag     `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
-	Comments     []Comment `json:"comments,omitempty"`
-	CommentCount int64     `json:"comment_count" gorm:"-"`
-	LikeCount    int64     `json:"like_count" gorm:"-"`
-	IsLiked      bool      `json:"is_liked" gorm:"-"`
+	Tags          []Tag     `json:"tags,omitempty" gorm:"many2many:artwork_tags;"`
+	Comments      []Comment `json:"comments,omitempty"`
+	CommentCount  int64     `json:"comment_count" gorm:"-"`
+	LikeCount     int64     `json:"like_count" gorm:"-"`
+	IsLiked       bool      `json:"is_liked" gorm:"-"`
+	BookmarkCount int64     `json:"bookmark_count" gorm:"-"`
+	IsBookmarked  bool      `json:"is_bookmarked" gorm:"-"`
 }
 
 // MarshalJSON serializes the Artwork model with an obfuscated string ID (e.g. "H1rJsY")

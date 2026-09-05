@@ -13,27 +13,20 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import { useLikes } from '../context/LikesContext';
+import { useBookmarks } from '../context/BookmarkContext';
 import { useAuth } from '../context/AuthContext';
 
 export const FeedPostCard = ({ artwork, index }) => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { getLikeInfo, toggleLike } = useLikes();
+  const { getBookmarkInfo, toggleBookmark } = useBookmarks();
   const [copied, setCopied] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // Persistent Client Bookmark State
-  const [isBookmarked, setIsBookmarked] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('lumiina_bookmarks') || '[]');
-      return Array.isArray(saved) && saved.includes(artwork.id);
-    } catch {
-      return false;
-    }
-  });
-
+  const { isBookmarked, count: bookmarkCount } = getBookmarkInfo(artwork.id, artwork.bookmark_count || 0);
   const { isLiked, count: likeCount } = getLikeInfo(artwork.id, artwork.like_count || 0);
 
   // Close dropdown on outside click
@@ -67,20 +60,7 @@ export const FeedPostCard = ({ artwork, index }) => {
 
   const handleBookmark = (e) => {
     e.stopPropagation();
-    try {
-      const saved = JSON.parse(localStorage.getItem('lumiina_bookmarks') || '[]');
-      let updated;
-      if (saved.includes(artwork.id)) {
-        updated = saved.filter((id) => id !== artwork.id);
-        setIsBookmarked(false);
-      } else {
-        updated = [...saved, artwork.id];
-        setIsBookmarked(true);
-      }
-      localStorage.setItem('lumiina_bookmarks', JSON.stringify(updated));
-    } catch {
-      setIsBookmarked(!isBookmarked);
-    }
+    toggleBookmark(artwork.id, artwork.bookmark_count || 0);
   };
 
   return (
@@ -228,7 +208,7 @@ export const FeedPostCard = ({ artwork, index }) => {
           <button
             type="button"
             onClick={handleBookmark}
-            className={`p-1.5 rounded-full transition-all cursor-pointer ${
+            className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1 ${
               isBookmarked
                 ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -237,6 +217,9 @@ export const FeedPostCard = ({ artwork, index }) => {
             aria-label="Bookmark artwork"
           >
             <Bookmark className={`w-5 h-5 transition-transform active:scale-125 ${isBookmarked ? 'fill-amber-500 text-amber-500' : ''}`} />
+            {bookmarkCount > 0 && (
+              <span className="text-xs font-bold tabular-nums pr-0.5">{bookmarkCount}</span>
+            )}
           </button>
         </div>
 
