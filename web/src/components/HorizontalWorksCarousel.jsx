@@ -91,15 +91,26 @@ export const HorizontalWorksCarousel = ({
         >
         {artworks.map((art) => {
           const { isLiked, count: likeCount } = getLikeInfo(art.id, art.like_count || 0);
+          const tagList = Array.isArray(art.tags)
+            ? art.tags.map((t) => (typeof t === 'string' ? t : t?.name)).filter(Boolean)
+            : [];
+          const tagsPrefix = tagList.slice(0, 3).join(', ');
+          const artistName = art.user?.display_name || art.user?.username || 'Creator';
+          const artworkTooltip = tagsPrefix
+            ? `${tagsPrefix} / ${art.title} - ${artistName}`
+            : `${art.title} - ${artistName}`;
 
           return (
             <div
               key={art.id}
-              onClick={() => navigate(`/artworks/${art.id}`)}
-              className="flex flex-col gap-2 shrink-0 w-36 sm:w-44 group cursor-pointer"
+              className="flex flex-col gap-2 shrink-0 w-36 sm:w-44 group"
             >
               {/* Square Image with docked like button */}
-              <div className="relative w-36 sm:w-44 h-36 sm:h-44 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200">
+              <Link
+                to={`/artworks/${art.id}`}
+                title={artworkTooltip}
+                className="relative w-36 sm:w-44 h-36 sm:h-44 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs group-hover:shadow-md group-hover:-translate-y-0.5 transition-all duration-200 block cursor-pointer"
+              >
                 <img
                   src={art.image_url}
                   alt={art.title}
@@ -111,6 +122,7 @@ export const HorizontalWorksCarousel = ({
                 <button
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     if (!isAuthenticated) {
                       navigate('/login');
@@ -127,24 +139,36 @@ export const HorizontalWorksCarousel = ({
                 >
                   <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-rose-500' : ''}`} />
                 </button>
-              </div>
+              </Link>
 
               {/* Title & Creator under thumbnail */}
               <div className="flex flex-col min-w-0">
-                <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                  {art.title}
-                </h3>
+                <Link
+                  to={`/artworks/${art.id}`}
+                  title={artworkTooltip}
+                  className="block group/title"
+                >
+                  <h3 className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate group-hover/title:text-sky-600 dark:group-hover/title:text-sky-400 transition-colors">
+                    {art.title}
+                  </h3>
+                </Link>
                 <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-                  <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center uppercase shrink-0 overflow-hidden">
-                    {art.user?.avatar_url ? (
-                      <img src={art.user.avatar_url} alt={art.user?.username} className="w-full h-full object-cover" />
-                    ) : (
-                      art.user?.username?.[0] || 'A'
-                    )}
-                  </div>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                    {art.user?.username || 'Artist'}
-                  </span>
+                  <Link
+                    to={`/profile/${art.user?.username || art.user_id}`}
+                    className="flex items-center gap-1.5 hover:opacity-80 transition-opacity min-w-0"
+                    title={`View ${art.user?.username}'s profile`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center uppercase shrink-0 overflow-hidden">
+                      {art.user?.avatar_url ? (
+                        <img src={art.user.avatar_url} alt={art.user?.username} className="w-full h-full object-cover" />
+                      ) : (
+                        art.user?.username?.[0] || 'A'
+                      )}
+                    </div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {art.user?.username || 'Artist'}
+                    </span>
+                  </Link>
                 </div>
               </div>
             </div>

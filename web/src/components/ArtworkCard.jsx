@@ -37,16 +37,28 @@ export const ArtworkCard = ({ artwork, index }) => {
     toggleBookmark(artwork.id, artwork.bookmark_count || 0);
   };
 
+  const tagList = Array.isArray(artwork.tags)
+    ? artwork.tags.map((t) => (typeof t === 'string' ? t : t?.name)).filter(Boolean)
+    : [];
+  const tagsPrefix = tagList.slice(0, 3).join(', ');
+  const artistName = artwork.user?.display_name || artwork.user?.username || 'Creator';
+  const artworkTooltip = tagsPrefix
+    ? `${tagsPrefix} / ${artwork.title} - ${artistName}`
+    : `${artwork.title} - ${artistName}`;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.25), ease: 'easeOut' }}
-      onClick={handleCardClick}
-      className="group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col hover:-translate-y-1"
+      className="group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all duration-200 flex flex-col hover:-translate-y-1"
     >
-      {/* Artwork Image */}
-      <div className="relative w-full bg-slate-100 dark:bg-[#121519] overflow-hidden">
+      {/* Artwork Image Link */}
+      <Link
+        to={`/artworks/${artwork.id}`}
+        title={artworkTooltip}
+        className="relative w-full bg-slate-100 dark:bg-[#121519] overflow-hidden block cursor-pointer"
+      >
         {!isLoaded && (
           <div className="w-full aspect-[3/4] bg-slate-200 dark:bg-slate-800 animate-pulse" />
         )}
@@ -67,14 +79,20 @@ export const ArtworkCard = ({ artwork, index }) => {
             <Eye className="w-3 h-3" /> View
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* Under-Thumbnail Metadata (Pixiv & YouTube style) */}
       <div className="p-3.5 flex flex-col gap-2">
-        {/* Title */}
-        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm leading-snug line-clamp-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-          {artwork.title}
-        </h3>
+        {/* Title Link */}
+        <Link
+          to={`/artworks/${artwork.id}`}
+          title={artworkTooltip}
+          className="block group/title"
+        >
+          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm leading-snug line-clamp-1 group-hover/title:text-sky-600 dark:group-hover/title:text-sky-400 transition-colors">
+            {artwork.title}
+          </h3>
+        </Link>
 
         {/* Creator Row & Engagement Stats */}
         <div className="flex items-center justify-between gap-2 pt-0.5">

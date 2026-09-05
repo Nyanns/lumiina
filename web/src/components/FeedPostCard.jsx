@@ -29,6 +29,15 @@ export const FeedPostCard = ({ artwork, index }) => {
   const { isBookmarked, count: bookmarkCount } = getBookmarkInfo(artwork.id, artwork.bookmark_count || 0);
   const { isLiked, count: likeCount } = getLikeInfo(artwork.id, artwork.like_count || 0);
 
+  const tagList = Array.isArray(artwork.tags)
+    ? artwork.tags.map((t) => (typeof t === 'string' ? t : t?.name)).filter(Boolean)
+    : [];
+  const tagsPrefix = tagList.slice(0, 3).join(', ');
+  const artistName = artwork.user?.display_name || artwork.user?.username || 'Creator';
+  const artworkTooltip = tagsPrefix
+    ? `${tagsPrefix} / ${artwork.title} - ${artistName}`
+    : `${artwork.title} - ${artistName}`;
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -137,10 +146,11 @@ export const FeedPostCard = ({ artwork, index }) => {
         </div>
       </div>
 
-      {/* Main Illustration Display (Clicking anywhere opens detail) */}
-      <div 
-        onClick={() => navigate(`/artworks/${artwork.id}`)}
-        className="relative w-full bg-[#0e1115] flex items-center justify-center cursor-pointer group overflow-hidden max-h-[700px]"
+      {/* Main Illustration Display */}
+      <Link 
+        to={`/artworks/${artwork.id}`}
+        title={artworkTooltip}
+        className="relative w-full bg-[#0e1115] flex items-center justify-center cursor-pointer group overflow-hidden max-h-[700px] block"
       >
         {!imageLoaded && (
           <div className="w-full aspect-[4/5] bg-slate-200 dark:bg-slate-800 animate-pulse" />
@@ -154,7 +164,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             imageLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
           }`}
         />
-      </div>
+      </Link>
 
       {/* Action Row & Metadata (Instagram, Cara & Pixiv Gold Standard) */}
       <div className="p-4 sm:p-5 flex flex-col gap-3">
@@ -225,12 +235,15 @@ export const FeedPostCard = ({ artwork, index }) => {
 
         {/* Title & Caption */}
         <div className="flex flex-col gap-1">
-          <h4 
-            onClick={() => navigate(`/artworks/${artwork.id}`)}
-            className="font-extrabold text-base text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+          <Link
+            to={`/artworks/${artwork.id}`}
+            title={artworkTooltip}
+            className="block group/title"
           >
-            {artwork.title}
-          </h4>
+            <h4 className="font-extrabold text-base text-slate-900 dark:text-white group-hover/title:text-sky-600 dark:group-hover/title:text-sky-400 transition-colors">
+              {artwork.title}
+            </h4>
+          </Link>
           {artwork.description && (
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
               {artwork.description}

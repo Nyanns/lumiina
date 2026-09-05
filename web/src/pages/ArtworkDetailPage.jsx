@@ -261,11 +261,40 @@ export const ArtworkDetailPage = () => {
 
   const isOwnerOrAdmin = isOwner || user?.role === 'admin';
 
+  const tagList = Array.isArray(artwork.tags)
+    ? artwork.tags.map((t) => (typeof t === 'string' ? t : t?.name)).filter(Boolean)
+    : [];
+  const tagsPrefix = tagList.slice(0, 3).join(', ');
+  const artistName = artwork.user?.display_name || artwork.user?.username || 'Creator';
+  const pageTitle = tagsPrefix
+    ? `${tagsPrefix} / ${artwork.title} - ${artistName} — Lumiina`
+    : `${artwork.title} - ${artistName} — Lumiina`;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-sky-100 selection:text-sky-900">
       <Helmet>
-        <title>{artwork.title} by {artwork.user?.username || 'Artist'} — Lumiina</title>
-        <meta name="description" content={artwork.description || `Anime illustration titled "${artwork.title}" by ${artwork.user?.username} on Lumiina.`} />
+        <title>{pageTitle}</title>
+        <meta
+          name="description"
+          content={
+            artwork.description ||
+            `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.${tagList.length > 0 ? ` Tags: #${tagList.join(' #')}` : ''}`
+          }
+        />
+        <meta property="og:title" content={pageTitle} />
+        <meta
+          property="og:description"
+          content={artwork.description || `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.`}
+        />
+        <meta property="og:image" content={artwork.image_url} />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta
+          name="twitter:description"
+          content={artwork.description || `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.`}
+        />
+        <meta name="twitter:image" content={artwork.image_url} />
       </Helmet>
 
       {/* ========================================================================= */}
