@@ -249,6 +249,7 @@ export const HomePage = () => {
                 {trendingArtworks.length > 0 && (
                   <HorizontalWorksCarousel
                     title="Trending Artwork"
+                    showAllTo="/trending"
                     artworks={trendingArtworks}
                   />
                 )}
@@ -262,6 +263,7 @@ export const HomePage = () => {
                 {recommendedArtworks.length > 0 && (
                   <HorizontalWorksCarousel
                     title="Recommended Artwork"
+                    showAllTo="/recommended"
                     artworks={recommendedArtworks}
                   />
                 )}

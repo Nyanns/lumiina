@@ -14,12 +14,12 @@ import {
   Sun,
   Moon
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export function LegalInfoPage({ defaultTab }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Determine active tab from path or prop
   const getTabFromPath = () => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { bookmarksAPI } from '../api/client';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +27,7 @@ export const BookmarkProvider = ({ children }) => {
   }, [isAuthenticated, user?.id]);
 
   // Sync artwork data from API response into bookmarksMap
-  const syncFromServer = (artworks) => {
+  const syncFromServer = useCallback((artworks) => {
     if (!artworks) return;
     const list = Array.isArray(artworks) ? artworks : [artworks];
     if (list.length === 0) return;
@@ -44,7 +44,7 @@ export const BookmarkProvider = ({ children }) => {
       }
       return { ...prev, ...updates };
     });
-  };
+  }, [isAuthenticated]);
 
   const getBookmarkInfo = (artworkId, defaultCount = 0) => {
     const key = String(artworkId);

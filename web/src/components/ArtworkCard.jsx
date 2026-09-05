@@ -55,6 +55,7 @@ export const ArtworkCard = ({ artwork, index }) => {
           alt={artwork.title}
           loading="lazy"
           onLoad={() => setIsLoaded(true)}
+          onError={() => setIsLoaded(true)}
           className={`w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-out ${
             isLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'
           }`}

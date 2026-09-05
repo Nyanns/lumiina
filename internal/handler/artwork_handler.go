@@ -371,10 +371,10 @@ func (h *ArtworkHandler) DeleteArtwork(c *gin.Context) {
 
 // GetTrendingArtworks fetches popular artworks ranked by engagement and recency.
 func (h *ArtworkHandler) GetTrendingArtworks(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "24")
 	limit, _ := strconv.Atoi(limitStr)
-	if limit < 1 || limit > 30 {
-		limit = 10
+	if limit < 1 || limit > 50 {
+		limit = 24
 	}
 
 	currentUserID := extractCurrentUserID(c)
@@ -421,10 +421,10 @@ func (h *ArtworkHandler) GetTrendingArtworks(c *gin.Context) {
 
 // GetRecommendedArtworks fetches tailored artworks based on user tags and diversity discovery.
 func (h *ArtworkHandler) GetRecommendedArtworks(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "10")
+	limitStr := c.DefaultQuery("limit", "24")
 	limit, _ := strconv.Atoi(limitStr)
-	if limit < 1 || limit > 30 {
-		limit = 10
+	if limit < 1 || limit > 50 {
+		limit = 24
 	}
 
 	currentUserID := extractCurrentUserID(c)

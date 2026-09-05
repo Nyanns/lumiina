@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { likesAPI } from '../api/client';
 
@@ -24,7 +24,7 @@ export const LikesProvider = ({ children }) => {
   }, [isAuthenticated, user?.id]);
 
   // Sync artwork data from API response into likesMap
-  const syncFromServer = (artworks) => {
+  const syncFromServer = useCallback((artworks) => {
     if (!artworks) return;
     const list = Array.isArray(artworks) ? artworks : [artworks];
     if (list.length === 0) return;
@@ -41,7 +41,7 @@ export const LikesProvider = ({ children }) => {
       }
       return { ...prev, ...updates };
     });
-  };
+  }, [isAuthenticated]);
 
   const getLikeInfo = (artworkId, defaultCount = 0) => {
     const key = String(artworkId);

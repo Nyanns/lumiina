@@ -47,6 +47,19 @@ services:
     networks:
       - lumiina_network
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: lumiina_web
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    networks:
+      - lumiina_network
+
 networks:
   lumiina_network:
     driver: bridge

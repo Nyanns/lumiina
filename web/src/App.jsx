@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { HomePage } from './pages/HomePage';
+import { ArtworksDiscoveryPage } from './pages/ArtworksDiscoveryPage';
 import { ArtworkDetailPage } from './pages/ArtworkDetailPage';
 import { UploadPage } from './pages/UploadPage';
 import { LoginPage } from './pages/LoginPage';
@@ -29,7 +30,11 @@ export default function App() {
           <div className="flex-1 flex flex-col">
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/explore" element={<HomePage />} />
+              <Route path="/explore" element={<ArtworksDiscoveryPage />} />
+              <Route path="/trending" element={<ArtworksDiscoveryPage defaultTab="trending" />} />
+              <Route path="/recommended" element={<ArtworksDiscoveryPage defaultTab="recommended" />} />
+              <Route path="/artworks/trending" element={<ArtworksDiscoveryPage defaultTab="trending" />} />
+              <Route path="/artworks/recommended" element={<ArtworksDiscoveryPage defaultTab="recommended" />} />
               <Route path="/artworks/:id" element={<ArtworkDetailPage />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/login" element={<LoginPage />} />
