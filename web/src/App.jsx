@@ -8,13 +8,14 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { LegalInfoPage } from './pages/LegalInfoPage';
 
 export default function App() {
   const location = useLocation();
 
-  // Hide global browsing Navbar on dedicated auth pages, upload studio, and artwork viewer for a focused gallery workspace
+  // Hide global browsing Navbar on dedicated auth pages, upload studio, legal docs, and artwork viewer for a focused workspace
   const hideGlobalNavbar = 
-    ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname) ||
+    ['/login', '/register', '/forgot-password', '/upload', '/about', '/guidelines', '/terms', '/privacy'].includes(location.pathname) ||
     location.pathname.startsWith('/artworks/');
 
   return (
@@ -31,6 +32,10 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/profile/:id" element={<ProfilePage />} />
+          <Route path="/about" element={<LegalInfoPage defaultTab="about" />} />
+          <Route path="/guidelines" element={<LegalInfoPage defaultTab="guidelines" />} />
+          <Route path="/terms" element={<LegalInfoPage defaultTab="terms" />} />
+          <Route path="/privacy" element={<LegalInfoPage defaultTab="privacy" />} />
           {/* Fallback route */}
           <Route path="*" element={<HomePage />} />
         </Routes>

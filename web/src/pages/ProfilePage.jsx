@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
@@ -6,25 +6,156 @@ import {
   BadgeCheck, 
   Image as ImageIcon, 
   ArrowLeft, 
-  Sparkles,
-  Upload,
   Share2,
-  Check
+  Check,
+  Edit3,
+  MapPin,
+  Globe,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { usersAPI } from '../api/client';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useAuth } from '../context/AuthContext';
+import { EditProfileModal, SocialBrandIcon } from '../components/EditProfileModal';
+import { ImageCropModal } from '../components/ImageCropModal';
+
+// Helper to format social platform destination URLs
+const formatSocialUrl = (platform, handle) => {
+  if (!handle) return '#';
+  if (handle.startsWith('http://') || handle.startsWith('https://')) {
+    return handle;
+  }
+  const clean = handle.replace(/^@/, '').trim();
+  const p = platform?.toLowerCase();
+  switch (p) {
+    case 'x':
+    case 'twitter':
+      return `https://x.com/${clean}`;
+    case 'instagram':
+      return `https://instagram.com/${clean}`;
+    case 'pawoo':
+      return `https://pawoo.net/@${clean}`;
+    case 'github':
+      return `https://github.com/${clean}`;
+    case 'youtube':
+      return `https://youtube.com/@${clean}`;
+    case 'deviantart':
+      return `https://deviantart.com/${clean}`;
+    default:
+      return `https://${clean}`;
+  }
+};
 
 export const ProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateUser, refreshUser } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [following, setFollowing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
+
+  // Direct banner & avatar upload states
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [cropModalData, setCropModalData] = useState(null); // { file, type: 'avatar' | 'banner' }
+
+  const bannerInputRef = useRef(null);
+  const avatarInputRef = useRef(null);
+
+  const handleDirectBannerSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Banner image must not exceed 10MB.');
+      return;
+    }
+    setCropModalData({ file, type: 'banner' });
+    if (bannerInputRef.current) bannerInputRef.current.value = '';
+  };
+
+  const handleDirectAvatarSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Avatar image must not exceed 5MB.');
+      return;
+    }
+    setCropModalData({ file, type: 'avatar' });
+    if (avatarInputRef.current) avatarInputRef.current.value = '';
+  };
+
+  const handleCropComplete = async (croppedFile) => {
+    if (!cropModalData) return;
+    const { type } = cropModalData;
+    const fd = new FormData();
+
+    if (type === 'banner') {
+      setUploadingBanner(true);
+      try {
+        fd.append('banner', croppedFile);
+        const res = await usersAPI.uploadBanner(fd);
+        const newUrl = res.data?.banner_url;
+        if (newUrl) {
+          setProfile((prev) => ({ ...prev, banner_url: newUrl }));
+          if (updateUser) updateUser({ banner_url: newUrl });
+          if (refreshUser) refreshUser();
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.response?.data?.error || 'Failed to upload banner.';
+        alert(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      } finally {
+        setUploadingBanner(false);
+      }
+    } else if (type === 'avatar') {
+      setUploadingAvatar(true);
+      try {
+        fd.append('avatar', croppedFile);
+        const res = await usersAPI.uploadAvatar(fd);
+        const newUrl = res.data?.avatar_url;
+        if (newUrl) {
+          setProfile((prev) => ({ ...prev, avatar_url: newUrl }));
+          if (updateUser) updateUser({ avatar_url: newUrl });
+          if (refreshUser) refreshUser();
+        }
+      } catch (err) {
+        const msg = err.response?.data?.error?.message || err.response?.data?.error || 'Failed to upload avatar.';
+        alert(typeof msg === 'string' ? msg : JSON.stringify(msg));
+      } finally {
+        setUploadingAvatar(false);
+      }
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await usersAPI.getProfile(id);
+      if (res.data?.data) {
+        const prof = res.data.data;
+        setProfile(prof);
+        if (prof.username && id.toLowerCase() !== prof.username.toLowerCase()) {
+          navigate(`/profile/${prof.username}`, { replace: true });
+        }
+      }
+    } catch {
+      setError('Artist profile not found.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      fetchProfile();
+      window.scrollTo(0, 0);
+    }
+  }, [id]);
 
   const handleShareProfile = () => {
     if (!profile?.username) return;
@@ -33,32 +164,6 @@ export const ProfilePage = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      setLoading(true);
-      try {
-        const res = await usersAPI.getProfile(id);
-        if (res.data?.data) {
-          const prof = res.data.data;
-          setProfile(prof);
-          // Canonical URL canonicalization: if visited with numeric or legacy id (e.g. /profile/1), replace URL to vanity handle (/profile/Nyanns)
-          if (prof.username && id.toLowerCase() !== prof.username.toLowerCase()) {
-            navigate(`/profile/${prof.username}`, { replace: true });
-          }
-        }
-      } catch {
-        setError('Artist profile not found.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchProfile();
-      window.scrollTo(0, 0);
-    }
-  }, [id, navigate]);
 
   if (loading) {
     return (
@@ -94,61 +199,148 @@ export const ProfilePage = () => {
       currentUser.username?.toLowerCase() === profile.username?.toLowerCase());
   const artworksList = profile.artworks || [];
 
+  // Parse social links safely
+  let socialLinks = [];
+  try {
+    if (Array.isArray(profile.social_links)) {
+      socialLinks = profile.social_links;
+    } else if (typeof profile.social_links === 'string' && profile.social_links.trim()) {
+      socialLinks = JSON.parse(profile.social_links);
+    }
+  } catch {
+    socialLinks = [];
+  }
+
+  const bioText = profile.bio || '';
+  const isBioLong = bioText.length > 280;
+  const displayedBio = isBioLong && !isBioExpanded ? `${bioText.slice(0, 280)}...` : bioText;
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
-        <title>{profile.username} (@{profile.username}) — Lumiina Gallery</title>
+        <title>
+          {profile.display_name ? `${profile.display_name} (@${profile.username})` : profile.username} — Lumiina
+        </title>
       </Helmet>
 
-      {/* Profile Header Banner (X / Pixiv inspired) */}
-      <div className="w-full bg-gradient-to-r from-sky-500 via-sky-600 to-indigo-600 h-44 sm:h-56 relative">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-start pt-4">
+      {/* Pixiv-Inspired Full-Width Header Banner */}
+      <div className="w-full relative h-48 sm:h-64 md:h-80 overflow-hidden bg-slate-100 dark:bg-[#181c24] border-b border-slate-200 dark:border-slate-800">
+        {profile.banner_url ? (
+          <img
+            src={profile.banner_url}
+            alt={`${profile.username}'s banner`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-slate-200/70 dark:bg-[#1c212b] flex items-center justify-center text-slate-400 dark:text-slate-600 font-bold text-xs uppercase tracking-wider select-none">
+            <span>No Header Banner Set</span>
+          </div>
+        )}
+
+        {/* Top Floating Navigation */}
+        <div className="absolute top-4 left-0 right-0 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between z-10">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black/30 hover:bg-black/50 text-white rounded-full text-xs font-bold transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black/40 hover:bg-black/60 text-white rounded-full text-xs font-bold backdrop-blur-xs transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Feed
           </Link>
+
+          {isOwnProfile && (
+            <div>
+              <button
+                type="button"
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={uploadingBanner}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-black/50 hover:bg-black/70 text-white rounded-full text-xs font-bold backdrop-blur-xs transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {uploadingBanner ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Uploading Banner...</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Change Banner</span>
+                  </>
+                )}
+              </button>
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleDirectBannerSelect}
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main Profile Info Card (Overlapping Banner) */}
-      <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="relative -mt-16 sm:-mt-20 mb-8 flex flex-col gap-6">
+      {/* Main Profile Container */}
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="relative -mt-16 sm:-mt-20 mb-8 flex flex-col gap-5">
           
-          {/* Avatar & Action Button Row */}
+          {/* Top Bar: Avatar & Action Buttons */}
           <div className="flex items-end justify-between gap-4 flex-wrap">
-            {/* Circular Overlapping Avatar */}
-            <div className="relative">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-white dark:bg-[#1a1e24] border-4 border-white dark:border-[#1a1e24] shadow-md flex items-center justify-center text-slate-800 dark:text-white font-extrabold text-3xl sm:text-4xl uppercase select-none">
-                {profile.username?.[0] || 'A'}
+            {/* Overlapping Pixiv Circular Avatar */}
+            <div className="relative group">
+              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-white dark:bg-[#1a1e24] border-4 border-white dark:border-[#1a1e24] shadow-lg flex items-center justify-center text-slate-800 dark:text-white font-black text-3xl sm:text-4xl uppercase select-none">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{profile.username?.[0] || 'A'}</span>
+                )}
               </div>
+
+              {isOwnProfile && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute bottom-1 right-1 p-2 bg-[#0096fa] hover:bg-[#0084e0] text-white rounded-full shadow-md transition-colors cursor-pointer border-2 border-white dark:border-[#1a1e24] disabled:opacity-50"
+                    title="Change avatar"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleDirectAvatarSelect}
+                  />
+                </>
+              )}
             </div>
 
             {/* Profile Action Buttons */}
             <div className="flex items-center gap-2.5">
-              <button
-                type="button"
-                onClick={handleShareProfile}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full font-bold text-xs transition-colors cursor-pointer"
-                title="Share artist profile"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-400" />}
-                <span>{copied ? 'Link Copied!' : 'Share'}</span>
-              </button>
-
               {isOwnProfile ? (
-                <Link
-                  to="/upload"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0096fa] hover:bg-[#0084e0] text-white rounded-full font-bold text-xs shadow-sm transition-all"
-                >
-                  <Upload className="w-4 h-4" /> Post New Artwork
-                </Link>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-full font-bold text-xs shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit profile
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
                   onClick={() => setFollowing(!following)}
-                  className={`px-6 py-2.5 rounded-full font-bold text-xs shadow-sm transition-all cursor-pointer ${
+                  className={`px-6 py-2.5 rounded-full font-bold text-xs shadow-xs transition-all cursor-pointer ${
                     following
                       ? 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-rose-50 hover:text-rose-600'
                       : 'bg-[#0096fa] hover:bg-[#0084e0] text-white'
@@ -157,34 +349,106 @@ export const ProfilePage = () => {
                   {following ? 'Following' : 'Follow'}
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={handleShareProfile}
+                className="inline-flex items-center gap-1.5 p-2.5 sm:px-4 sm:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-full font-bold text-xs transition-colors cursor-pointer"
+                title="Share profile link"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-500" />}
+                <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
+              </button>
             </div>
           </div>
 
-          {/* User Bio & Meta Details */}
-          <div className="bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col gap-4 transition-colors">
+          {/* User Details & Identity Section */}
+          <div className="bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col gap-4 transition-colors">
+            
+            {/* Name, Handle & Verified Status */}
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {profile.username}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                  {profile.display_name || profile.username}
                 </h1>
                 {profile.is_verified && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 px-2 py-0.5 rounded-full">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 px-2.5 py-0.5 rounded-full">
                     <BadgeCheck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" /> Verified
                   </span>
                 )}
-                <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                  {profile.role || 'regular'}
-                </span>
+                {/* Note: REGULAR badge removed per user specification */}
+                {profile.role && profile.role !== 'regular' && (
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+                    {profile.role}
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-slate-400 font-semibold mt-0.5">@{profile.username?.toLowerCase()}</p>
+
+              <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                @{profile.username?.toLowerCase()}
+              </p>
             </div>
 
-            <p className="text-sm text-slate-600 dark:text-slate-300 font-medium leading-relaxed max-w-2xl">
-              Digital illustrator and fan artist on Lumiina. Passionate about sharing visual stories and character designs.
-            </p>
+            {/* Location & Social Media Row (Pixiv-Style) */}
+            <div className="flex items-center gap-4 flex-wrap text-xs text-slate-600 dark:text-slate-300">
+              {profile.location && (
+                <div className="flex items-center gap-1.5 font-medium text-slate-500 dark:text-slate-400">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>{profile.location}</span>
+                </div>
+              )}
+
+              {/* Social Media Link Icons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {profile.website && (
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"
+                    title={`Website: ${profile.website}`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                  </a>
+                )}
+
+                {socialLinks.map((item, idx) => (
+                  <a
+                    key={idx}
+                    href={formatSocialUrl(item.platform, item.handle)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded-full bg-slate-100 hover:bg-sky-50 dark:bg-slate-800 dark:hover:bg-sky-950/50 text-slate-700 hover:text-[#0096fa] dark:text-slate-200 dark:hover:text-[#0096fa] transition-colors"
+                    title={`${item.platform.toUpperCase()}: ${item.handle}`}
+                  >
+                    <SocialBrandIcon platform={item.platform} className="w-3.5 h-3.5" />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Self Introduction / Bio */}
+            {bioText ? (
+              <div className="text-sm text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-3xl whitespace-pre-line">
+                {displayedBio}
+                {isBioLong && (
+                  <button
+                    type="button"
+                    onClick={() => setIsBioExpanded(!isBioExpanded)}
+                    className="ml-2 text-xs font-bold text-[#0096fa] hover:underline cursor-pointer"
+                  >
+                    {isBioExpanded ? 'Show less' : 'View profile'}
+                  </button>
+                )}
+              </div>
+            ) : isOwnProfile ? (
+              <p className="text-xs text-slate-400 italic">
+                You haven&apos;t added a bio yet. Click &quot;Edit profile&quot; to introduce yourself to your fans!
+              </p>
+            ) : null}
 
             {/* Metadata Badges */}
-            <div className="flex items-center gap-6 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 Joined{' '}
@@ -205,16 +469,23 @@ export const ProfilePage = () => {
 
         </div>
 
-        {/* Gallery Section */}
-        <section className="flex flex-col gap-5">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-sky-600" /> Artworks ({artworksList.length})
-            </h2>
-          </div>
+        {/* Gallery Sub-Navigation Tabs (Pixiv Standard) */}
+        <div className="flex items-center gap-8 border-b border-slate-200 dark:border-slate-800 mb-6">
+          <button
+            type="button"
+            className="pb-3 text-sm font-extrabold text-[#0096fa] border-b-2 border-[#0096fa] flex items-center gap-2 cursor-pointer"
+          >
+            <span>Illustrations</span>
+            <span className="text-xs px-2 py-0.5 bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 rounded-full font-bold">
+              {artworksList.length}
+            </span>
+          </button>
+        </div>
 
+        {/* Artworks Grid */}
+        <section>
           {artworksList.length === 0 ? (
-            <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-sm">
+            <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
               <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
                 <ImageIcon className="w-6 h-6" />
               </div>
@@ -247,6 +518,25 @@ export const ProfilePage = () => {
         </section>
 
       </main>
+
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <EditProfileModal
+          profile={profile}
+          onClose={() => setIsEditModalOpen(false)}
+          onProfileUpdated={fetchProfile}
+        />
+      )}
+
+      {/* Interactive Crop & Adjust Studio Modal */}
+      {cropModalData && (
+        <ImageCropModal
+          imageSource={cropModalData.file}
+          cropType={cropModalData.type}
+          onClose={() => setCropModalData(null)}
+          onCropComplete={handleCropComplete}
+        />
+      )}
     </div>
   );
 };

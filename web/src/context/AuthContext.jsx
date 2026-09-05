@@ -47,8 +47,40 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('lumiina_user');
   };
 
+  const updateUser = (userData) => {
+    setUser((prev) => {
+      const updated = { ...(prev || {}), ...userData };
+      localStorage.setItem('lumiina_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const refreshUser = async () => {
+    if (!token) return;
+    try {
+      const res = await authAPI.getMe();
+      if (res.data?.data) {
+        setUser(res.data.data);
+        localStorage.setItem('lumiina_user', JSON.stringify(res.data.data));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        login,
+        logout,
+        updateUser,
+        refreshUser,
+        isAuthenticated: !!token,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

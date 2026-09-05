@@ -96,8 +96,12 @@ export const FeedPostCard = ({ artwork, index }) => {
           to={`/profile/${artwork.user?.username || artwork.user_id}`}
           className="flex items-center gap-3 group min-w-0"
         >
-          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center uppercase shrink-0 shadow-xs">
-            {artwork.user?.username?.[0] || 'A'}
+          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center uppercase shrink-0 shadow-xs overflow-hidden">
+            {artwork.user?.avatar_url ? (
+              <img src={artwork.user.avatar_url} alt={artwork.user?.username} className="w-full h-full object-cover" />
+            ) : (
+              artwork.user?.username?.[0] || 'A'
+            )}
           </div>
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">

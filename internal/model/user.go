@@ -9,11 +9,26 @@ type User struct {
 	Password   string    `json:"-" gorm:"not null"`
 	Role       string    `json:"role" gorm:"default:'regular'"`
 	IsVerified bool      `json:"is_verified" gorm:"default:false"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	DisplayName string    `json:"display_name" gorm:"default:''"`
+	Bio         string    `json:"bio" gorm:"type:text;default:''"`
+	AvatarURL   string    `json:"avatar_url" gorm:"default:''"`
+	BannerURL   string    `json:"banner_url" gorm:"default:''"`
+	Location    string    `json:"location" gorm:"default:''"`
+	Website     string    `json:"website" gorm:"default:''"`
+	SocialLinks string    `json:"social_links" gorm:"type:text;default:'[]'"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 
 	Artworks []Artwork `json:"artworks,omitempty"`
 	Comments []Comment `json:"comments,omitempty"`
+}
+
+type UpdateProfileRequest struct {
+	DisplayName string `json:"display_name" binding:"max=50"`
+	Bio         string `json:"bio" binding:"max=1000"`
+	Location    string `json:"location" binding:"max=100"`
+	Website     string `json:"website" binding:"max=255"`
+	SocialLinks string `json:"social_links"`
 }
 
 type LoginRequest struct {

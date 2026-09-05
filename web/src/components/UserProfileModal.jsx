@@ -58,8 +58,12 @@ export const UserProfileModal = ({ userId, onClose, onArtworkClick, onTagClick }
             <>
               {/* Profile Card Header */}
               <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-600 to-sky-400 text-white font-black text-2xl flex items-center justify-center uppercase shadow-sm border-2 border-white">
-                  {profile.username?.[0] || 'A'}
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-sky-600 to-sky-400 text-white font-black text-2xl flex items-center justify-center uppercase shadow-sm border-2 border-white overflow-hidden">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                  ) : (
+                    profile.username?.[0] || 'A'
+                  )}
                 </div>
 
                 <div className="flex-1 flex flex-col items-center sm:items-start gap-1">

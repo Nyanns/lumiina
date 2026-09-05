@@ -135,8 +135,12 @@ export const HorizontalWorksCarousel = ({
                   {art.title}
                 </h3>
                 <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
-                  <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center uppercase shrink-0">
-                    {art.user?.username?.[0] || 'A'}
+                  <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[9px] flex items-center justify-center uppercase shrink-0 overflow-hidden">
+                    {art.user?.avatar_url ? (
+                      <img src={art.user.avatar_url} alt={art.user?.username} className="w-full h-full object-cover" />
+                    ) : (
+                      art.user?.username?.[0] || 'A'
+                    )}
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                     {art.user?.username || 'Artist'}

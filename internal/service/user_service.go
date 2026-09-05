@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"mime/multipart"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
+	"github.com/sandi/lumiina/internal/pkg/cloudinary"
 	"github.com/sandi/lumiina/internal/pkg/mailer"
 	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/pkg/validator"
@@ -37,23 +39,32 @@ type UserService interface {
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
 	GetProfileByIdentifier(identifier string) (*model.User, error)
+	UpdateProfile(userID uint, req *model.UpdateProfileRequest) (*model.User, error)
+	UploadAvatar(ctx context.Context, userID uint, file multipart.File) (string, error)
+	UploadBanner(ctx context.Context, userID uint, file multipart.File) (string, error)
 	RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error
 	IsTokenRevoked(ctx context.Context, tokenString string) bool
 }
 
 type userService struct {
-	repo    repository.UserRepository
-	rdb     *redis.Client
-	mailer  mailer.MailerService
-	baseURL string
+	repo       repository.UserRepository
+	rdb        *redis.Client
+	mailer     mailer.MailerService
+	baseURL    string
+	cloudinary cloudinary.CloudinaryService
 }
 
-func NewUserService(repo repository.UserRepository, rdb *redis.Client, mailer mailer.MailerService, baseURL string) UserService {
+func NewUserService(repo repository.UserRepository, rdb *redis.Client, mailer mailer.MailerService, baseURL string, cld ...cloudinary.CloudinaryService) UserService {
+	var cloudinaryService cloudinary.CloudinaryService
+	if len(cld) > 0 {
+		cloudinaryService = cld[0]
+	}
 	return &userService{
-		repo:    repo,
-		rdb:     rdb,
-		mailer:  mailer,
-		baseURL: baseURL,
+		repo:       repo,
+		rdb:        rdb,
+		mailer:     mailer,
+		baseURL:    baseURL,
+		cloudinary: cloudinaryService,
 	}
 }
 
@@ -275,6 +286,61 @@ func (s *userService) GetProfileByID(id uint) (*model.User, error) {
 
 func (s *userService) GetProfileByIdentifier(identifier string) (*model.User, error) {
 	return s.repo.GetProfileByIdentifier(identifier)
+}
+
+func (s *userService) UpdateProfile(userID uint, req *model.UpdateProfileRequest) (*model.User, error) {
+	updates := map[string]interface{}{}
+
+	updates["display_name"] = strings.TrimSpace(req.DisplayName)
+	updates["bio"] = strings.TrimSpace(req.Bio)
+	updates["location"] = strings.TrimSpace(req.Location)
+	updates["website"] = strings.TrimSpace(req.Website)
+
+	if req.SocialLinks != "" {
+		updates["social_links"] = req.SocialLinks
+	} else {
+		updates["social_links"] = "[]"
+	}
+
+	if err := s.repo.UpdateProfileFields(userID, updates); err != nil {
+		return nil, err
+	}
+
+	return s.repo.GetProfileByID(userID)
+}
+
+func (s *userService) UploadAvatar(ctx context.Context, userID uint, file multipart.File) (string, error) {
+	if s.cloudinary == nil {
+		return "", errors.New("cloudinary service is not configured")
+	}
+
+	url, err := s.cloudinary.UploadImage(ctx, file, "lumiina_avatars")
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.repo.UpdateProfileFields(userID, map[string]interface{}{"avatar_url": url}); err != nil {
+		return "", err
+	}
+
+	return url, nil
+}
+
+func (s *userService) UploadBanner(ctx context.Context, userID uint, file multipart.File) (string, error) {
+	if s.cloudinary == nil {
+		return "", errors.New("cloudinary service is not configured")
+	}
+
+	url, err := s.cloudinary.UploadImage(ctx, file, "lumiina_banners")
+	if err != nil {
+		return "", err
+	}
+
+	if err := s.repo.UpdateProfileFields(userID, map[string]interface{}{"banner_url": url}); err != nil {
+		return "", err
+	}
+
+	return url, nil
 }
 
 func (s *userService) RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error {

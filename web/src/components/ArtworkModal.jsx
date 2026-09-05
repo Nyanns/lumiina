@@ -154,8 +154,12 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
                 onClick={() => { onArtistClick(artwork.user?.id || artwork.user_id); onClose(); }}
                 className="flex items-center gap-3 cursor-pointer group"
               >
-                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg uppercase shadow-sm group-hover:shadow-md transition-all">
-                  {artwork.user?.username?.[0] || 'A'}
+                <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-lg uppercase shadow-sm group-hover:shadow-md transition-all overflow-hidden">
+                  {artwork.user?.avatar_url ? (
+                    <img src={artwork.user.avatar_url} alt={artwork.user?.username} className="w-full h-full object-cover" />
+                  ) : (
+                    artwork.user?.username?.[0] || 'A'
+                  )}
                 </div>
                 <div>
                   <h4 className="font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
@@ -211,8 +215,12 @@ export const ArtworkModal = ({ artwork: initialArtwork, onClose, onTagClick, onA
                     const canDelete = user && (user.id === c.user_id || user.role === 'admin' || user.id === artwork.user_id);
                     return (
                       <div key={c.id} className="flex items-start gap-3 group">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center uppercase shrink-0">
-                          {c.user?.username?.[0] || 'U'}
+                        <div className="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center uppercase shrink-0 overflow-hidden">
+                          {c.user?.avatar_url ? (
+                            <img src={c.user.avatar_url} alt={c.user?.username} className="w-full h-full object-cover" />
+                          ) : (
+                            c.user?.username?.[0] || 'U'
+                          )}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">

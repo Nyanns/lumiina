@@ -338,8 +338,12 @@ export const ArtworkDetailPage = () => {
                 className="flex items-center gap-1.5 pl-1.5"
                 title="My Profile"
               >
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#0096fa] to-sky-400 text-white font-bold text-xs flex items-center justify-center uppercase shadow-xs">
-                  {user?.username?.[0] || 'U'}
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#0096fa] to-sky-400 text-white font-bold text-xs flex items-center justify-center uppercase shadow-xs overflow-hidden">
+                  {user?.avatar_url ? (
+                    <img src={user.avatar_url} alt={user?.username} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.username?.[0] || 'U'
+                  )}
                 </div>
               </Link>
             ) : (
@@ -492,8 +496,12 @@ export const ArtworkDetailPage = () => {
                   to={`/profile/${artwork.user?.username || artwork.user_id}`}
                   className="flex items-center gap-3 group min-w-0"
                 >
-                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-base flex items-center justify-center uppercase shrink-0 shadow-2xs group-hover:border-sky-500 transition-colors">
-                    {artwork.user?.username?.[0] || 'A'}
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold text-base flex items-center justify-center uppercase shrink-0 shadow-2xs group-hover:border-sky-500 transition-colors overflow-hidden">
+                    {artwork.user?.avatar_url ? (
+                      <img src={artwork.user.avatar_url} alt={artwork.user?.username} className="w-full h-full object-cover" />
+                    ) : (
+                      artwork.user?.username?.[0] || 'A'
+                    )}
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 truncate transition-colors">
@@ -625,8 +633,12 @@ export const ArtworkDetailPage = () => {
                     )}
                     <div className="flex items-center gap-3">
                       {/* Current user avatar (aligns with comment avatars below) */}
-                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0">
-                        {user?.username?.[0] || 'U'}
+                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 overflow-hidden">
+                        {user?.avatar_url ? (
+                          <img src={user.avatar_url} alt={user?.username} className="w-full h-full object-cover" />
+                        ) : (
+                          user?.username?.[0] || 'U'
+                        )}
                       </div>
                       <div className="relative flex-1 flex items-center">
                         <input
@@ -688,8 +700,12 @@ export const ArtworkDetailPage = () => {
                     return (
                       <div key={c.id} className="flex items-start gap-3 px-5 py-2.5 group hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100/80 dark:border-slate-800/60 last:border-b-0">
                         {/* Avatar */}
-                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 mt-0.5">
-                          {c.user?.username?.[0] || 'U'}
+                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center uppercase shrink-0 mt-0.5 overflow-hidden">
+                          {c.user?.avatar_url ? (
+                            <img src={c.user.avatar_url} alt={c.user?.username} className="w-full h-full object-cover" />
+                          ) : (
+                            c.user?.username?.[0] || 'U'
+                          )}
                         </div>
                         {/* Body */}
                         <div className="flex-1 min-w-0">

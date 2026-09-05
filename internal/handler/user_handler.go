@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -287,6 +288,142 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": user})
+}
+
+// UpdateProfile updates the profile details of the authenticated user.
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req model.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := h.service.UpdateProfile(userID, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
+		"data":    user,
+	})
+}
+
+// UploadAvatar uploads and updates the authenticated user's avatar image.
+func (h *UserHandler) UploadAvatar(c *gin.Context) {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	fileHeader, err := c.FormFile("avatar")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Avatar image file is required"})
+		return
+	}
+
+	if fileHeader.Size > 5*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Avatar file size exceeds 5MB limit"})
+		return
+	}
+
+	uploadedFile, err := fileHeader.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
+	defer uploadedFile.Close()
+
+	buffer := make([]byte, 512)
+	if _, err := uploadedFile.Read(buffer); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file header"})
+		return
+	}
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
+		return
+	}
+
+	contentType := http.DetectContentType(buffer)
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" && contentType != "image/gif" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format. Only JPEG, PNG, WebP, and GIF are allowed"})
+		return
+	}
+
+	avatarURL, err := h.service.UploadAvatar(c.Request.Context(), userID, uploadedFile)
+	if err != nil {
+		slog.Error("Avatar upload failed", "error", err, "user_id", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload avatar image"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Avatar updated successfully",
+		"avatar_url": avatarURL,
+	})
+}
+
+// UploadBanner uploads and updates the authenticated user's banner image.
+func (h *UserHandler) UploadBanner(c *gin.Context) {
+	userID := extractCurrentUserID(c)
+	if userID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	fileHeader, err := c.FormFile("banner")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Banner image file is required"})
+		return
+	}
+
+	if fileHeader.Size > 10*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Banner file size exceeds 10MB limit"})
+		return
+	}
+
+	uploadedFile, err := fileHeader.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
+	defer uploadedFile.Close()
+
+	buffer := make([]byte, 512)
+	if _, err := uploadedFile.Read(buffer); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read file header"})
+		return
+	}
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
+		return
+	}
+
+	contentType := http.DetectContentType(buffer)
+	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" && contentType != "image/gif" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format. Only JPEG, PNG, WebP, and GIF are allowed"})
+		return
+	}
+
+	bannerURL, err := h.service.UploadBanner(c.Request.Context(), userID, uploadedFile)
+	if err != nil {
+		slog.Error("Banner upload failed", "error", err, "user_id", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload banner image"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Banner updated successfully",
+		"banner_url": bannerURL,
+	})
 }
 
 // SearchUsers searches for artists/users by username.

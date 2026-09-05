@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -15,6 +17,7 @@ type UserRepository interface {
 	FindByID(id uint) (*model.User, error)
 	FindByEmail(email string) (*model.User, error)
 	UpdateUser(user *model.User) error
+	UpdateProfileFields(userID uint, updates map[string]interface{}) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
 	GetProfileByIdentifier(identifier string) (*model.User, error)
@@ -54,6 +57,37 @@ func (r *userRepository) UpdateUser(user *model.User) error {
 	return r.db.Save(user).Error
 }
 
+func (r *userRepository) UpdateProfileFields(userID uint, updates map[string]interface{}) error {
+	if len(updates) == 0 {
+		return nil
+	}
+
+	// Build deterministic SET clause from sorted keys so SQL is predictable.
+	// We use raw Exec here because GORM's .Updates(map) silently skips zero-value
+	// strings (""), making it impossible to clear fields like display_name or bio.
+	keys := make([]string, 0, len(updates))
+	for k := range updates {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	setClauses := make([]string, 0, len(keys))
+	args := make([]interface{}, 0, len(keys)+1)
+	for i, k := range keys {
+		setClauses = append(setClauses, fmt.Sprintf("%s = $%d", k, i+1))
+		args = append(args, updates[k])
+	}
+	args = append(args, userID)
+
+	sql := fmt.Sprintf(
+		"UPDATE users SET %s WHERE id = $%d",
+		strings.Join(setClauses, ", "),
+		len(keys)+1,
+	)
+
+	return r.db.Exec(sql, args...).Error
+}
+
 func (r *userRepository) SearchUsers(searchQuery string, limit int, offset int) ([]model.User, int64, error) {
 	var users []model.User
 	var total int64
@@ -68,7 +102,7 @@ func (r *userRepository) SearchUsers(searchQuery string, limit int, offset int) 
 		return nil, 0, err
 	}
 
-	err := dbQuery.Select("id, username, role, is_verified, created_at").
+	err := dbQuery.Select("id, username, role, is_verified, display_name, bio, avatar_url, banner_url, location, website, social_links, created_at").
 		Order("created_at DESC").
 		Limit(limit).
 		Offset(offset).
@@ -79,7 +113,7 @@ func (r *userRepository) SearchUsers(searchQuery string, limit int, offset int) 
 
 func (r *userRepository) GetProfileByID(id uint) (*model.User, error) {
 	var user model.User
-	err := r.db.Select("id, username, role, is_verified, created_at").
+	err := r.db.Select("id, username, role, is_verified, display_name, bio, avatar_url, banner_url, location, website, social_links, created_at").
 		Preload("Artworks", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC").Limit(20)
 		}).
@@ -94,7 +128,7 @@ func (r *userRepository) GetProfileByIdentifier(identifier string) (*model.User,
 		return nil, gorm.ErrRecordNotFound
 	}
 
-	query := r.db.Select("id, username, role, is_verified, created_at").
+	query := r.db.Select("id, username, role, is_verified, display_name, bio, avatar_url, banner_url, location, website, social_links, created_at").
 		Preload("Artworks", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC").Limit(20)
 		}).

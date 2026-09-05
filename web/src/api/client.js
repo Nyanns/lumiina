@@ -55,10 +55,7 @@ export const artworksAPI = {
   getTrending: (params) => api.get('/artworks/trending', { params }),
   getRecommended: (params) => api.get('/artworks/recommended', { params }),
   getByID: (id) => api.get(`/artworks/${id}`),
-  create: (formData) =>
-    api.post('/artworks', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+  create: (formData) => api.post('/artworks', formData),
   update: (id, data) => api.put(`/artworks/${id}`, data),
   delete: (id) => api.delete(`/artworks/${id}`),
 };
@@ -85,6 +82,9 @@ export const likesAPI = {
 // User Profile & Discovery endpoints
 export const usersAPI = {
   getProfile: (userId) => api.get(`/users/${userId}`),
+  updateProfile: (data) => api.put('/users/profile', data),
+  uploadAvatar: (formData) => api.post('/users/avatar', formData),
+  uploadBanner: (formData) => api.post('/users/banner', formData),
   search: (query, params = {}) =>
     api.get('/users/search', { params: { q: query, ...params } }),
 };

@@ -3,15 +3,14 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   Upload, 
-  LogIn, 
   LogOut, 
   X, 
   ChevronDown, 
   Moon, 
   Sun, 
-  LayoutDashboard, 
   Bookmark, 
-  Globe 
+  Globe,
+  User 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -169,8 +168,12 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                     className="flex items-center gap-1.5 p-0.5 rounded-full hover:ring-2 hover:ring-sky-400 transition-all cursor-pointer"
                     aria-label="User profile menu"
                   >
-                    <div className="w-8 h-8 rounded-full bg-slate-800 dark:bg-sky-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-slate-200 dark:border-slate-700">
-                      {user?.username?.[0] || 'U'}
+                    <div className="w-8 h-8 rounded-full bg-slate-800 dark:bg-sky-700 text-white flex items-center justify-center font-bold text-xs uppercase shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt={user?.username} className="w-full h-full object-cover" />
+                      ) : (
+                        user?.username?.[0] || 'U'
+                      )}
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -181,18 +184,26 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                       
                       {/* Dropdown Header: Banner & Avatar */}
                       <div className="relative">
-                        <div className="h-16 w-full bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600" />
+                        {user?.banner_url ? (
+                          <img src={user.banner_url} alt="Banner" className="h-16 w-full object-cover" />
+                        ) : (
+                          <div className="h-16 w-full bg-slate-200 dark:bg-[#252a32] border-b border-slate-300/40 dark:border-slate-700/60" />
+                        )}
                         <div className="px-4 pb-3 pt-2 flex flex-col">
                           <div className="relative -mt-9 mb-1.5">
                             <div className="w-14 h-14 rounded-full bg-white dark:bg-[#1a1e24] p-0.5 shadow-md inline-block">
-                              <div className="w-full h-full rounded-full bg-slate-800 dark:bg-sky-600 text-white flex items-center justify-center font-extrabold text-lg uppercase">
-                                {user?.username?.[0] || 'U'}
+                              <div className="w-full h-full rounded-full bg-slate-800 dark:bg-sky-600 text-white flex items-center justify-center font-extrabold text-lg uppercase overflow-hidden">
+                                {user?.avatar_url ? (
+                                  <img src={user.avatar_url} alt={user?.username} className="w-full h-full object-cover" />
+                                ) : (
+                                  user?.username?.[0] || 'U'
+                                )}
                               </div>
                             </div>
                           </div>
 
                           <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
-                            {user?.username}
+                            {user?.display_name || user?.username}
                           </h4>
                           <p className="text-[11px] text-slate-400 font-medium truncate">
                             @{user?.username?.toLowerCase()}
@@ -211,10 +222,10 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                         <Link
                           to={`/profile/${user?.username || user?.id}`}
                           onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                          className="flex items-center gap-2.5 px-4 py-2 text-xs font-bold text-[#0096fa] hover:bg-sky-50 dark:hover:bg-sky-950/40 transition-colors"
                         >
-                          <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                          <span>Dashboard</span>
+                          <User className="w-4 h-4 text-[#0096fa]" />
+                          <span>View Profile</span>
                         </Link>
                         <Link
                           to={`/profile/${user?.username || user?.id}`}
@@ -272,13 +283,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-[#0096fa] dark:hover:text-sky-400 hover:bg-slate-100 dark:hover:bg-[#252a32] rounded-full transition-colors"
-                >
-                  Sign In
-                </Link>
+              <div className="flex items-center">
                 <Link
                   to="/register"
                   className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-[#0096fa] hover:bg-[#0084e0] active:scale-95 rounded-full shadow-xs transition-all"

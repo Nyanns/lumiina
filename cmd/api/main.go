@@ -60,7 +60,7 @@ func main() {
 	ArtworkHandler := handler.NewArtworkHandler(ArtworkService, rdb)
 
 	userRepo := repository.NewUserRepository(db)
-	userService := service.NewUserService(userRepo, rdb, mailerService, cfg.AppBaseURL)
+	userService := service.NewUserService(userRepo, rdb, mailerService, cfg.AppBaseURL, cldService)
 	userHandler := handler.NewUserHandler(userService, cfg.JWTSecret)
 
 	commentRepo := repository.NewCommentRepository(db)
@@ -171,6 +171,9 @@ func main() {
 
 		// User profile
 		protected.GET("/users/me", userHandler.GetMe)
+		protected.PUT("/users/profile", userHandler.UpdateProfile)
+		protected.POST("/users/avatar", userHandler.UploadAvatar)
+		protected.POST("/users/banner", userHandler.UploadBanner)
 
 		protected.POST("/artworks", ArtworkHandler.CreateArtwork)
 		protected.PUT("/artworks/:id", ArtworkHandler.UpdateArtwork)

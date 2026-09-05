@@ -25,7 +25,7 @@ func (r *commentRepository) Create(comment *model.Comment) error {
 		return err
 	}
 	return r.db.Preload("User", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, username")
+		return db.Select("id, username, display_name, avatar_url, is_verified, created_at")
 	}).First(comment, comment.ID).Error
 }
 
@@ -41,7 +41,7 @@ func (r *commentRepository) GetByArtworkID(artworkID uint, limit int, offset int
 	// Query paginated comments and selectively preload User public fields (id, username)
 	err := r.db.Where("artwork_id = ?", artworkID).
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username")
+			return db.Select("id, username, display_name, avatar_url, is_verified, created_at")
 		}).
 		Order("created_at DESC").
 		Limit(limit).

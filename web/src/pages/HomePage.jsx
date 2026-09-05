@@ -429,8 +429,12 @@ export const HomePage = () => {
                             to={`/profile/${u.username || u.id}`}
                             className="flex items-center gap-2.5 min-w-0 group"
                           >
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center uppercase shrink-0 border border-slate-200 dark:border-slate-600">
-                              {u.username?.[0] || 'A'}
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center uppercase shrink-0 border border-slate-200 dark:border-slate-600 overflow-hidden">
+                              {u.avatar_url ? (
+                                <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
+                              ) : (
+                                u.username?.[0] || 'A'
+                              )}
                             </div>
                             <div className="min-w-0">
                               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 transition-colors">
@@ -474,25 +478,21 @@ export const HomePage = () => {
 
               {/* Clean Legal & Navigation Links */}
               <div className="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-                <Link to="/" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+                <Link to="/guidelines" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
                   Guidelines
                 </Link>
                 <span className="text-slate-300 dark:text-slate-700">·</span>
-                <a
-                  href="#terms"
-                  onClick={(e) => { e.preventDefault(); alert('Terms of Service: Respect fellow creators and copyright laws.'); }}
-                  className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
+                <Link to="/terms" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
                   Terms
-                </a>
+                </Link>
                 <span className="text-slate-300 dark:text-slate-700">·</span>
-                <a
-                  href="#about"
-                  onClick={(e) => { e.preventDefault(); alert('Lumiina — High-performance anime fan art platform. Built with Go & React.'); }}
-                  className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                >
+                <Link to="/privacy" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
+                  Privacy
+                </Link>
+                <span className="text-slate-300 dark:text-slate-700">·</span>
+                <Link to="/about" className="hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
                   About Us
-                </a>
+                </Link>
               </div>
 
               {/* Simple Copyright */}

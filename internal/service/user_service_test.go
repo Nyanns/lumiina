@@ -47,6 +47,11 @@ func (m *MockUserRepository) UpdateUser(user *model.User) error {
 	return args.Error(0)
 }
 
+func (m *MockUserRepository) UpdateProfileFields(userID uint, updates map[string]interface{}) error {
+	args := m.Called(userID, updates)
+	return args.Error(0)
+}
+
 func (m *MockUserRepository) SearchUsers(query string, limit int, offset int) ([]model.User, int64, error) {
 	args := m.Called(query, limit, offset)
 	if args.Get(0) != nil {

@@ -54,7 +54,7 @@ func (r *artworkRepository) GetAllArtworks(limit int, offset int, search string,
 
 	err := query.Preload("Tags").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username, created_at")
+			return db.Select("id, username, display_name, avatar_url, banner_url, is_verified, created_at")
 		}).
 		Order("artworks.created_at DESC").
 		Limit(limit).
@@ -95,7 +95,7 @@ func (r *artworkRepository) GetByID(id uint) (*model.Artwork, error) {
 	var artwork model.Artwork
 	err := r.db.Preload("Tags").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username, created_at")
+			return db.Select("id, username, display_name, avatar_url, banner_url, is_verified, created_at")
 		}).
 		First(&artwork, id).Error
 	if err != nil {
@@ -139,7 +139,7 @@ func (r *artworkRepository) GetTrendingArtworks(limit int, currentUserID uint) (
 	err := r.db.Model(&model.Artwork{}).
 		Preload("Tags").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username, created_at")
+			return db.Select("id, username, display_name, avatar_url, banner_url, is_verified, created_at")
 		}).
 		Joins("LEFT JOIN comments ON comments.artwork_id = artworks.id").
 		Group("artworks.id").
@@ -170,7 +170,7 @@ func (r *artworkRepository) GetRecommendedArtworks(userID uint, limit int) ([]mo
 			err := r.db.Model(&model.Artwork{}).
 				Preload("Tags").
 				Preload("User", func(db *gorm.DB) *gorm.DB {
-					return db.Select("id, username, created_at")
+					return db.Select("id, username, display_name, avatar_url, banner_url, is_verified, created_at")
 				}).
 				Joins("JOIN artwork_tags ON artwork_tags.artwork_id = artworks.id").
 				Where("artwork_tags.tag_id IN (?)", userTagIDs).
@@ -206,7 +206,7 @@ func (r *artworkRepository) GetRecommendedArtworks(userID uint, limit int) ([]mo
 	query := r.db.Model(&model.Artwork{}).
 		Preload("Tags").
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id, username, created_at")
+			return db.Select("id, username, display_name, avatar_url, banner_url, is_verified, created_at")
 		})
 
 	if len(existingIDs) > 0 {
