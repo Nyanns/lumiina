@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -62,11 +63,13 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	r.Use(middleware.TimeoutMiddleware(15 * time.Second))
 	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigins...))
 	r.Use(middleware.SecurityHeadersMiddleware())
-	r.Use(gzip.Gzip(
-		gzip.DefaultCompression,
-		gzip.WithExcludedPaths([]string{"/metrics", "/livez", "/readyz"}),
-		gzip.WithMinLength(512),
-	))
+	if os.Getenv("VERCEL") == "" {
+		r.Use(gzip.Gzip(
+			gzip.DefaultCompression,
+			gzip.WithExcludedPaths([]string{"/metrics", "/livez", "/readyz"}),
+			gzip.WithMinLength(512),
+		))
+	}
 
 	// Global Atomic Token Bucket Rate Limiter
 	r.Use(middleware.RateLimiterMiddleware(rdb, 100, 1*time.Minute))
