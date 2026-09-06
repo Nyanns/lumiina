@@ -122,4 +122,9 @@ export const bookmarksAPI = {
   },
 };
 
+// Admin endpoints
+export const adminAPI = {
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
+};
+
 export default api;

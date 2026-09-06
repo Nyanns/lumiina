@@ -17,8 +17,10 @@ import {
   UserCheck,
   UserPlus,
   Bookmark,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
-import { usersAPI, bookmarksAPI } from '../api/client';
+import { usersAPI, bookmarksAPI, adminAPI } from '../api/client';
 import { ArtworkCard } from '../components/ArtworkCard';
 import { useAuth } from '../context/AuthContext';
 import { useFollow } from '../context/FollowContext';
@@ -80,6 +82,9 @@ export const ProfilePage = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
   const [followModal, setFollowModal] = useState({ isOpen: false, tab: 'followers' });
+  const [isAdminDeleteModalOpen, setIsAdminDeleteModalOpen] = useState(false);
+  const [adminDeleteLoading, setAdminDeleteLoading] = useState(false);
+  const [adminDeleteError, setAdminDeleteError] = useState('');
 
   const [activeTab, setActiveTab] = useState('illustrations'); // 'illustrations' | 'bookmarks'
   const [bookmarkedArtworks, setBookmarkedArtworks] = useState([]);
@@ -227,6 +232,22 @@ export const ProfilePage = () => {
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleAdminDeleteUser = async () => {
+    if (!profile?.id) return;
+    setAdminDeleteLoading(true);
+    setAdminDeleteError('');
+    try {
+      await adminAPI.deleteUser(profile.id);
+      setIsAdminDeleteModalOpen(false);
+      navigate('/', { replace: true });
+    } catch (err) {
+      const msg = err.response?.data?.error?.message || err.response?.data?.error || 'Failed to delete user';
+      setAdminDeleteError(msg);
+    } finally {
+      setAdminDeleteLoading(false);
+    }
   };
 
   if (loading) {
@@ -494,6 +515,18 @@ export const ProfilePage = () => {
                       <span>Follow</span>
                     </>
                   )}
+                </button>
+              )}
+
+              {currentUser?.role === 'admin' && !isOwnProfile && profile?.role !== 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => setIsAdminDeleteModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-full font-bold text-xs transition-colors cursor-pointer border border-rose-200 dark:border-rose-900/50"
+                  title="Admin Moderation: Delete User"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Delete User (Admin)</span>
                 </button>
               )}
 
@@ -781,6 +814,62 @@ export const ProfilePage = () => {
         username={profile?.username}
         onClose={() => setFollowModal({ isOpen: false, tab: 'followers' })}
       />
+
+      {/* Admin Delete User Confirmation Modal */}
+      {isAdminDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#1a1e24] w-full max-w-md rounded-3xl p-6 sm:p-7 shadow-2xl border border-rose-200 dark:border-rose-900/50 flex flex-col gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-1">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Delete User Account?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+                You are about to permanently delete <strong className="text-slate-900 dark:text-slate-100">@{profile?.username}</strong> ({profile?.display_name || profile?.username}).
+                This will purge their profile, artworks, likes, bookmarks, and comments permanently.
+              </p>
+            </div>
+
+            {adminDeleteError && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-700 dark:text-rose-300">
+                {adminDeleteError}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 mt-2">
+              <button
+                type="button"
+                disabled={adminDeleteLoading}
+                onClick={() => setIsAdminDeleteModalOpen(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-full transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={adminDeleteLoading}
+                onClick={handleAdminDeleteUser}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-full transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {adminDeleteLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

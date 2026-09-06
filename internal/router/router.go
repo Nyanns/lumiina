@@ -183,7 +183,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(middleware.AdminOnly())
 	{
-		// Admin-only endpoints
+		adminOnly.DELETE("/users/:id", userHandler.AdminDeleteUser)
 	}
 
 	// Static web assets & React SPA fallback via embedded filesystem

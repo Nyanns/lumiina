@@ -21,6 +21,7 @@ import (
 	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/apperror"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
 	"github.com/sandi/lumiina/internal/pkg/sanitize"
 	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
@@ -624,4 +625,44 @@ func (h *UserHandler) Logout(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logout successful. Your session has ended."})
+}
+
+// AdminDeleteUser allows administrators to permanently delete other user accounts.
+func (h *UserHandler) AdminDeleteUser(c *gin.Context) {
+	adminID := extractCurrentUserID(c)
+	if adminID == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	targetParam := strings.TrimSpace(c.Param("id"))
+	if targetParam == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Target user ID is required"})
+		return
+	}
+
+	var targetID uint
+	if num, err := strconv.ParseUint(targetParam, 10, 32); err == nil && num > 0 {
+		targetID = uint(num)
+	} else if decoded, err := hashid.Decode(targetParam); err == nil && decoded > 0 {
+		targetID = decoded
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err := h.service.AdminDeleteUser(adminID, targetID)
+	if err != nil {
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) {
+			respondAppError(c, appErr)
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User account permanently deleted by administrator",
+	})
 }

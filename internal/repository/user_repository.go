@@ -21,6 +21,7 @@ type UserRepository interface {
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
 	GetProfileByID(id uint) (*model.User, error)
 	GetProfileByIdentifier(identifier string) (*model.User, error)
+	DeleteUser(id uint) error
 }
 
 type userRepository struct {
@@ -169,4 +170,8 @@ func (r *userRepository) GetProfileByIdentifier(identifier string) (*model.User,
 	}
 
 	return nil, gorm.ErrRecordNotFound
+}
+
+func (r *userRepository) DeleteUser(id uint) error {
+	return r.db.Delete(&model.User{}, id).Error
 }

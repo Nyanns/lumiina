@@ -76,6 +76,11 @@ func (m *MockUserRepository) GetProfileByIdentifier(identifier string) (*model.U
 	return nil, args.Error(1)
 }
 
+func (m *MockUserRepository) DeleteUser(id uint) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 func TestRegister_Success(t *testing.T) {
 	// Arrange
 	mockRepo := new(MockUserRepository)
@@ -184,4 +189,47 @@ func TestRevokeToken_NilRedis_Safe(t *testing.T) {
 
 	isRevoked := userService.IsTokenRevoked(nil, "dummy_token")
 	assert.False(t, isRevoked)
+}
+
+func TestAdminDeleteUser_CannotDeleteSelf(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	err := userService.AdminDeleteUser(1, 1)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot delete their own account")
+}
+
+func TestAdminDeleteUser_CannotDeleteAnotherAdmin(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	targetAdmin := &model.User{
+		ID:       2,
+		Username: "superadmin2",
+		Role:     "admin",
+	}
+	mockRepo.On("FindByID", uint(2)).Return(targetAdmin, nil)
+
+	err := userService.AdminDeleteUser(1, 2)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Cannot delete another administrator account")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAdminDeleteUser_Success(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	targetUser := &model.User{
+		ID:       5,
+		Username: "bad_actor",
+		Role:     "regular",
+	}
+	mockRepo.On("FindByID", uint(5)).Return(targetUser, nil)
+	mockRepo.On("DeleteUser", uint(5)).Return(nil)
+
+	err := userService.AdminDeleteUser(1, 5)
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
 }

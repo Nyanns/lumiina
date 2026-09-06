@@ -47,6 +47,7 @@ type UserService interface {
 	UploadBanner(ctx context.Context, userID uint, file multipart.File) (string, error)
 	RevokeToken(ctx context.Context, tokenString string, expiration time.Duration) error
 	IsTokenRevoked(ctx context.Context, tokenString string) bool
+	AdminDeleteUser(adminID, targetID uint) error
 }
 
 type userService struct {
@@ -394,4 +395,41 @@ func (s *userService) IsTokenRevoked(ctx context.Context, tokenString string) bo
 	key := fmt.Sprintf("revoked_token:%x", h)
 	exists, err := s.rdb.Exists(ctx, key).Result()
 	return err == nil && exists > 0
+}
+
+func (s *userService) AdminDeleteUser(adminID, targetID uint) error {
+	if adminID == targetID {
+		return apperror.New("FORBIDDEN", "Administrators cannot delete their own account", 403, nil)
+	}
+
+	targetUser, err := s.repo.FindByID(targetID)
+	if err != nil {
+		return apperror.New("NOT_FOUND", "User to delete not found", 404, err)
+	}
+
+	// Guardrail: Root admin safety
+	if targetUser.Role == "admin" {
+		return apperror.New("FORBIDDEN", "Cannot delete another administrator account", 403, nil)
+	}
+
+	if err := s.repo.DeleteUser(targetID); err != nil {
+		return apperror.New("INTERNAL_SERVER_ERROR", "Failed to delete user", 500, err)
+	}
+
+	// Invalidate relevant caches in Redis
+	if s.rdb != nil {
+		ctx := context.Background()
+		_ = s.rdb.Del(ctx,
+			fmt.Sprintf("user_profile:%d", targetID),
+			fmt.Sprintf("user_profile:%s", strings.ToLower(targetUser.Username)),
+		).Err()
+	}
+
+	slog.Warn("Security Audit: User permanently deleted by admin",
+		"admin_id", adminID,
+		"target_user_id", targetID,
+		"target_username", sanitize.Log(targetUser.Username),
+	)
+
+	return nil
 }
