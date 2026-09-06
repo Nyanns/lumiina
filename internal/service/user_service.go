@@ -158,9 +158,20 @@ func (s *userService) VerifyEmail(token string) (*model.User, error) {
 
 	ctx := context.Background()
 	key := fmt.Sprintf("verify_email:%s", token)
+	consumedKey := fmt.Sprintf("verify_email:consumed:%s", token)
 
 	userIDStr, err := s.rdb.Get(ctx, key).Result()
 	if err != nil {
+		// Graceful idempotency: Check if token was already consumed in a previous request or email scanner pre-fetch
+		consumedUserIDStr, consumedErr := s.rdb.Get(ctx, consumedKey).Result()
+		if consumedErr == nil && consumedUserIDStr != "" {
+			if uid, parseErr := strconv.Atoi(consumedUserIDStr); parseErr == nil {
+				user, findErr := s.repo.FindByID(uint(uid))
+				if findErr == nil && user != nil {
+					return user, nil
+				}
+			}
+		}
 		return nil, errors.New("verification link is invalid or expired")
 	}
 
@@ -179,7 +190,9 @@ func (s *userService) VerifyEmail(token string) (*model.User, error) {
 		return nil, err
 	}
 
-	// Invalidate token upon successful consumption (single-use constraint)
+	// Retain consumed token for 24 hours so repeat clicks or email pre-fetches
+	// gracefully auto-login without showing scary "Expired or Invalid" errors
+	_ = s.rdb.Set(ctx, consumedKey, fmt.Sprintf("%d", user.ID), 24*time.Hour).Err()
 	_ = s.rdb.Del(ctx, key)
 	return user, nil
 }
