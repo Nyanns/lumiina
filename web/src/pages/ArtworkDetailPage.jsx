@@ -465,17 +465,17 @@ export const ArtworkDetailPage = () => {
       {/* ========================================================================= */}
       {/* 2. MAIN VIEWPORT (Cinema Stage Left + Metadata / Discussion Right)         */}
       {/* ========================================================================= */}
-      <main className="flex-1 max-w-[1520px] mx-auto w-full px-4 sm:px-6 py-6 flex flex-col gap-8">
+      <main className="flex-1 max-w-[1520px] mx-auto w-full px-3 sm:px-6 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8 pb-16">
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-start">
           
           {/* ======================================================================= */}
           {/* LEFT: ARTWORK CINEMA STAGE (7-8 COLS)                                    */}
           {/* ======================================================================= */}
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
             
-            {/* Stage Box */}
-            <div className={`relative ${getCanvasBgClass()} rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/90 shadow-sm overflow-hidden flex items-center justify-center min-h-[480px] max-h-[88vh] transition-colors group`}>
+            {/* Stage Box (Dynamic Viewport Height dvh - Mobile & Desktop Adaptable) */}
+            <div className={`relative ${getCanvasBgClass()} rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/90 shadow-sm overflow-hidden flex items-center justify-center min-h-[260px] sm:min-h-[420px] max-h-[75dvh] sm:max-h-[85dvh] transition-colors group p-2 sm:p-4`}>
               
               {/* Artwork Image with Click-to-Zoom */}
               <img
@@ -484,29 +484,29 @@ export const ArtworkDetailPage = () => {
                 fetchpriority="high"
                 decoding="async"
                 onClick={() => setLightboxOpen(true)}
-                className="max-h-[85vh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"
+                className="max-h-[70dvh] sm:max-h-[80dvh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"
                 title="Click to inspect in fullscreen"
               />
 
-              {/* Floating Backdrop Switcher (Top Center) */}
-              <div className="absolute top-3.5 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/80 backdrop-blur-sm p-0.5 rounded-lg border border-white/10 text-[11px] font-semibold text-slate-300 shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Floating Backdrop Switcher (Visible on mobile touch, hover on desktop) */}
+              <div className="absolute top-2.5 sm:top-3.5 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/80 backdrop-blur-sm p-0.5 rounded-lg border border-white/10 text-[10px] sm:text-[11px] font-semibold text-slate-300 shadow-md opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => setCanvasBg('oled')}
-                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'oled' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded transition-colors cursor-pointer ${canvasBg === 'oled' ? 'bg-white/20 text-white font-bold' : 'hover:text-white'}`}
                   title="OLED Dark Canvas"
                 >
                   Dark
                 </button>
                 <button
                   onClick={() => setCanvasBg('studio')}
-                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'studio' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded transition-colors cursor-pointer ${canvasBg === 'studio' ? 'bg-white/20 text-white font-bold' : 'hover:text-white'}`}
                   title="18% Neutral Studio Gray Canvas"
                 >
                   Gray
                 </button>
                 <button
                   onClick={() => setCanvasBg('clean')}
-                  className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${canvasBg === 'clean' ? 'bg-white/20 text-white' : 'hover:text-white'}`}
+                  className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded transition-colors cursor-pointer ${canvasBg === 'clean' ? 'bg-white/20 text-white font-bold' : 'hover:text-white'}`}
                   title="Clean Bright Canvas"
                 >
                   Light
@@ -514,21 +514,21 @@ export const ArtworkDetailPage = () => {
               </div>
 
               {/* Floating Quick Action Overlay (Bottom Right) */}
-              <div className="absolute bottom-3.5 right-3.5 flex items-center gap-2">
+              <div className="absolute bottom-2.5 sm:bottom-3.5 right-2.5 sm:right-3.5 flex items-center gap-1.5 sm:gap-2">
                 <button
                   onClick={() => setLightboxOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/85 hover:bg-slate-950 text-white text-xs font-bold rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-slate-900/85 hover:bg-slate-950 text-white text-[11px] sm:text-xs font-bold rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all cursor-pointer"
                   title="Expand to Fullscreen (Click image or this button)"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Inspect Detail</span>
+                  <span className="hidden xs:inline">Inspect</span>
                 </button>
 
                 <a
                   href={artwork.image_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 bg-slate-900/85 hover:bg-slate-950 text-white rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all"
+                  className="p-1 sm:p-1.5 bg-slate-900/85 hover:bg-slate-950 text-white rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all"
                   title="Open original raw image file"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -536,7 +536,7 @@ export const ArtworkDetailPage = () => {
               </div>
 
               {/* Resolution Pill (Bottom Left) */}
-              <div className="absolute bottom-3.5 left-3.5 hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/75 text-slate-300 text-[10px] font-semibold rounded-md backdrop-blur-xs border border-white/10">
+              <div className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 sm:left-3.5 hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/75 text-slate-300 text-[10px] font-semibold rounded-md backdrop-blur-xs border border-white/10">
                 <ImageIcon className="w-3 h-3 text-sky-400" />
                 <span>Original Quality</span>
               </div>

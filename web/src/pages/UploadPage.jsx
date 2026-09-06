@@ -419,7 +419,7 @@ export const UploadPage = () => {
       {/* ========================================================================= */}
       {/* 2. MAIN WORKBENCH                                                         */}
       {/* ========================================================================= */}
-      <main className="flex-1 max-w-[1360px] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
+      <main className="flex-1 max-w-[1360px] mx-auto w-full px-3 sm:px-6 py-4 sm:py-8 pb-16">
         
         {/* Error Alert */}
         {error && (
@@ -660,8 +660,8 @@ export const UploadPage = () => {
 
                   </div>
 
-                  {/* Canvas Viewport */}
-                  <div className={`relative min-h-[440px] max-h-[600px] w-full flex items-center justify-center p-4 overflow-hidden select-none transition-colors ${getBackdropClass()}`}>
+                  {/* Canvas Viewport (Responsive Height with dvh) */}
+                  <div className={`relative min-h-[260px] sm:min-h-[420px] max-h-[60dvh] sm:max-h-[600px] w-full flex items-center justify-center p-2 sm:p-4 overflow-hidden select-none transition-colors ${getBackdropClass()}`}>
                     <img
                       ref={imagePreviewRef}
                       src={previewUrl}
@@ -671,8 +671,8 @@ export const UploadPage = () => {
                       }}
                       className={`transition-all duration-150 ${
                         viewMode === 'fit'
-                          ? 'max-h-[540px] w-auto max-w-full object-contain rounded-lg shadow-sm'
-                          : `w-full aspect-square max-h-[540px] rounded-lg shadow-sm ${getFocalClass()}`
+                          ? 'max-h-[55dvh] sm:max-h-[540px] w-auto max-w-full object-contain rounded-lg shadow-sm'
+                          : `w-full aspect-square max-h-[55dvh] sm:max-h-[540px] rounded-lg shadow-sm ${getFocalClass()}`
                       }`}
                     />
 

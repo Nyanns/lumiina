@@ -115,7 +115,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
         <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
       </Helmet>
 
-      <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-4">
+      <main className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 pb-24 md:pb-12 flex flex-col gap-4">
 
         {/* Compact top bar: back link + tab switcher + count */}
         <div className="flex items-center justify-between gap-3">
@@ -199,8 +199,8 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
-            {[...Array(10)].map((_, i) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
+            {[...Array(12)].map((_, i) => (
               <div key={i} className="bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-pulse">
                 <div className="w-full aspect-[3/4] bg-slate-200 dark:bg-slate-800" />
                 <div className="p-3 flex flex-col gap-2">
@@ -239,7 +239,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
             {filteredArtworks.map((artwork, idx) => (
               <ArtworkCard key={artwork.id} artwork={artwork} index={idx} />
             ))}

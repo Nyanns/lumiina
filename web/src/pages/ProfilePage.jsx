@@ -355,7 +355,7 @@ export const ProfilePage = () => {
       </Helmet>
 
       {/* Pixiv-Inspired Full-Width Header Banner */}
-      <div className="w-full relative h-48 sm:h-64 md:h-80 overflow-hidden bg-slate-100 dark:bg-[#181c24] border-b border-slate-200 dark:border-slate-800">
+      <div className="w-full relative h-36 sm:h-56 md:h-72 lg:h-80 overflow-hidden bg-slate-100 dark:bg-[#181c24] border-b border-slate-200 dark:border-slate-800">
         {profile.banner_url ? (
           <img
             src={profile.banner_url}
@@ -411,14 +411,14 @@ export const ProfilePage = () => {
       </div>
 
       {/* Main Profile Container */}
-      <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="relative -mt-16 sm:-mt-20 mb-8 flex flex-col gap-5">
+      <main className="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 pb-24 md:pb-16">
+        <div className="relative -mt-12 sm:-mt-16 md:-mt-20 mb-8 flex flex-col gap-5">
           
           {/* Top Bar: Avatar & Action Buttons */}
           <div className="flex items-end justify-between gap-4 flex-wrap">
             {/* Overlapping Pixiv Circular Avatar */}
             <div className="relative group">
-              <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden bg-white dark:bg-[#1a1e24] border-4 border-white dark:border-[#1a1e24] shadow-lg flex items-center justify-center text-slate-800 dark:text-white font-black text-3xl sm:text-4xl uppercase select-none">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-full overflow-hidden bg-white dark:bg-[#1a1e24] border-4 border-white dark:border-[#1a1e24] shadow-lg flex items-center justify-center text-slate-800 dark:text-white font-black text-2xl sm:text-3xl md:text-4xl uppercase select-none">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -704,7 +704,7 @@ export const ProfilePage = () => {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
                 {artworksList.map((artwork, idx) => (
                   <ArtworkCard
                     key={artwork.id}
@@ -740,7 +740,7 @@ export const ProfilePage = () => {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
                 {bookmarkedArtworks.map((artwork, idx) => (
                   <ArtworkCard
                     key={artwork.id}

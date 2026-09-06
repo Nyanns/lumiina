@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { BottomNav } from './components/BottomNav';
 import { FollowProvider } from './context/FollowContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 
@@ -33,6 +34,11 @@ export default function App() {
     ['/login', '/register', '/forgot-password', '/upload', '/about', '/guidelines', '/terms', '/privacy'].includes(location.pathname) ||
     location.pathname.startsWith('/artworks/');
 
+  // Hide mobile bottom navigation on auth, upload studio, and cinema viewer pages
+  const hideBottomNav =
+    ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname) ||
+    location.pathname.startsWith('/artworks/');
+
   return (
     <FollowProvider>
       <BookmarkProvider>
@@ -63,6 +69,8 @@ export default function App() {
               </Routes>
             </Suspense>
           </div>
+
+          {!hideBottomNav && <BottomNav />}
         </div>
       </BookmarkProvider>
     </FollowProvider>
