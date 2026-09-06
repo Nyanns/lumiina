@@ -51,7 +51,7 @@ export const ArtworkCard = ({ artwork, index }) => {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.25), ease: 'easeOut' }}
-      className="card-containment group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all duration-200 flex flex-col hover:-translate-y-1"
+      className="card-containment group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_3px_rgba(15,23,42,0.06)] hover:shadow-md transition-all duration-200 flex flex-col hover:-translate-y-1"
     >
       {/* Artwork Image Link */}
       <Link
@@ -111,18 +111,18 @@ export const ArtworkCard = ({ artwork, index }) => {
                 artwork.user?.username?.[0] || 'A'
               )}
             </div>
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
               {artwork.user?.username || 'Artist'}
             </span>
           </Link>
 
-          {/* Action Counters (Likes & Comments) */}
-          <div className="flex items-center gap-2.5 shrink-0 text-slate-400">
+          {/* Action Counters (Likes & Comments) - Enhanced Readability */}
+          <div className="flex items-center gap-2.5 shrink-0 text-slate-500 dark:text-slate-400">
             <button
               type="button"
               onClick={handleLikeToggle}
               className={`action-btn flex items-center gap-1 text-xs font-semibold hover:text-rose-600 transition-colors cursor-pointer p-0.5 ${
-                isLiked ? 'text-rose-600 dark:text-rose-500' : 'text-slate-400 dark:text-slate-500'
+                isLiked ? 'text-rose-600 dark:text-rose-500' : 'text-slate-600 dark:text-slate-400'
               }`}
               title="Like this artwork"
             >
@@ -134,7 +134,7 @@ export const ArtworkCard = ({ artwork, index }) => {
               type="button"
               onClick={handleBookmarkToggle}
               className={`action-btn flex items-center gap-1 text-xs font-semibold hover:text-amber-600 transition-colors cursor-pointer p-0.5 ${
-                isBookmarked ? 'text-amber-500 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
+                isBookmarked ? 'text-amber-500 dark:text-amber-400' : 'text-slate-600 dark:text-slate-400'
               }`}
               title="Bookmark this artwork"
             >
@@ -143,7 +143,7 @@ export const ArtworkCard = ({ artwork, index }) => {
             </button>
 
             {((artwork.comment_count || 0) > 0 || (artwork.comments && artwork.comments.length > 0)) && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-slate-400 dark:text-slate-500">
+              <span className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400">
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>{artwork.comment_count ?? artwork.comments?.length ?? 0}</span>
               </span>
@@ -157,7 +157,7 @@ export const ArtworkCard = ({ artwork, index }) => {
             {artwork.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag.id || tag.name}
-                className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded transition-colors"
+                className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/60 px-1.5 py-0.5 rounded transition-colors"
               >
                 #{tag.name}
               </span>

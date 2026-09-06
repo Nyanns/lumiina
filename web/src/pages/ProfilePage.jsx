@@ -329,7 +329,7 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
         <title>{creatorDisplayName} — Lumiina Artist Portfolio</title>
         <meta name="description" content={creatorDescription} />

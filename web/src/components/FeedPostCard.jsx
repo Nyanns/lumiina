@@ -77,7 +77,7 @@ export const FeedPostCard = ({ artwork, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.25), ease: 'easeOut' }}
-      className="card-containment bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col transition-colors"
+      className="card-containment bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_1px_4px_rgba(15,23,42,0.06)] overflow-hidden flex flex-col transition-colors"
     >
       {/* Top Header: Creator Info & More Options (World-Class Feed Standard) */}
       <div className="p-4 flex items-center justify-between">
@@ -96,7 +96,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
               {artwork.user?.username || 'Artist'}
             </h3>
-            <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
               <Calendar className="w-3 h-3" />
               {artwork.created_at
                 ? new Date(artwork.created_at).toLocaleDateString('en-US', {
@@ -180,7 +180,7 @@ export const FeedPostCard = ({ artwork, index }) => {
               className={`group flex items-center gap-1.5 text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 isLiked
                   ? 'text-rose-600 dark:text-rose-500'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-500'
+                  : 'text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-500'
               }`}
               title={isLiked ? 'Unlike' : 'Like'}
             >
@@ -191,7 +191,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             {/* Comment Bubble */}
             <Link
               to={`/artworks/${artwork.id}`}
-              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
               title="View comments"
             >
               <MessageSquare className="w-5 h-5 transition-transform group-hover:scale-110" />
@@ -202,7 +202,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             <button
               type="button"
               onClick={handleShare}
-              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
+              className="group flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition-colors cursor-pointer"
               title="Share artwork"
             >
               {copied ? (
@@ -223,7 +223,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             className={`p-1.5 rounded-full transition-all cursor-pointer flex items-center gap-1 ${
               isBookmarked
                 ? 'text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
             title={isBookmarked ? 'Remove bookmark' : 'Bookmark artwork'}
             aria-label="Bookmark artwork"
@@ -247,7 +247,7 @@ export const FeedPostCard = ({ artwork, index }) => {
             </h4>
           </Link>
           {artwork.description && (
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-2">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-2">
               {artwork.description}
             </p>
           )}
@@ -260,7 +260,7 @@ export const FeedPostCard = ({ artwork, index }) => {
               <Link
                 key={tag.id || tag.name}
                 to={`/?tag=${encodeURIComponent(tag.name)}`}
-                className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1 rounded-lg transition-colors border border-sky-100 dark:border-sky-800/60"
+                className="text-[11px] font-semibold text-sky-800 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 px-2.5 py-1 rounded-lg transition-colors border border-sky-200/80 dark:border-sky-800/60"
               >
                 #{tag.name}
               </Link>

@@ -74,7 +74,7 @@ export function LegalInfoPage({ defaultTab }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-800 dark:text-slate-200 transition-colors duration-200">
+    <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0b0f17] text-slate-800 dark:text-slate-200 transition-colors duration-200">
       <Helmet>
         <title>{metaConfig.title}</title>
         <meta name="description" content={metaConfig.description} />

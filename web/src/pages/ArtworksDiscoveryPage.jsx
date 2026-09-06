@@ -93,7 +93,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
   const canonicalUrl = `https://lumiina.art/${activeTab === 'trending' ? 'trending' : 'recommended'}`;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 font-sans transition-colors">
+    <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#121519] text-slate-900 dark:text-slate-100 font-sans transition-colors">
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />

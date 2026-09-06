@@ -225,7 +225,7 @@ export const ArtworkDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] flex items-center justify-center p-8 transition-colors">
+      <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0c0f14] flex items-center justify-center p-8 transition-colors">
         <div className="text-center flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Loading masterpiece...</p>
@@ -236,7 +236,7 @@ export const ArtworkDetailPage = () => {
 
   if (!artwork) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] flex items-center justify-center p-8 transition-colors">
+      <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0c0f14] flex items-center justify-center p-8 transition-colors">
         <div className="text-center bg-white dark:bg-[#161a22] p-8 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md shadow-sm">
           <h2 className="text-base font-bold text-slate-900 dark:text-white mb-2">Artwork Not Found</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">This illustration may have been removed or is unavailable.</p>
@@ -327,7 +327,7 @@ export const ArtworkDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-sky-100 selection:text-sky-900">
+    <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-sky-100 selection:text-sky-900">
       <Helmet>
         <title>{pageTitle}</title>
         <meta
@@ -593,7 +593,7 @@ export const ArtworkDetailPage = () => {
           <div className="lg:col-span-5 xl:col-span-4 flex flex-col gap-6">
             
             {/* Unified Artwork & Artist Card */}
-            <div className="bg-white dark:bg-[#141820] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs flex flex-col gap-5 transition-colors">
+            <div className="bg-white dark:bg-[#141820] rounded-2xl sm:rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-[0_1px_4px_rgba(15,23,42,0.06)] flex flex-col gap-5 transition-colors">
               
               {/* Creator Profile Section */}
               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
@@ -755,7 +755,7 @@ export const ArtworkDetailPage = () => {
                           onChange={(e) => setNewComment(e.target.value)}
                           placeholder="Write your thoughts..."
                           maxLength={500}
-                          className="w-full pl-4 pr-10 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
+                          className="w-full pl-4 pr-10 py-2 text-xs bg-slate-100/90 dark:bg-slate-800/80 hover:bg-slate-200/60 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-200 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
                         />
                         <button
                           type="submit"
@@ -769,8 +769,8 @@ export const ArtworkDetailPage = () => {
                     </div>
                   </form>
                 ) : (
-                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/80 text-center">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  <div className="p-3 bg-slate-100/80 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-700/80 text-center">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                       Want to join?{' '}
                       <Link to="/login" className="font-bold text-sky-600 dark:text-sky-400 hover:underline">
                         Sign in
@@ -783,7 +783,7 @@ export const ArtworkDetailPage = () => {
               {/* Comments List */}
               <div className="flex flex-col max-h-[380px] overflow-y-auto">
                 {comments.length === 0 ? (
-                  <div className="text-center py-10 text-xs text-slate-400">
+                  <div className="text-center py-10 text-xs text-slate-500 dark:text-slate-400 font-medium">
                     No comments yet. Be the first to share your appreciation!
                   </div>
                 ) : (
@@ -829,7 +829,7 @@ export const ArtworkDetailPage = () => {
                                 </span>
                               )}
                               <span className="text-slate-400 dark:text-slate-500">·</span>
-                              <span className="text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0 font-medium">
                                 {c.created_at
                                   ? new Date(c.created_at).toLocaleDateString('en-US', {
                                       day: 'numeric',

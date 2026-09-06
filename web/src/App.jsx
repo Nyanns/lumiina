@@ -43,7 +43,7 @@ export default function App() {
   return (
     <FollowProvider>
       <BookmarkProvider>
-        <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900 selection:bg-sky-100 selection:text-sky-900">
+        <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#121519] flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-sky-100 selection:text-sky-900 transition-colors">
           {!hideGlobalNavbar && <Navbar />}
 
           <div className="flex-1 flex flex-col">

@@ -401,14 +401,13 @@ export const HomePage = () => {
 
           {/* Right Sidebar Column (Sticky - Pixiv Style) */}
           <aside className="lg:col-span-4 xl:col-span-3 flex flex-col gap-5 sticky top-24">
-            
-            {/* Widget 1: Daily Spotlight (Sorotan Hari Ini) */}
-            <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col gap-4">
+                   {/* Widget 1: Daily Spotlight (Sorotan Hari Ini) */}
+            <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   Daily Spotlight
                 </h3>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Ranked</span>
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Ranked</span>
               </div>
 
               {artworks.length > 0 ? (
@@ -419,7 +418,7 @@ export const HomePage = () => {
                       to={`/artworks/${art.id}`}
                       className="flex items-center gap-3 group hover:bg-slate-50 dark:hover:bg-slate-800/60 p-1.5 rounded-xl transition-colors"
                     >
-                      <span className="text-sm font-black text-slate-300 dark:text-slate-600 group-hover:text-sky-600 w-4 text-center">
+                      <span className="text-sm font-black text-slate-400 dark:text-slate-600 group-hover:text-sky-600 w-4 text-center">
                         {idx + 1}
                       </span>
                       <img
@@ -428,10 +427,10 @@ export const HomePage = () => {
                         className="w-12 h-12 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 transition-colors">
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 transition-colors">
                           {art.title}
                         </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 truncate mt-0.5">
                           by {art.user?.username || 'Artist'}
                         </p>
                       </div>
@@ -439,12 +438,12 @@ export const HomePage = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 py-2">No spotlight artworks yet.</p>
+                <p className="text-xs text-slate-500 py-2">No spotlight artworks yet.</p>
               )}
             </div>
 
             {/* Widget 2: Popular Tags (100% Real from PostgreSQL Database) */}
-            <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col gap-3">
+            <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex flex-col gap-3">
               <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 Popular Tags
               </h3>
@@ -458,23 +457,21 @@ export const HomePage = () => {
                       className={`text-xs font-medium px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
                         queryTag === tag
                           ? 'bg-sky-600 text-white font-bold'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-50 dark:hover:bg-slate-700'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 hover:text-sky-600 border border-slate-200/70 dark:border-slate-700/60'
                       }`}
                     >
                       #{tag}
                     </button>
                   ))
                 ) : (
-                  <p className="text-xs text-slate-400 py-1 italic">
-                    No tags in database yet.
-                  </p>
+                  <p className="text-xs text-slate-500 py-2">Loading tags...</p>
                 )}
               </div>
             </div>
 
             {/* Widget 3: Recommended Users (Hidden for guests, strictly excludes current user) */}
             {isAuthenticated && (
-              <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col gap-4">
+              <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-[0_1px_3px_rgba(15,23,42,0.06)] flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                     Recommended Users
@@ -504,7 +501,7 @@ export const HomePage = () => {
                               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-sky-600 transition-colors">
                                 {u.username}
                               </h4>
-                              <p className="text-[10px] text-slate-400 truncate">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                                 @{u.username?.toLowerCase()}
                               </p>
                             </div>

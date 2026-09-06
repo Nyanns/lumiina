@@ -302,7 +302,7 @@ export const UploadPage = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans">
+      <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0c0f14] flex items-center justify-center p-6 text-slate-900 dark:text-slate-100 font-sans">
         <Helmet>
           <title>Sign In Required — Lumiina</title>
         </Helmet>
@@ -359,7 +359,7 @@ export const UploadPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
+    <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
         <title>{title.trim() ? `${title.trim()} — Upload` : 'Upload Illustration — Lumiina'}</title>
       </Helmet>

@@ -82,7 +82,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
             className="flex-1 max-w-xl relative hidden md:block"
           >
             <div className="relative group">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-sky-600 transition-colors pointer-events-none" />
+              <Search className="w-4 h-4 text-slate-500 dark:text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 group-focus-within:text-sky-600 transition-colors pointer-events-none" />
               <input
                 type="text"
                 value={localSearch}
@@ -91,7 +91,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                   if (onSearchChange) onSearchChange(e.target.value);
                 }}
                 placeholder="Search illustrations, tags, or creators..."
-                className="w-full pl-10 pr-9 py-2 text-sm bg-slate-100 dark:bg-[#252a32] hover:bg-slate-200/70 dark:hover:bg-[#2c323c] focus:bg-white dark:focus:bg-[#21262d] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-full border border-transparent focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-950/40 transition-all outline-none"
+                className="w-full pl-10 pr-9 py-2 text-sm bg-slate-100/90 dark:bg-[#252a32] hover:bg-slate-200/60 dark:hover:bg-[#2c323c] focus:bg-white dark:focus:bg-[#21262d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-full border border-slate-200/80 dark:border-transparent focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-950/40 transition-all outline-none"
               />
               {localSearch && (
                 <button
