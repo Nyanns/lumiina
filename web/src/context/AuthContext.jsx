@@ -20,9 +20,12 @@ export const AuthProvider = ({ children }) => {
             setUser(res.data.data);
             localStorage.setItem('lumiina_user', JSON.stringify(res.data.data));
           }
-        } catch {
-          // Token invalid or expired
-          logout();
+        } catch (err) {
+          // Only logout if server explicitly confirms token is 401 Unauthorized (expired/invalid).
+          // Do NOT wipe the session on 429 rate limits or transient network errors.
+          if (err.response?.status === 401) {
+            logout();
+          }
         }
       }
       setLoading(false);

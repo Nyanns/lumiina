@@ -53,6 +53,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	followHandler := handler.NewFollowHandler(followService, userRepo)
 
 	r := gin.Default()
+	r.TrustedPlatform = "X-Forwarded-For"
 
 	// Security: Configure trusted proxies
 	_ = r.SetTrustedProxies(cfg.TrustedProxies)
@@ -72,7 +73,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	}
 
 	// Global Atomic Token Bucket Rate Limiter
-	r.Use(middleware.RateLimiterMiddleware(rdb, 100, 1*time.Minute))
+	r.Use(middleware.RateLimiterMiddleware(rdb, 300, 1*time.Minute))
 
 	// Health Probes
 	r.GET("/livez", func(c *gin.Context) {
@@ -142,7 +143,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		users.GET("/:id/bookmarks", optionalAuth, bookmarkHandler.GetUserBookmarks)
 	}
 
-	rateLimiter := middleware.RateLimiterMiddleware(rdb, 10, 1*time.Minute)
+	rateLimiter := middleware.RateLimiterMiddleware(rdb, 60, 1*time.Minute)
 	auth := v1.Group("/auth")
 	auth.Use(rateLimiter)
 	{
