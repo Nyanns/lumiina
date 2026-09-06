@@ -24,7 +24,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()")
 
 		// Restrict resource loading with safe allowances for styles, fonts, and images
-		c.Header("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; script-src 'self'; connect-src 'self'")
+		c.Header("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://res.cloudinary.com")
 
 		c.Next()
 	}
