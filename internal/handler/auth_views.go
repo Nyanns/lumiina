@@ -34,7 +34,7 @@ func renderVerificationSuccessPage() string {
 </head>
 <body>
 	<nav class="navbar">
-		<a href="http://localhost:5173" class="brand">Lumiina <span>Illustration & Creator Community</span></a>
+		<a href="/" class="brand">Lumiina <span>Illustration & Creator Community</span></a>
 	</nav>
 	
 	<main class="main">
@@ -53,7 +53,7 @@ func renderVerificationSuccessPage() string {
 				</ul>
 			</div>
 
-			<a href="http://localhost:5173/login" class="btn-primary">Sign In to Your Account</a>
+			<a href="/login" class="btn-primary">Sign In to Your Account</a>
 		</div>
 	</main>
 
@@ -98,7 +98,7 @@ func renderVerificationErrorPage(title, message string) string {
 </head>
 <body>
 	<nav class="navbar">
-		<a href="http://localhost:5173" class="brand">Lumiina <span>Illustration & Creator Community</span></a>
+		<a href="/" class="brand">Lumiina <span>Illustration & Creator Community</span></a>
 	</nav>
 	
 	<main class="main">
@@ -118,7 +118,7 @@ func renderVerificationErrorPage(title, message string) string {
 				</ul>
 			</div>
 
-			<a href="http://localhost:5173/login" class="btn-primary">Return to Sign In</a>
+			<a href="/login" class="btn-primary">Return to Sign In</a>
 		</div>
 	</main>
 

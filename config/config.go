@@ -49,7 +49,16 @@ func LoadConfig() *Config {
 	}
 
 	appEnv := getEnvOrDefault("APP_ENV", "development")
-	baseURL := getEnvOrDefault("APP_BASE_URL", "http://localhost:8080")
+	baseURL := os.Getenv("APP_BASE_URL")
+	if baseURL == "" {
+		if vercelURL := os.Getenv("VERCEL_PROJECT_PRODUCTION_URL"); vercelURL != "" {
+			baseURL = "https://" + vercelURL
+		} else if vercelURL := os.Getenv("VERCEL_URL"); vercelURL != "" {
+			baseURL = "https://" + vercelURL
+		} else {
+			baseURL = "http://localhost:8080"
+		}
+	}
 	secret := os.Getenv("JWT_SECRET")
 	secretOld := os.Getenv("JWT_SECRET_OLD")
 	port := getEnvOrDefault("PORT", "8080")
