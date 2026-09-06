@@ -18,7 +18,7 @@ func InvalidateArtworkCache(rdb *redis.Client) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	patterns := []string{"artworks:page:*", "artworks:trending:*", "artworks:recommended:*", "tags:popular:*"}
+	patterns := []string{"artworks:*", "tags:popular:*"}
 	for _, pattern := range patterns {
 		var batchKeys []string
 		iter := rdb.Scan(ctx, 0, pattern, 100).Iterator()

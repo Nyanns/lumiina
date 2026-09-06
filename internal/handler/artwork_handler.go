@@ -128,7 +128,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	// Check cache
 	cachedData, err := h.rdb.Get(ctx, cacheKey).Result()
 	if err == nil {
-		c.Header("Cache-Control", "public, max-age=60")
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 		c.Data(http.StatusOK, "application/json", []byte(cachedData))
 		return
 	}
@@ -169,7 +169,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 		return
 	}
 
-	c.Header("Cache-Control", "public, max-age=60")
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
@@ -330,7 +330,7 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 		artwork.User.IsFollowing, _ = h.followRepo.IsFollowing(currentUserID, artwork.UserID)
 	}
 
-	c.Header("Cache-Control", "public, max-age=60")
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.JSON(http.StatusOK, gin.H{"data": artwork})
 }
 
@@ -458,7 +458,7 @@ func (h *ArtworkHandler) GetTrendingArtworks(c *gin.Context) {
 		return
 	}
 
-	c.Header("Cache-Control", "public, max-age=120")
+	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 

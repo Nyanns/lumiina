@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { artworksAPI, usersAPI, tagsAPI } from '../api/client';
 import { FeedPostCard } from '../components/FeedPostCard';
@@ -16,6 +16,7 @@ import { useBookmarks } from '../context/BookmarkContext';
 
 export const HomePage = () => {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
   const { syncFromServer: syncLikes } = useLikes();
   const { syncFromServer: syncBookmarks } = useBookmarks();
   const { isFollowed: isFollowedGlobal, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
@@ -84,7 +85,7 @@ export const HomePage = () => {
 
   useEffect(() => {
     fetchArtworks(true);
-  }, [querySearch, queryTag, isAuthenticated]);
+  }, [querySearch, queryTag, isAuthenticated, location.key]);
 
   // Fetch Dual-Axis Horizontal Sections (Trending & Recommended)
   useEffect(() => {
