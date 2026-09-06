@@ -36,12 +36,14 @@ func ConnectDB(cfg *Config) *gorm.DB {
 		},
 	)
 
+	isPooler := strings.Contains(cfg.DBHost, "pooler.supabase.com") || cfg.DBPort == "6543"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormLogger,
 		// Performance: Skip default transaction on single writes for ~30-50% speedup
 		SkipDefaultTransaction: true,
-		// Performance: Cache prepared statements to eliminate repeated query plan compilation
-		PrepareStmt: true,
+		// In transaction pooler mode, disable PrepareStmt to prevent prepared statement conflicts
+		PrepareStmt: !isPooler,
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -52,11 +54,17 @@ func ConnectDB(cfg *Config) *gorm.DB {
 		log.Fatalf("Failed to get database instance: %v", err)
 	}
 
-	// Enterprise Connection Pool Sizing: Prevents connection exhaustion & thread thrashing
-	sqlDB.SetMaxOpenConns(50)
-	sqlDB.SetMaxIdleConns(25)
-	sqlDB.SetConnMaxLifetime(15 * time.Minute)
-	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
+	// Enterprise Connection Pool Sizing: Prevents pool exhaustion on Supabase Serverless
+	maxOpen := 50
+	maxIdle := 25
+	if isPooler || cfg.AppEnv == "production" {
+		maxOpen = 8
+		maxIdle = 4
+	}
+	sqlDB.SetMaxOpenConns(maxOpen)
+	sqlDB.SetMaxIdleConns(maxIdle)
+	sqlDB.SetConnMaxLifetime(10 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(2 * time.Minute)
 
 	return db
 }
