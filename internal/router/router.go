@@ -2,6 +2,8 @@ package router
 
 import (
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/gzip"
@@ -178,6 +180,23 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	adminOnly.Use(middleware.AdminOnly())
 	{
 		// Admin-only endpoints
+	}
+
+	// Static web assets & React SPA fallback (if web/dist exists)
+	if _, err := os.Stat("web/dist/index.html"); err == nil {
+		r.Static("/assets", "web/dist/assets")
+		r.StaticFile("/favicon.ico", "web/dist/favicon.ico")
+		r.StaticFile("/sw.js", "web/dist/sw.js")
+		r.StaticFile("/manifest.webmanifest", "web/dist/manifest.webmanifest")
+		r.StaticFile("/registerSW.js", "web/dist/registerSW.js")
+
+		r.NoRoute(func(c *gin.Context) {
+			if !strings.HasPrefix(c.Request.URL.Path, "/api") {
+				c.File("web/dist/index.html")
+				return
+			}
+			c.JSON(http.StatusNotFound, gin.H{"error": "API route not found"})
+		})
 	}
 
 	return r

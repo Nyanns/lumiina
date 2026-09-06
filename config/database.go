@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -12,8 +13,16 @@ import (
 )
 
 func ConnectDB(cfg *Config) *gorm.DB {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
-		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort,
+	sslMode := "disable"
+	if cfg.AppEnv == "production" || strings.Contains(cfg.DBHost, "supabase.co") || strings.Contains(cfg.DBHost, "neon.tech") {
+		sslMode = "require"
+	}
+	if envSSL := os.Getenv("DB_SSL_MODE"); envSSL != "" {
+		sslMode = envSSL
+	}
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Jakarta",
+		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort, sslMode,
 	)
 
 	// Slow query logger: automatically captures queries taking > 200ms
