@@ -38,7 +38,10 @@ func ConnectDB(cfg *Config) *gorm.DB {
 
 	isPooler := strings.Contains(cfg.DBHost, "pooler.supabase.com") || cfg.DBPort == "6543"
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: isPooler || cfg.AppEnv == "production",
+	}), &gorm.Config{
 		Logger: gormLogger,
 		// Performance: Skip default transaction on single writes for ~30-50% speedup
 		SkipDefaultTransaction: true,

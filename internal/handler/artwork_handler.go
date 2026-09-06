@@ -17,6 +17,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	"github.com/sandi/lumiina/internal/middleware"
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/cache"
 	"github.com/sandi/lumiina/internal/pkg/hashid"
@@ -163,6 +164,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	})
 
 	if err != nil {
+		slog.Error("Failed to fetch artworks", "error", err, "page", page, "limit", limit, "request_id", middleware.GetRequestID(c))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch artworks"})
 		return
 	}
