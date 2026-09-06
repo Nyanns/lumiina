@@ -14,7 +14,7 @@ import (
 
 func ConnectDB(cfg *Config) *gorm.DB {
 	sslMode := "disable"
-	if cfg.AppEnv == "production" || strings.Contains(cfg.DBHost, "supabase.co") || strings.Contains(cfg.DBHost, "neon.tech") {
+	if cfg.AppEnv == "production" || strings.Contains(cfg.DBHost, "supabase.co") || strings.Contains(cfg.DBHost, "supabase.com") || strings.Contains(cfg.DBHost, "neon.tech") {
 		sslMode = "require"
 	}
 	if envSSL := os.Getenv("DB_SSL_MODE"); envSSL != "" {
