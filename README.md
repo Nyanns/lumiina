@@ -33,6 +33,25 @@ Official platform mascots: **Lumi** and **Ina**.
 - **Entity Obfuscation and Vanity URLs**:
   - Sequential database IDs are shielded using Sqids-based HashID strings (`/artworks/H1rJsY`).
   - Canonical creator profiles use case-insensitive vanity handles (`/profile/Nyanns`).
+- **Instagram-Style Client-Side Image Preprocessing & Optimization (`/upload`)**:
+  - **Zero-Wait Uploads**: High-performance client-side Canvas & GPU downsampling pipelines (`web/src/utils/imageOptimizer.js`).
+  - **Intelligent Resampling**: Scales oversized 4K/8K illustrations to optimal display bounds (2560px max dimension, 2K QHD crisp) preserving razor-sharp line-art.
+  - **Visually Lossless Compression**: Encodes to WebP (with JPEG fallback) at 0.88–0.90 quality factor, shrinking 10MB–20MB raw files down to **~600KB–1.2MB (-85% to -95% bandwidth saved)**.
+  - **Alpha-Channel Aware**: Automatically detects PNG transparency to prevent black bounding boxes on transparent stickers and character illustrations.
+  - **Artist Autonomy**: Instagram-style live compression metrics badge with an opt-out toggle for artists desiring uncompressed master files.
+- **Technical SEO, GEO & AI Crawler Discoverability**:
+  - Standardized Schema.org JSON-LD rich data: `VisualArtwork`, `ProfilePage`, `Person` (with `sameAs` social links), `BreadcrumbList`, and `WebSite` with Sitelinks `SearchAction`.
+  - Machine-readable discovery: `robots.txt` optimized for search and AI crawlers (GPTBot, ClaudeBot, PerplexityBot) alongside dynamic XML `sitemap.xml`.
+  - Dynamic Open Graph and Twitter Large Summary Cards for viral social sharing.
+- **Extreme Frontend Performance & Bundle Optimization**:
+  - Route-level code-splitting with `React.lazy()` and zero-CLS `PageLoadingFallback`. Initial bundle entry reduced by **>93% (from 640 kB to 22.07 kB)**.
+  - Off-screen GPU render containment via CSS `.card-containment` (`content-visibility: auto; contain-intrinsic-size: 380px;`).
+  - Gin backend HTTP Gzip compression (`github.com/gin-contrib/gzip`) with minimum size thresholds.
+- **Defense-in-Depth API Security Hardening**:
+  - Transport & Headers: HSTS (`Strict-Transport-Security: max-age=31536000`), lockdown `Permissions-Policy`, and strict CSP.
+  - Stream DoS Mitigation: Enforced `http.MaxBytesReader` on upload streams (6MB Avatar, 12MB Banner, 22MB Artwork).
+  - Anti-XSS: Server-side `html.EscapeString` and strict safe URI scheme neutralization against `javascript:`/`data:` vectors.
+  - BOLA Remediation: Artwork owners granted full comment moderation privileges on their artworks.
 - **Human-Crafted Visual Standard**:
   - Built strictly on clean slate surfaces, 1px tactile borders, and Pixiv Sky Blue (`#0096fa`) accents.
   - Zero glassmorphism blur; content-first typography using **Inter** paired with native Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`).

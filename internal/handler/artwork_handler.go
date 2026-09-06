@@ -177,6 +177,9 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 		return
 	}
 
+	// Limit total body size to prevent stream memory exhaustion DoS (max 22MB)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 22*1024*1024)
+
 	file, err := c.FormFile("image")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Image file is required (field: image)"})
@@ -533,6 +536,3 @@ func (h *ArtworkHandler) GetPopularTags(c *gin.Context) {
 
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
-
-
-

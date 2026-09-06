@@ -376,4 +376,3 @@ func (r *artworkRepository) GetPopularTags(userID uint, limit int) ([]model.Tag,
 	err := query.Limit(limit).Find(&tags).Error
 	return tags, err
 }
-

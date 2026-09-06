@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sandi/lumiina/config"
@@ -91,6 +92,11 @@ func main() {
 	r.Use(middleware.TimeoutMiddleware(15 * time.Second))
 	r.Use(middleware.CORSMiddleware(cfg.AllowedOrigins...))
 	r.Use(middleware.SecurityHeadersMiddleware())
+	r.Use(gzip.Gzip(
+		gzip.DefaultCompression,
+		gzip.WithExcludedPaths([]string{"/metrics", "/livez", "/readyz"}),
+		gzip.WithMinLength(512),
+	))
 
 	// Health Probes
 	r.GET("/livez", func(c *gin.Context) {

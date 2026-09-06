@@ -330,6 +330,9 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
+	// Security: Guard against memory exhaustion DoS from oversized multipart bodies (max 6MB)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 6*1024*1024)
+
 	fileHeader, err := c.FormFile("avatar")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Avatar image file is required"})
@@ -384,6 +387,9 @@ func (h *UserHandler) UploadBanner(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+
+	// Security: Guard against memory exhaustion DoS from oversized multipart bodies (max 12MB)
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 12*1024*1024)
 
 	fileHeader, err := c.FormFile("banner")
 	if err != nil {

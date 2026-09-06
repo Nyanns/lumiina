@@ -3,12 +3,12 @@ package model
 import "time"
 
 type User struct {
-	ID         uint      `json:"id" gorm:"primaryKey"`
-	Username   string    `json:"username" gorm:"unique;not null"`
-	Email      string    `json:"email" gorm:"unique;not null"`
-	Password   string    `json:"-" gorm:"not null"`
-	Role       string    `json:"role" gorm:"default:'regular'"`
-	IsVerified bool      `json:"is_verified" gorm:"default:false"`
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	Username    string    `json:"username" gorm:"unique;not null"`
+	Email       string    `json:"email" gorm:"unique;not null"`
+	Password    string    `json:"-" gorm:"not null"`
+	Role        string    `json:"role" gorm:"default:'regular'"`
+	IsVerified  bool      `json:"is_verified" gorm:"default:false"`
 	DisplayName string    `json:"display_name" gorm:"default:''"`
 	Bio         string    `json:"bio" gorm:"type:text;default:''"`
 	AvatarURL   string    `json:"avatar_url" gorm:"default:''"`

@@ -53,7 +53,7 @@ func (r *commentRepository) GetByArtworkID(artworkID uint, limit int, offset int
 
 func (r *commentRepository) GetByID(id uint) (*model.Comment, error) {
 	var comment model.Comment
-	err := r.db.First(&comment, id).Error
+	err := r.db.Preload("Artwork").First(&comment, id).Error
 	return &comment, err
 }
 

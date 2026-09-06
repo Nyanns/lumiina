@@ -53,8 +53,12 @@ func (s *commentService) DeleteComment(commentID uint, userID uint, role string)
 		return err
 	}
 
-	// Authorization check: Only comment owner or admin can delete
-	if comment.UserID != userID && role != "admin" {
+	// Authorization check: comment author, artwork owner, or admin can delete
+	isAuthor := comment.UserID == userID
+	isArtworkOwner := comment.Artwork != nil && comment.Artwork.UserID > 0 && comment.Artwork.UserID == userID
+	isAdmin := role == "admin"
+
+	if !isAuthor && !isArtworkOwner && !isAdmin {
 		return errors.New("forbidden: unauthorized to delete this comment")
 	}
 

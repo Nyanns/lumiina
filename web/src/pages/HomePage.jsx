@@ -200,11 +200,59 @@ export const HomePage = () => {
   if (querySearch) pageTitle = `Search "${querySearch}" — Lumiina`;
   else if (queryTag) pageTitle = `#${queryTag} — Lumiina`;
 
+  const homeCanonicalUrl = querySearch 
+    ? `https://lumiina.art/?search=${encodeURIComponent(querySearch)}`
+    : queryTag
+    ? `https://lumiina.art/?tag=${encodeURIComponent(queryTag)}`
+    : 'https://lumiina.art/';
+
+  const homeDescription = querySearch
+    ? `Explore digital artwork and illustrations matching "${querySearch}" on Lumiina.`
+    : queryTag
+    ? `Discover the latest digital fan art and anime illustrations tagged #${queryTag} on Lumiina.`
+    : 'Explore high-quality anime fan art, character illustrations, and manga artwork from independent digital creators worldwide on Lumiina.';
+
+  const collectionJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: pageTitle,
+    description: homeDescription,
+    url: homeCanonicalUrl,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: artworks.slice(0, 10).map((art, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        url: `https://lumiina.art/artworks/${art.id}`,
+        name: art.title,
+      })),
+    },
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content="Explore high-quality illustrations and artwork by creators on Lumiina." />
+        <meta name="description" content={homeDescription} />
+        <link rel="canonical" href={homeCanonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Lumiina" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={homeDescription} />
+        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:url" content={homeCanonicalUrl} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@lumiina_art" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={homeDescription} />
+        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+
+        {/* Schema.org CollectionPage */}
+        <script type="application/ld+json">{JSON.stringify(collectionJsonLd)}</script>
       </Helmet>
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">

@@ -12,7 +12,6 @@ import {
   Calendar, 
   Check,
   Maximize2,
-  Minimize2,
   X,
   Sun,
   Moon,
@@ -270,6 +269,63 @@ export const ArtworkDetailPage = () => {
     ? `${tagsPrefix} / ${artwork.title} - ${artistName} — Lumiina`
     : `${artwork.title} - ${artistName} — Lumiina`;
 
+  const canonicalUrl = `https://lumiina.art/artworks/${artwork.id}`;
+  const artworkJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: artwork.title,
+    image: artwork.image_url,
+    description:
+      artwork.description ||
+      `Digital illustration titled "${artwork.title}" by ${artistName} on Lumiina.`,
+    creator: {
+      '@type': 'Person',
+      name: artistName,
+      url: `https://lumiina.art/profile/${artwork.user?.username || artwork.user_id}`,
+    },
+    dateCreated: artwork.created_at,
+    artform: 'Digital Illustration',
+    artMedium: 'Digital Painting',
+    keywords: tagList.join(', '),
+    interactionStatistic: [
+      {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/LikeAction',
+        userInteractionCount: likeCount,
+      },
+      {
+        '@type': 'InteractionCounter',
+        interactionType: 'https://schema.org/CommentAction',
+        userInteractionCount: comments.length,
+      },
+    ],
+  };
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://lumiina.art/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Artworks',
+        item: 'https://lumiina.art/explore',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: artwork.title,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0c0f14] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-sky-100 selection:text-sky-900">
       <Helmet>
@@ -281,20 +337,28 @@ export const ArtworkDetailPage = () => {
             `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.${tagList.length > 0 ? ` Tags: #${tagList.join(' #')}` : ''}`
           }
         />
+        <link rel="canonical" href={canonicalUrl} />
         <meta property="og:title" content={pageTitle} />
         <meta
           property="og:description"
           content={artwork.description || `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.`}
         />
         <meta property="og:image" content={artwork.image_url} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Lumiina" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@lumiina_art" />
         <meta name="twitter:title" content={pageTitle} />
         <meta
           name="twitter:description"
           content={artwork.description || `Illustration titled "${artwork.title}" by ${artistName} on Lumiina.`}
         />
         <meta name="twitter:image" content={artwork.image_url} />
+
+        {/* Structured Data: Schema.org VisualArtwork & Breadcrumbs for Google & Generative AI Search */}
+        <script type="application/ld+json">{JSON.stringify(artworkJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       </Helmet>
 
       {/* ========================================================================= */}
@@ -417,6 +481,8 @@ export const ArtworkDetailPage = () => {
               <img
                 src={artwork.image_url}
                 alt={artwork.title}
+                fetchpriority="high"
+                decoding="async"
                 onClick={() => setLightboxOpen(true)}
                 className="max-h-[85vh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"
                 title="Click to inspect in fullscreen"

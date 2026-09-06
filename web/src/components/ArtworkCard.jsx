@@ -51,7 +51,7 @@ export const ArtworkCard = ({ artwork, index }) => {
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.25), ease: 'easeOut' }}
-      className="group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all duration-200 flex flex-col hover:-translate-y-1"
+      className="card-containment group bg-white dark:bg-[#1a1e24] rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:shadow-md transition-all duration-200 flex flex-col hover:-translate-y-1"
     >
       {/* Artwork Image Link */}
       <Link
@@ -65,7 +65,9 @@ export const ArtworkCard = ({ artwork, index }) => {
         <img
           src={artwork.image_url}
           alt={artwork.title}
-          loading="lazy"
+          loading={index < 4 ? "eager" : "lazy"}
+          fetchpriority={index === 0 ? "high" : "auto"}
+          decoding="async"
           onLoad={() => setIsLoaded(true)}
           onError={() => setIsLoaded(true)}
           className={`w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300 ease-out ${

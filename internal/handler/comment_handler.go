@@ -22,8 +22,6 @@ func NewCommentHandler(service service.CommentService, rdb *redis.Client) *Comme
 	return &CommentHandler{service: service, rdb: rdb}
 }
 
-
-
 // CreateComment adds a sanitized comment to an artwork.
 // @Summary Post a comment on artwork
 // @Description Creates a new text comment for the specified artwork. Content is sanitized for HTML/XSS.

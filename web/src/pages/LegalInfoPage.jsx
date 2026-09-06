@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { 
   ArrowLeft, 
   ShieldCheck, 
@@ -7,12 +8,8 @@ import {
   BookOpen, 
   Sparkles, 
   Lock, 
-  EyeOff, 
-  HeartHandshake, 
-  AlertTriangle, 
-  ExternalLink,
-  Sun,
-  Moon
+  Sun, 
+  Moon 
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -49,8 +46,55 @@ export function LegalInfoPage({ defaultTab }) {
     { key: 'privacy', label: 'Privacy Policy', icon: ShieldCheck, badge: 'No Data Selling' },
   ];
 
+  const metaConfig = {
+    about: {
+      title: 'About Lumiina — Mission, Mascots Lumi & Ina, and Creator Ownership',
+      description: 'Learn about Lumiina, the creator-first anime and manga illustration sharing platform celebrating human artistic craftsmanship without artificial noise.',
+      canonical: 'https://lumiina.art/about',
+    },
+    guidelines: {
+      title: 'Community Guidelines — Content Standards & Safe Space | Lumiina',
+      description: 'Explore Lumiina community guidelines, content classifications, anti-theft policies, and standards for a safe, welcoming anime art community.',
+      canonical: 'https://lumiina.art/guidelines',
+    },
+    terms: {
+      title: 'Terms of Service — 100% Artist Ownership Guarantee | Lumiina',
+      description: 'Read the Lumiina Terms of Service. Creators retain 100% intellectual property rights. Strict anti-scraping and AI crawler restrictions.',
+      canonical: 'https://lumiina.art/terms',
+    },
+    privacy: {
+      title: 'Privacy Policy — No Data Selling & GDPR/CCPA Aligned | Lumiina',
+      description: 'Lumiina privacy policy: We never sell creator portfolios or personal data to AI datasets or third-party brokers. Transparent data protection.',
+      canonical: 'https://lumiina.art/privacy',
+    },
+  }[activeTab] || {
+    title: 'Documentation & Legal Hub — Lumiina',
+    description: 'Documentation, community guidelines, terms, and privacy policy for Lumiina.',
+    canonical: 'https://lumiina.art/about',
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0b0f17] text-slate-800 dark:text-slate-200 transition-colors duration-200">
+      <Helmet>
+        <title>{metaConfig.title}</title>
+        <meta name="description" content={metaConfig.description} />
+        <link rel="canonical" href={metaConfig.canonical} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="article" />
+        <meta property="og:site_name" content="Lumiina" />
+        <meta property="og:title" content={metaConfig.title} />
+        <meta property="og:description" content={metaConfig.description} />
+        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:url" content={metaConfig.canonical} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@lumiina_art" />
+        <meta name="twitter:title" content={metaConfig.title} />
+        <meta name="twitter:description" content={metaConfig.description} />
+        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+      </Helmet>
       {/* Top Header Bar */}
       <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#121722]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">

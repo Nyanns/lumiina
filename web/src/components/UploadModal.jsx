@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X, UploadCloud, Tag as TagIcon, AlertCircle } from 'lucide-react';
+import { X, UploadCloud, Tag as TagIcon, AlertCircle, Zap, Loader2 } from 'lucide-react';
 import { artworksAPI } from '../api/client';
+import { optimizeImage, formatBytes } from '../utils/imageOptimizer';
 
 export const UploadModal = ({ onClose, onArtworkCreated }) => {
   const [file, setFile] = useState(null);
@@ -12,6 +13,11 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
   const [tagInput, setTagInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+
+  // Instagram-style optimization state
+  const [optimizedFile, setOptimizedFile] = useState(null);
+  const [optimizationResult, setOptimizationResult] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   
   // Animation state for error shake
   const [shake, setShake] = useState(false);
@@ -50,6 +56,24 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(URL.createObjectURL(selectedFile));
+
+    // Instagram-style background optimization
+    setIsOptimizing(true);
+    setOptimizedFile(null);
+    setOptimizationResult(null);
+
+    optimizeImage(selectedFile, { maxDimension: 2560, quality: 0.88 })
+      .then((res) => {
+        setOptimizedFile(res.file);
+        setOptimizationResult(res);
+      })
+      .catch((err) => {
+        console.warn('Optimization skipped:', err);
+        setOptimizedFile(selectedFile);
+      })
+      .finally(() => {
+        setIsOptimizing(false);
+      });
   };
 
   // Enforce blob URL protocol check to mitigate DOM-based text reinterpretation as HTML (CWE-079)
@@ -79,7 +103,8 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
     const formData = new FormData();
     formData.append('title', title.trim());
     formData.append('description', description.trim());
-    formData.append('image', file);
+    const fileToUpload = optimizedFile || file;
+    formData.append('image', fileToUpload);
     tags.forEach((tag) => formData.append('tags', tag));
 
     try {
@@ -157,6 +182,34 @@ export const UploadModal = ({ onClose, onArtworkCreated }) => {
                 </div>
               )}
             </div>
+
+            {/* Instagram-style Smart Compression Status */}
+            {safePreviewUrl && (
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-sky-50/70 border border-sky-100 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-[#0096fa]/10 text-[#0096fa]">
+                    {isOptimizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800">
+                      {isOptimizing ? 'Optimizing photo for instant upload...' : 'Instagram-Style Fast Optimization'}
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {isOptimizing
+                        ? 'Downscaling to crisp 2K display resolution...'
+                        : optimizationResult?.wasOptimized
+                        ? `${formatBytes(optimizationResult.originalSize)} → ${formatBytes(optimizationResult.optimizedSize)} (-${optimizationResult.savedPercent}% bandwidth)`
+                        : file ? `${formatBytes(file.size)} • Original resolution` : ''}
+                    </p>
+                  </div>
+                </div>
+                {optimizationResult?.wasOptimized && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-extrabold text-[10px]">
+                    Instant Ready
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-bold text-slate-700">Illustration Title <span className="text-rose-500">*</span></label>

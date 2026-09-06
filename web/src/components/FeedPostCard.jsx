@@ -77,7 +77,7 @@ export const FeedPostCard = ({ artwork, index }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: Math.min(index * 0.05, 0.25), ease: 'easeOut' }}
-      className="bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col transition-colors"
+      className="card-containment bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col transition-colors"
     >
       {/* Top Header: Creator Info & More Options (World-Class Feed Standard) */}
       <div className="p-4 flex items-center justify-between">
@@ -158,7 +158,9 @@ export const FeedPostCard = ({ artwork, index }) => {
         <img
           src={artwork.image_url}
           alt={artwork.title}
-          loading="lazy"
+          loading={index === 0 ? "eager" : "lazy"}
+          fetchpriority={index === 0 ? "high" : "auto"}
+          decoding="async"
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-auto max-h-[700px] object-contain transition-transform duration-300 group-hover:scale-[1.01] ${
             imageLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'

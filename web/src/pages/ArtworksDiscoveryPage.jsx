@@ -83,14 +83,36 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
     : artworks;
 
   const pageTitle = activeTab === 'trending'
-    ? 'Trending — Lumiina'
-    : 'Recommended — Lumiina';
+    ? 'Trending Illustrations — Discover Popular Anime Art | Lumiina'
+    : 'Recommended Artworks — Curated Anime & Manga Fan Art | Lumiina';
+
+  const pageDescription = activeTab === 'trending'
+    ? 'Explore the most popular and trending anime fan art, character designs, and digital illustrations loved by the Lumiina community today.'
+    : 'Discover hand-curated and personalized illustration recommendations from top digital artists on Lumiina.';
+
+  const canonicalUrl = `https://lumiina.art/${activeTab === 'trending' ? 'trending' : 'recommended'}`;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 font-sans transition-colors">
       <Helmet>
         <title>{pageTitle}</title>
-        <meta name="description" content={activeTab === 'trending' ? 'Popular illustrations on Lumiina' : 'Recommended illustrations on Lumiina'} />
+        <meta name="description" content={pageDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Lumiina" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:url" content={canonicalUrl} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@lumiina_art" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
       </Helmet>
 
       <main className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col gap-4">

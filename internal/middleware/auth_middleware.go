@@ -135,4 +135,3 @@ func OptionalAuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerF
 		c.Next()
 	}
 }
-

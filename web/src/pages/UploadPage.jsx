@@ -13,10 +13,13 @@ import {
   Pipette,
   Layers,
   Sparkles,
+  Zap,
+  Loader2,
 } from 'lucide-react';
 import { artworksAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { optimizeImage, formatBytes } from '../utils/imageOptimizer';
 
 export const UploadPage = () => {
   const navigate = useNavigate();
@@ -28,6 +31,12 @@ export const UploadPage = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [fileSpecs, setFileSpecs] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Instagram-style client-side smart compression state
+  const [optimizedFile, setOptimizedFile] = useState(null);
+  const [optimizationResult, setOptimizationResult] = useState(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [useSmartCompression, setUseSmartCompression] = useState(true);
 
   // Advanced artist inspection workbench state
   const [palette, setPalette] = useState([]);
@@ -153,6 +162,22 @@ export const UploadPage = () => {
       extractPalette(img);
       setFile(selectedFile);
       setPreviewUrl(objectUrl);
+
+      // Trigger Instagram-style client-side optimization in background
+      setIsOptimizing(true);
+      optimizeImage(selectedFile, { maxDimension: 2560, quality: 0.88 })
+        .then((res) => {
+          setOptimizedFile(res.file);
+          setOptimizationResult(res);
+        })
+        .catch((err) => {
+          console.warn('Image optimization skipped:', err);
+          setOptimizedFile(selectedFile);
+          setOptimizationResult(null);
+        })
+        .finally(() => {
+          setIsOptimizing(false);
+        });
     };
 
     img.onerror = () => {
@@ -167,6 +192,9 @@ export const UploadPage = () => {
       URL.revokeObjectURL(previewUrl);
     }
     setFile(null);
+    setOptimizedFile(null);
+    setOptimizationResult(null);
+    setIsOptimizing(false);
     setPreviewUrl('');
     setFileSpecs(null);
     setPalette([]);
@@ -249,7 +277,8 @@ export const UploadPage = () => {
     const formData = new FormData();
     formData.append('title', title.trim());
     formData.append('description', description.trim());
-    formData.append('image', file);
+    const fileToUpload = (useSmartCompression && optimizedFile) ? optimizedFile : file;
+    formData.append('image', fileToUpload);
     tags.forEach((tag) => formData.append('tags', tag));
 
     try {
@@ -703,6 +732,60 @@ export const UploadPage = () => {
                           Remove
                         </button>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Instagram-style Smart Web Optimizer Box */}
+                  {file && (
+                    <div className="px-4 py-2.5 bg-gradient-to-r from-sky-50/80 to-blue-50/40 dark:from-sky-950/30 dark:to-blue-950/20 border-t border-sky-100/80 dark:border-sky-900/40 flex items-center justify-between text-xs flex-wrap gap-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 bg-[#0096fa]/10 dark:bg-[#0096fa]/20 text-[#0096fa] rounded-lg shrink-0">
+                          {isOptimizing ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Zap className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800 dark:text-slate-200">
+                              Smart Optimizer (Instagram-style)
+                            </span>
+                            {isOptimizing ? (
+                              <span className="text-[10px] text-sky-600 dark:text-sky-400 font-medium animate-pulse">
+                                Optimizing for instant upload...
+                              </span>
+                            ) : optimizationResult?.wasOptimized ? (
+                              <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
+                                -{optimizationResult.savedPercent}% Bandwidth Saved
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                Native Crisp Size
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            {isOptimizing
+                              ? 'Analyzing image dimensions and generating optimal web resolution...'
+                              : optimizationResult?.wasOptimized
+                              ? `${formatBytes(optimizationResult.originalSize)} → ${formatBytes(optimizationResult.optimizedSize)} • ${optimizationResult.width} × ${optimizationResult.height} ${optimizationResult.format} (Bicubic Crisp)`
+                              : `${formatBytes(file.size)} • Original raw file preserved`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {optimizationResult?.wasOptimized && (
+                        <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white/80 dark:bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 shadow-2xs">
+                          <input
+                            type="checkbox"
+                            checked={useSmartCompression}
+                            onChange={(e) => setUseSmartCompression(e.target.checked)}
+                            className="rounded border-slate-300 text-[#0096fa] focus:ring-[#0096fa] cursor-pointer"
+                          />
+                          <span>Fast Web Upload</span>
+                        </label>
+                      )}
                     </div>
                   )}
 

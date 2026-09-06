@@ -118,3 +118,28 @@ func TestCreateComment_XSSSanitization(t *testing.T) {
 	assert.Equal(t, "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;", comment.Content)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestDeleteComment_ArtworkOwnerSuccess(t *testing.T) {
+	mockRepo := new(MockCommentRepository)
+	commentService := NewCommentService(mockRepo)
+
+	existingComment := &model.Comment{
+		ID:        10,
+		Content:   "Rude comment",
+		ArtworkID: 5,
+		UserID:    2, // Commenter
+		Artwork: &model.Artwork{
+			ID:     5,
+			UserID: 7, // Artwork creator
+		},
+	}
+
+	mockRepo.On("GetByID", uint(10)).Return(existingComment, nil)
+	mockRepo.On("Delete", uint(10)).Return(nil)
+
+	// User 7 (Artwork Creator) deletes User 2's comment on their artwork
+	err := commentService.DeleteComment(10, 7, "regular")
+
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}

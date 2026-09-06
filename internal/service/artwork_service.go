@@ -109,4 +109,3 @@ func (s *ArtworkService) GetPopularTags(userID uint, limit int) ([]model.Tag, er
 	}
 	return s.repo.GetPopularTags(userID, limit)
 }
-

@@ -15,7 +15,8 @@ type Comment struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	User *User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	User    *User    `json:"user,omitempty" gorm:"foreignKey:UserID"`
+	Artwork *Artwork `json:"artwork,omitempty" gorm:"foreignKey:ArtworkID"`
 }
 
 type CreateCommentRequest struct {

@@ -53,6 +53,20 @@ const formatSocialUrl = (platform, handle) => {
   }
 };
 
+// Security helper: neutralize javascript:, data:, and relative link attacks in external website URLs
+const getSafeUrl = (url) => {
+  if (!url) return '#';
+  const trimmed = url.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('vbscript:')) {
+    return '#';
+  }
+  if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
+    return `https://${trimmed}`;
+  }
+  return trimmed;
+};
+
 export const ProfilePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -279,12 +293,65 @@ export const ProfilePage = () => {
   const isBioLong = bioText.length > 280;
   const displayedBio = isBioLong && !isBioExpanded ? `${bioText.slice(0, 280)}...` : bioText;
 
+  const creatorCanonicalUrl = `https://lumiina.art/profile/${profile.username}`;
+  const creatorDisplayName = profile.display_name ? `${profile.display_name} (@${profile.username})` : `@${profile.username}`;
+  const creatorDescription = profile.bio
+    ? profile.bio.slice(0, 160)
+    : `Explore illustrations, anime fan art, and creative works by ${profile.display_name || profile.username} on Lumiina.`;
+  const creatorImage = profile.avatar_url || profile.banner_url || 'https://lumiina.art/logo_icon.png';
+
+  const personJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    mainEntity: {
+      '@type': 'Person',
+      name: profile.display_name || profile.username,
+      alternateName: `@${profile.username}`,
+      identifier: profile.username,
+      description: creatorDescription,
+      image: creatorImage,
+      url: creatorCanonicalUrl,
+      sameAs: [
+        profile.website,
+        socialLinks?.twitter ? `https://x.com/${socialLinks.twitter}` : null,
+        socialLinks?.instagram ? `https://instagram.com/${socialLinks.instagram}` : null,
+        socialLinks?.github ? `https://github.com/${socialLinks.github}` : null,
+        socialLinks?.deviantart ? `https://deviantart.com/${socialLinks.deviantart}` : null,
+      ].filter(Boolean),
+      interactionStatistic: [
+        {
+          '@type': 'InteractionCounter',
+          interactionType: 'https://schema.org/FollowAction',
+          userInteractionCount: profile.followers_count || 0,
+        },
+      ],
+    },
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors">
       <Helmet>
-        <title>
-          {profile.display_name ? `${profile.display_name} (@${profile.username})` : profile.username} — Lumiina
-        </title>
+        <title>{creatorDisplayName} — Lumiina Artist Portfolio</title>
+        <meta name="description" content={creatorDescription} />
+        <link rel="canonical" href={creatorCanonicalUrl} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="profile" />
+        <meta property="og:site_name" content="Lumiina" />
+        <meta property="og:title" content={`${creatorDisplayName} — Lumiina Artist Portfolio`} />
+        <meta property="og:description" content={creatorDescription} />
+        <meta property="og:image" content={creatorImage} />
+        <meta property="og:url" content={creatorCanonicalUrl} />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="@lumiina_art" />
+        <meta name="twitter:title" content={`${creatorDisplayName} — Lumiina Artist Portfolio`} />
+        <meta name="twitter:description" content={creatorDescription} />
+        <meta name="twitter:image" content={creatorImage} />
+
+        {/* Schema.org ProfilePage & Person Structured Data */}
+        <script type="application/ld+json">{JSON.stringify(personJsonLd)}</script>
       </Helmet>
 
       {/* Pixiv-Inspired Full-Width Header Banner */}
@@ -293,6 +360,7 @@ export const ProfilePage = () => {
           <img
             src={profile.banner_url}
             alt={`${profile.username}'s banner`}
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (
@@ -355,6 +423,7 @@ export const ProfilePage = () => {
                   <img
                     src={profile.avatar_url}
                     alt={profile.username}
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -480,7 +549,7 @@ export const ProfilePage = () => {
               <div className="flex items-center gap-2 flex-wrap">
                 {profile.website && (
                   <a
-                    href={profile.website}
+                    href={getSafeUrl(profile.website)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors"

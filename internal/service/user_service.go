@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"log/slog"
 	"mime/multipart"
 	"strconv"
@@ -291,15 +293,34 @@ func (s *userService) GetProfileByIdentifier(identifier string) (*model.User, er
 func (s *userService) UpdateProfile(userID uint, req *model.UpdateProfileRequest) (*model.User, error) {
 	updates := map[string]interface{}{}
 
-	updates["display_name"] = strings.TrimSpace(req.DisplayName)
-	updates["bio"] = strings.TrimSpace(req.Bio)
-	updates["location"] = strings.TrimSpace(req.Location)
-	updates["website"] = strings.TrimSpace(req.Website)
+	// Defense in depth: Sanitize text fields to prevent stored XSS (CWE-079)
+	updates["display_name"] = html.EscapeString(strings.TrimSpace(req.DisplayName))
+	updates["bio"] = html.EscapeString(strings.TrimSpace(req.Bio))
+	updates["location"] = html.EscapeString(strings.TrimSpace(req.Location))
 
+	// Validate & neutralize dangerous website URIs (javascript:, data:, vbscript:)
+	website := strings.TrimSpace(req.Website)
+	if website != "" {
+		lower := strings.ToLower(website)
+		if strings.HasPrefix(lower, "javascript:") || strings.HasPrefix(lower, "data:") || strings.HasPrefix(lower, "vbscript:") {
+			website = ""
+		} else if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
+			website = "https://" + website
+		}
+		website = html.EscapeString(website)
+	}
+	updates["website"] = website
+
+	// Validate social links JSON format
 	if req.SocialLinks != "" {
-		updates["social_links"] = req.SocialLinks
+		var js json.RawMessage
+		if err := json.Unmarshal([]byte(req.SocialLinks), &js); err != nil {
+			updates["social_links"] = "{}"
+		} else {
+			updates["social_links"] = req.SocialLinks
+		}
 	} else {
-		updates["social_links"] = "[]"
+		updates["social_links"] = "{}"
 	}
 
 	if err := s.repo.UpdateProfileFields(userID, updates); err != nil {

@@ -1,0 +1,48 @@
+# robots.txt for Lumiina (https://lumiina.art)
+# Human-crafted illustration & digital art platform
+
+User-agent: *
+Allow: /
+Allow: /explore
+Allow: /trending
+Allow: /recommended
+Allow: /artworks/
+Allow: /profile/
+Allow: /about
+Allow: /guidelines
+Allow: /terms
+Allow: /privacy
+Allow: /favicon.png
+Allow: /logo_icon.png
+
+# Protect private studio & authentication workflows
+Disallow: /upload
+Disallow: /api/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /login
+Disallow: /register
+
+# AI Discovery & Generative Search Engines (GEO)
+User-agent: GPTBot
+Allow: /
+Disallow: /upload
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /upload
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /upload
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /upload
+Disallow: /api/
+
+# Canonical Sitemap
+Sitemap: https://lumiina.art/sitemap.xml

@@ -19,8 +19,6 @@ func NewLikeHandler(service service.LikeService, rdb *redis.Client) *LikeHandler
 	return &LikeHandler{service: service, rdb: rdb}
 }
 
-
-
 // ToggleLike toggles the like status of an artwork for the authenticated user
 func (h *LikeHandler) ToggleLike(c *gin.Context) {
 	artworkIDParam := c.Param("id")
