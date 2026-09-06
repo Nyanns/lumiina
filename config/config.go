@@ -55,6 +55,9 @@ func LoadConfig() *Config {
 	port := getEnvOrDefault("PORT", "8080")
 	dbHost := getEnvOrDefault("DB_HOST", "localhost")
 	dbPort := getEnvOrDefault("DB_PORT", "5432")
+	if strings.Contains(dbHost, "pooler.supabase.com") && dbPort == "5432" {
+		dbPort = "6543"
+	}
 	dbUser := getEnvOrDefault("DB_USER", "postgres")
 	dbName := getEnvOrDefault("DB_NAME", "lumiina_db")
 	redisHost := getEnvOrDefault("REDIS_HOST", "localhost")
