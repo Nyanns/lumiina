@@ -36,7 +36,7 @@ func init() {
 type UserService interface {
 	Register(user *model.User) error
 	Login(identifier, password string) (*model.User, error)
-	VerifyEmail(token string) error
+	VerifyEmail(token string) (*model.User, error)
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
@@ -151,9 +151,9 @@ func (s *userService) Login(identifier, password string) (*model.User, error) {
 	return user, nil
 }
 
-func (s *userService) VerifyEmail(token string) error {
+func (s *userService) VerifyEmail(token string) (*model.User, error) {
 	if s.rdb == nil {
-		return errors.New("redis client is not initialized")
+		return nil, errors.New("redis client is not initialized")
 	}
 
 	ctx := context.Background()
@@ -161,27 +161,27 @@ func (s *userService) VerifyEmail(token string) error {
 
 	userIDStr, err := s.rdb.Get(ctx, key).Result()
 	if err != nil {
-		return errors.New("verification link is invalid or expired")
+		return nil, errors.New("verification link is invalid or expired")
 	}
 
 	userIDInt, err := strconv.Atoi(userIDStr)
 	if err != nil {
-		return errors.New("invalid user ID payload in token")
+		return nil, errors.New("invalid user ID payload in token")
 	}
 
 	user, err := s.repo.FindByID(uint(userIDInt))
 	if err != nil {
-		return errors.New("user not found")
+		return nil, errors.New("user not found")
 	}
 
 	user.IsVerified = true
 	if err := s.repo.UpdateUser(user); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Invalidate token upon successful consumption (single-use constraint)
 	_ = s.rdb.Del(ctx, key)
-	return nil
+	return user, nil
 }
 
 func (s *userService) ForgotPassword(email string) error {

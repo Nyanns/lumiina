@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"image"
 	_ "image/gif"
@@ -195,7 +196,7 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	err := h.service.VerifyEmail(token)
+	user, err := h.service.VerifyEmail(token)
 	if err != nil {
 		if wantsJSON {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -205,14 +206,36 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
+	// Generate JWT session for seamless auto-login
+	now := time.Now()
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"iss":     "lumiina-api",
+		"user_id": user.ID,
+		"role":    user.Role,
+		"iat":     now.Unix(),
+		"nbf":     now.Unix(),
+		"exp":     now.Add(time.Hour * 24).Unix(),
+	})
+
+	tokenString, _ := jwtToken.SignedString([]byte(h.jwtSecret))
+
+	fullUser, errProfile := h.service.GetProfileByID(user.ID)
+	if errProfile == nil && fullUser != nil {
+		user = fullUser
+	}
+
+	userJSONBytes, _ := json.Marshal(user)
+
 	if wantsJSON {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Email successfully verified! Your account is now active. Please sign in.",
+			"message": "Email successfully verified! Your account is now active.",
+			"token":   tokenString,
+			"user":    user,
 		})
 		return
 	}
 
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(renderVerificationSuccessPage()))
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(renderVerificationSuccessPage(tokenString, string(userJSONBytes))))
 }
 
 // ForgotPassword initiates the password reset workflow.
