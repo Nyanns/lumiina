@@ -4,7 +4,7 @@
 .env.production
 
 # Build artifacts & Binaries
-/api
+/main
 /bin/
 tmp/
 *.exe
