@@ -2,7 +2,6 @@ package router
 
 import (
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/sandi/lumiina/internal/pkg/mailer"
 	"github.com/sandi/lumiina/internal/repository"
 	"github.com/sandi/lumiina/internal/service"
+	"github.com/sandi/lumiina/web"
 )
 
 // SetupRouter initializes and wires up all middleware, repositories, services, and handlers.
@@ -182,20 +182,48 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		// Admin-only endpoints
 	}
 
-	// Static web assets & React SPA fallback (if web/dist exists)
-	if _, err := os.Stat("web/dist/index.html"); err == nil {
-		r.Static("/assets", "web/dist/assets")
-		r.StaticFile("/favicon.ico", "web/dist/favicon.ico")
-		r.StaticFile("/sw.js", "web/dist/sw.js")
-		r.StaticFile("/manifest.webmanifest", "web/dist/manifest.webmanifest")
-		r.StaticFile("/registerSW.js", "web/dist/registerSW.js")
+	// Static web assets & React SPA fallback via embedded filesystem
+	subFS, err := web.SubFS()
+	if err == nil {
+		indexHTML, readErr := web.DistFS.ReadFile("dist/index.html")
+		fileServer := http.FileServer(http.FS(subFS))
+
+		if readErr == nil {
+			serveIndex := func(c *gin.Context) {
+				c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+			}
+			r.GET("/", serveIndex)
+			r.GET("/index.html", serveIndex)
+		}
 
 		r.NoRoute(func(c *gin.Context) {
-			if !strings.HasPrefix(c.Request.URL.Path, "/api") {
-				c.File("web/dist/index.html")
+			if strings.HasPrefix(c.Request.URL.Path, "/api") {
+				c.JSON(http.StatusNotFound, gin.H{"error": "API route not found"})
 				return
 			}
-			c.JSON(http.StatusNotFound, gin.H{"error": "API route not found"})
+
+			reqPath := strings.TrimPrefix(c.Request.URL.Path, "/")
+			if reqPath == "" || reqPath == "index.html" {
+				if readErr == nil {
+					c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+					return
+				}
+			}
+
+			// If file exists in embedded assets (e.g. assets/*.js, favicon.ico, etc.)
+			if f, openErr := subFS.Open(reqPath); openErr == nil {
+				_ = f.Close()
+				fileServer.ServeHTTP(c.Writer, c.Request)
+				return
+			}
+
+			// SPA fallback: return index.html for client-side routing
+			if readErr == nil {
+				c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
+				return
+			}
+
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
 		})
 	}
 

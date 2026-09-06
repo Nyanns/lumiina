@@ -1,15 +1,4 @@
 {
   "version": 2,
-  "buildCommand": "cd web && npm install && npm run build && cd .. && go build -o $VERCEL_OUTPUT_FILE ./cmd/api",
-  "outputDirectory": "web/dist",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "buildCommand": "go build -o $VERCEL_OUTPUT_FILE ./cmd/api"
 }
