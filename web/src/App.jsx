@@ -15,6 +15,7 @@ const UploadPage = lazy(() => import('./pages/UploadPage').then(m => ({ default:
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const LegalInfoPage = lazy(() => import('./pages/LegalInfoPage').then(m => ({ default: m.LegalInfoPage })));
 
@@ -33,12 +34,12 @@ export default function App() {
 
   // Hide global browsing Navbar on dedicated auth pages, upload studio, legal docs, and artwork viewer for a focused workspace
   const hideGlobalNavbar = 
-    ['/login', '/register', '/forgot-password', '/upload', '/about', '/guidelines', '/terms', '/privacy'].includes(location.pathname) ||
+    ['/login', '/register', '/forgot-password', '/verify-email', '/upload', '/about', '/guidelines', '/terms', '/privacy'].includes(location.pathname) ||
     location.pathname.startsWith('/artworks/');
 
   // Hide mobile bottom navigation on auth, upload studio, and cinema viewer pages
   const hideBottomNav =
-    ['/login', '/register', '/forgot-password', '/upload'].includes(location.pathname) ||
+    ['/login', '/register', '/forgot-password', '/verify-email', '/upload'].includes(location.pathname) ||
     location.pathname.startsWith('/artworks/');
 
   return (
@@ -61,6 +62,7 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/profile/:id" element={<ProfilePage />} />
                 <Route path="/about" element={<LegalInfoPage defaultTab="about" />} />
                 <Route path="/guidelines" element={<LegalInfoPage defaultTab="guidelines" />} />

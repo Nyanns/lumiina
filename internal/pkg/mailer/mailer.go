@@ -64,7 +64,7 @@ func (m *mailerService) sendEmail(toEmail, subject, htmlBody string) error {
 }
 
 func (m *mailerService) SendVerificationEmail(toEmail, username, token, baseURL string) error {
-	verifyURL := fmt.Sprintf("%s/api/v1/auth/verify-email?token=%s", baseURL, token)
+	verifyURL := fmt.Sprintf("%s/verify-email?token=%s", baseURL, token)
 	subject := "Verify Your Email Address | Lumiina"
 	htmlBody := buildVerificationEmailHTML(username, verifyURL)
 

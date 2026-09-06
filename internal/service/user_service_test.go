@@ -233,3 +233,31 @@ func TestAdminDeleteUser_Success(t *testing.T) {
 	assert.NoError(t, err)
 	mockRepo.AssertExpectations(t)
 }
+
+func TestResendVerificationEmail_AntiEnumeration(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	mockRepo.On("FindByEmail", "nonexistent@example.com").Return(nil, assert.AnError)
+
+	err := userService.ResendVerificationEmail("nonexistent@example.com")
+	assert.NoError(t, err) // Anti-enumeration: must return nil
+	mockRepo.AssertExpectations(t)
+}
+
+func TestResendVerificationEmail_AlreadyVerified(t *testing.T) {
+	mockRepo := new(MockUserRepository)
+	userService := NewUserService(mockRepo, nil, nil, "http://localhost:8080")
+
+	verifiedUser := &model.User{
+		ID:         10,
+		Username:   "verified_user",
+		Email:      "verified@example.com",
+		IsVerified: true,
+	}
+	mockRepo.On("FindByEmail", "verified@example.com").Return(verifiedUser, nil)
+
+	err := userService.ResendVerificationEmail("verified@example.com")
+	assert.NoError(t, err)
+	mockRepo.AssertExpectations(t)
+}

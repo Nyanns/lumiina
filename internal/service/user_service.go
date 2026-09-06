@@ -37,6 +37,7 @@ type UserService interface {
 	Register(user *model.User) error
 	Login(identifier, password string) (*model.User, error)
 	VerifyEmail(token string) (*model.User, error)
+	ResendVerificationEmail(email string) error
 	ForgotPassword(email string) error
 	ResetPassword(token, newPassword string) error
 	SearchUsers(query string, limit int, offset int) ([]model.User, int64, error)
@@ -196,6 +197,52 @@ func (s *userService) VerifyEmail(token string) (*model.User, error) {
 	_ = s.rdb.Set(ctx, consumedKey, fmt.Sprintf("%d", user.ID), 24*time.Hour).Err()
 	_ = s.rdb.Del(ctx, key)
 	return user, nil
+}
+
+func (s *userService) ResendVerificationEmail(email string) error {
+	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
+	user, err := s.repo.FindByEmail(normalizedEmail)
+	if err != nil || user == nil {
+		// Anti-enumeration defense: return nil so existence of email is not leaked
+		return nil
+	}
+
+	if user.IsVerified {
+		// Already verified, do nothing
+		return nil
+	}
+
+	ctx := context.Background()
+	cooldownKey := fmt.Sprintf("resend_verify_cooldown:%d", user.ID)
+	if s.rdb != nil {
+		// Rate limiting: 60-second cooldown per account to prevent mail server abuse
+		if exists, _ := s.rdb.Exists(ctx, cooldownKey).Result(); exists > 0 {
+			return nil
+		}
+	}
+
+	token, err := generateCryptoToken(32)
+	if err != nil {
+		return err
+	}
+
+	if s.rdb != nil {
+		key := fmt.Sprintf("verify_email:%s", token)
+		_ = s.rdb.Set(ctx, key, fmt.Sprintf("%d", user.ID), 24*time.Hour).Err()
+		_ = s.rdb.Set(ctx, cooldownKey, "1", 60*time.Second).Err()
+	}
+
+	if s.mailer != nil {
+		err := s.mailer.SendVerificationEmail(user.Email, user.Username, token, s.baseURL)
+		cleanEmail := sanitize.Log(user.Email)
+		if err != nil {
+			slog.Error("Mailer: resend verification email dispatch failed", "email", cleanEmail, "error", err)
+		} else {
+			slog.Info("Mailer: resend verification email sent successfully", "email", cleanEmail)
+		}
+	}
+
+	return nil
 }
 
 func (s *userService) ForgotPassword(email string) error {

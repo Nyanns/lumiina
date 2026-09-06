@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"encoding/json"
 	"errors"
+	"fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -225,8 +225,6 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 		user = fullUser
 	}
 
-	userJSONBytes, _ := json.Marshal(user)
-
 	if wantsJSON {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Email successfully verified! Your account is now active.",
@@ -236,7 +234,32 @@ func (h *UserHandler) VerifyEmail(c *gin.Context) {
 		return
 	}
 
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(renderVerificationSuccessPage(tokenString, string(userJSONBytes))))
+	// For direct browser visits (e.g. from legacy links), redirect to SPA frontend verification route
+	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("/verify-email?token=%s", token))
+}
+
+// ResendVerification sends a fresh verification email with anti-enumeration protection.
+// @Summary Resend verification email
+// @Description Dispatches a new email verification token if the account exists and is unverified.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param req body model.ResendVerificationRequest true "Registered Email Address"
+// @Success 200 {object} map[string]string "Generic success response"
+// @Failure 400 {object} map[string]string "Invalid email format"
+// @Router /auth/resend-verification [post]
+func (h *UserHandler) ResendVerification(c *gin.Context) {
+	var req model.ResendVerificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_ = h.service.ResendVerificationEmail(req.Email)
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "If an unverified account with this email exists, a new verification link has been sent.",
+	})
 }
 
 // ForgotPassword initiates the password reset workflow.

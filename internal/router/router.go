@@ -150,6 +150,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
 		auth.GET("/verify-email", userHandler.VerifyEmail)
+		auth.POST("/resend-verification", userHandler.ResendVerification)
 		auth.POST("/forgot-password", userHandler.ForgotPassword)
 		auth.POST("/reset-password", userHandler.ResetPassword)
 	}
