@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { FollowProvider } from './context/FollowContext';
 import { BookmarkProvider } from './context/BookmarkContext';
 
@@ -71,6 +72,7 @@ export default function App() {
           </div>
 
           {!hideBottomNav && <BottomNav />}
+          <PwaInstallBanner />
         </div>
       </BookmarkProvider>
     </FollowProvider>

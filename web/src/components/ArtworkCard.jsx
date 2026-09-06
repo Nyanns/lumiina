@@ -66,7 +66,7 @@ export const ArtworkCard = ({ artwork, index }) => {
           src={artwork.image_url}
           alt={artwork.title}
           loading={index < 4 ? "eager" : "lazy"}
-          fetchpriority={index === 0 ? "high" : "auto"}
+          fetchPriority={index === 0 ? "high" : "auto"}
           decoding="async"
           onLoad={() => setIsLoaded(true)}
           onError={() => setIsLoaded(true)}

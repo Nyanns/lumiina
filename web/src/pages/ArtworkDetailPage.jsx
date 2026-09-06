@@ -481,7 +481,7 @@ export const ArtworkDetailPage = () => {
               <img
                 src={artwork.image_url}
                 alt={artwork.title}
-                fetchpriority="high"
+                fetchPriority="high"
                 decoding="async"
                 onClick={() => setLightboxOpen(true)}
                 className="max-h-[70dvh] sm:max-h-[80dvh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"

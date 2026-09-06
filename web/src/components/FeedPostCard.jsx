@@ -159,7 +159,7 @@ export const FeedPostCard = ({ artwork, index }) => {
           src={artwork.image_url}
           alt={artwork.title}
           loading={index === 0 ? "eager" : "lazy"}
-          fetchpriority={index === 0 ? "high" : "auto"}
+          fetchPriority={index === 0 ? "high" : "auto"}
           decoding="async"
           onLoad={() => setImageLoaded(true)}
           className={`w-full h-auto max-h-[700px] object-contain transition-transform duration-300 group-hover:scale-[1.01] ${
