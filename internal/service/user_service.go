@@ -115,17 +115,15 @@ func (s *userService) Register(user *model.User) error {
 		_ = s.rdb.Set(ctx, key, fmt.Sprintf("%d", user.ID), 24*time.Hour).Err()
 	}
 
-	// Dispatch verification email asynchronously in background
+	// Dispatch verification email synchronously to ensure completion before serverless runtime freezes
 	if s.mailer != nil {
-		go func(toEmail, username, verToken, baseURL string) {
-			err := s.mailer.SendVerificationEmail(toEmail, username, verToken, baseURL)
-			cleanEmail := sanitize.Log(toEmail)
-			if err != nil {
-				slog.Error("Mailer: verification email dispatch failed", "email", cleanEmail, "error", err)
-			} else {
-				slog.Info("Mailer: verification email sent", "email", cleanEmail)
-			}
-		}(user.Email, user.Username, token, s.baseURL)
+		err := s.mailer.SendVerificationEmail(user.Email, user.Username, token, s.baseURL)
+		cleanEmail := sanitize.Log(user.Email)
+		if err != nil {
+			slog.Error("Mailer: verification email dispatch failed", "email", cleanEmail, "error", err)
+		} else {
+			slog.Info("Mailer: verification email sent successfully", "email", cleanEmail)
+		}
 	}
 
 	return nil
@@ -205,17 +203,15 @@ func (s *userService) ForgotPassword(email string) error {
 		_ = s.rdb.Set(ctx, key, fmt.Sprintf("%d", user.ID), 15*time.Minute).Err()
 	}
 
-	// Dispatch reset password email asynchronously in background
+	// Dispatch reset password email synchronously to ensure completion before serverless runtime freezes
 	if s.mailer != nil {
-		go func(toEmail, username, resetToken, baseURL string) {
-			err := s.mailer.SendPasswordResetEmail(toEmail, username, resetToken, baseURL)
-			cleanEmail := sanitize.Log(toEmail)
-			if err != nil {
-				slog.Error("Mailer: password reset email dispatch failed", "email", cleanEmail, "error", err)
-			} else {
-				slog.Info("Mailer: password reset email sent", "email", cleanEmail)
-			}
-		}(user.Email, user.Username, token, s.baseURL)
+		err := s.mailer.SendPasswordResetEmail(user.Email, user.Username, token, s.baseURL)
+		cleanEmail := sanitize.Log(user.Email)
+		if err != nil {
+			slog.Error("Mailer: password reset email dispatch failed", "email", cleanEmail, "error", err)
+		} else {
+			slog.Info("Mailer: password reset email sent successfully", "email", cleanEmail)
+		}
 	}
 
 	return nil
