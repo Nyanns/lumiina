@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Navbar } from './components/Navbar';
 import { BottomNav } from './components/BottomNav';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
@@ -73,6 +74,7 @@ export default function App() {
 
           {!hideBottomNav && <BottomNav />}
           <PwaInstallBanner />
+          <SpeedInsights />
         </div>
       </BookmarkProvider>
     </FollowProvider>
