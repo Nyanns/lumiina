@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -371,7 +372,8 @@ func (s *userService) RevokeToken(ctx context.Context, tokenString string, expir
 	if expiration <= 0 {
 		expiration = 24 * time.Hour
 	}
-	key := fmt.Sprintf("revoked_token:%s", tokenString)
+	h := sha256.Sum256([]byte(tokenString))
+	key := fmt.Sprintf("revoked_token:%x", h)
 	return s.rdb.Set(ctx, key, "1", expiration).Err()
 }
 
@@ -379,7 +381,8 @@ func (s *userService) IsTokenRevoked(ctx context.Context, tokenString string) bo
 	if s.rdb == nil {
 		return false
 	}
-	key := fmt.Sprintf("revoked_token:%s", tokenString)
+	h := sha256.Sum256([]byte(tokenString))
+	key := fmt.Sprintf("revoked_token:%x", h)
 	exists, err := s.rdb.Exists(ctx, key).Result()
 	return err == nil && exists > 0
 }

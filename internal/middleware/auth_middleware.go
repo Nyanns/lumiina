@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -11,8 +12,41 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+func hashToken(tokenString string) string {
+	h := sha256.Sum256([]byte(tokenString))
+	return fmt.Sprintf("%x", h)
+}
+
+func parseTokenWithRotation(tokenString, secret, secretOld string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(secret), nil
+	})
+
+	if err == nil && token.Valid {
+		return token, nil
+	}
+
+	// Fallback to old secret for graceful zero-downtime secret rotation
+	if secretOld != "" {
+		tokenOld, errOld := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method")
+			}
+			return []byte(secretOld), nil
+		})
+		if errOld == nil && tokenOld.Valid {
+			return tokenOld, nil
+		}
+	}
+
+	return token, err
+}
+
 // AuthMiddleware validates JWT Bearer tokens from incoming requests and verifies revocation in Redis
-func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
+func AuthMiddleware(jwtSecret string, jwtSecretOld string, rdb ...*redis.Client) gin.HandlerFunc {
 	var redisClient *redis.Client
 	if len(rdb) > 0 {
 		redisClient = rdb[0]
@@ -32,22 +66,16 @@ func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
 		}
 		tokenString := parts[1]
 
-		// Check if token has been revoked / logged out
+		// Check if token has been revoked / logged out (hashed with SHA-256)
 		if redisClient != nil {
-			revokedKey := fmt.Sprintf("revoked_token:%s", tokenString)
+			revokedKey := fmt.Sprintf("revoked_token:%s", hashToken(tokenString))
 			if exists, err := redisClient.Exists(c.Request.Context(), revokedKey).Result(); err == nil && exists > 0 {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Token has been revoked. Please login again."})
 				return
 			}
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return []byte(jwtSecret), nil
-		})
-
+		token, err := parseTokenWithRotation(tokenString, jwtSecret, jwtSecretOld)
 		if err != nil || !token.Valid {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			return
@@ -89,7 +117,7 @@ func AuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
 }
 
 // OptionalAuthMiddleware extracts user_id if Bearer token is valid, but allows guest access without blocking
-func OptionalAuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerFunc {
+func OptionalAuthMiddleware(jwtSecret string, jwtSecretOld string, rdb ...*redis.Client) gin.HandlerFunc {
 	var redisClient *redis.Client
 	if len(rdb) > 0 {
 		redisClient = rdb[0]
@@ -110,20 +138,14 @@ func OptionalAuthMiddleware(jwtSecret string, rdb ...*redis.Client) gin.HandlerF
 		tokenString := parts[1]
 
 		if redisClient != nil {
-			revokedKey := fmt.Sprintf("revoked_token:%s", tokenString)
+			revokedKey := fmt.Sprintf("revoked_token:%s", hashToken(tokenString))
 			if exists, err := redisClient.Exists(c.Request.Context(), revokedKey).Result(); err == nil && exists > 0 {
 				c.Next()
 				return
 			}
 		}
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method")
-			}
-			return []byte(jwtSecret), nil
-		})
-
+		token, err := parseTokenWithRotation(tokenString, jwtSecret, jwtSecretOld)
 		if err == nil && token.Valid {
 			if claims, ok := token.Claims.(jwt.MapClaims); ok {
 				c.Set("user_id", claims["user_id"])

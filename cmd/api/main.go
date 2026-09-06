@@ -84,7 +84,7 @@ func main() {
 	r := gin.Default()
 
 	// Security: Configure trusted proxies to prevent IP spoofing & rate-limit bypass
-	_ = r.SetTrustedProxies([]string{"127.0.0.1", "::1"})
+	_ = r.SetTrustedProxies(cfg.TrustedProxies)
 
 	// Observability & Security: Global middlewares (RequestID, Recovery, CORS & Security Headers)
 	r.Use(middleware.RequestIDMiddleware())
@@ -98,30 +98,28 @@ func main() {
 		gzip.WithMinLength(512),
 	))
 
-	// Health Probes
+	// Global Atomic Token Bucket Rate Limiter (RFC 6585 compliant)
+	r.Use(middleware.RateLimiterMiddleware(rdb, 100, 1*time.Minute))
+
+	// Kubernetes / Cloud Native Health & Liveness Probes
 	r.GET("/livez", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		c.JSON(http.StatusOK, gin.H{"status": "alive"})
 	})
+
 	r.GET("/readyz", func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
-		defer cancel()
-
-		var dbStatus = "ok"
 		sqlDB, err := db.DB()
-		if err != nil || sqlDB.PingContext(ctx) != nil {
-			dbStatus = "unhealthy"
-		}
-
-		var redisStatus = "ok"
-		if rdb == nil || rdb.Ping(ctx).Err() != nil {
-			redisStatus = "unhealthy"
-		}
-
-		if dbStatus != "ok" || redisStatus != "ok" {
+		if err != nil || sqlDB.Ping() != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"status":   "not ready",
-				"database": dbStatus,
-				"redis":    redisStatus,
+				"status": "not ready",
+				"reason": "database unreachable",
+			})
+			return
+		}
+
+		if rdb != nil && rdb.Ping(c.Request.Context()).Err() != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status": "not ready",
+				"reason": "redis unreachable",
 			})
 			return
 		}
@@ -137,8 +135,8 @@ func main() {
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	v1 := r.Group("/api/v1")
-	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, rdb)
-	optionalAuth := middleware.OptionalAuthMiddleware(cfg.JWTSecret, rdb)
+	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
+	optionalAuth := middleware.OptionalAuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
 
 	// Swagger Docs
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

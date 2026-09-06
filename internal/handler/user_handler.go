@@ -2,12 +2,18 @@ package handler
 
 import (
 	"errors"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	_ "golang.org/x/image/webp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -367,6 +373,16 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
+	// Secondary validation: Decode image config to ensure structurally valid image
+	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
+		return
+	}
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
+		return
+	}
+
 	avatarURL, err := h.service.UploadAvatar(c.Request.Context(), userID, uploadedFile)
 	if err != nil {
 		slog.Error("Avatar upload failed", "error", err, "user_id", userID)
@@ -425,6 +441,16 @@ func (h *UserHandler) UploadBanner(c *gin.Context) {
 		return
 	}
 
+	// Secondary validation: Decode image config to ensure structurally valid image
+	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
+		return
+	}
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
+		return
+	}
+
 	bannerURL, err := h.service.UploadBanner(c.Request.Context(), userID, uploadedFile)
 	if err != nil {
 		slog.Error("Banner upload failed", "error", err, "user_id", userID)
@@ -451,6 +477,11 @@ func (h *UserHandler) UploadBanner(c *gin.Context) {
 // @Router /users/search [get]
 func (h *UserHandler) SearchUsers(c *gin.Context) {
 	q := c.Query("q")
+	if len(q) > 200 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Search query too long (maximum 200 characters)"})
+		return
+	}
+
 	limitStr := c.DefaultQuery("limit", "20")
 	pageStr := c.DefaultQuery("page", "1")
 
@@ -466,6 +497,11 @@ func (h *UserHandler) SearchUsers(c *gin.Context) {
 		limit = 50
 	}
 	offset := (page - 1) * limit
+
+	if offset > 50000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pagination offset exceeds maximum allowed limit (50000)"})
+		return
+	}
 
 	users, total, err := h.service.SearchUsers(q, limit, offset)
 	if err != nil {

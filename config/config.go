@@ -11,6 +11,7 @@ import (
 )
 
 type Config struct {
+	AppEnv         string
 	Port           string
 	DBHost         string
 	DBUser         string
@@ -18,6 +19,7 @@ type Config struct {
 	DBName         string
 	DBPort         string
 	JWTSecret      string
+	JWTSecretOld   string
 	CloudinaryURL  string
 	RedisHost      string
 	RedisPort      string
@@ -28,6 +30,7 @@ type Config struct {
 	SMTPPassword   string
 	AppBaseURL     string
 	AllowedOrigins []string
+	TrustedProxies []string
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
@@ -44,8 +47,10 @@ func LoadConfig() *Config {
 		slog.Warn(".env file not found, loading environment variables")
 	}
 
+	appEnv := getEnvOrDefault("APP_ENV", "development")
 	baseURL := getEnvOrDefault("APP_BASE_URL", "http://localhost:8080")
 	secret := os.Getenv("JWT_SECRET")
+	secretOld := os.Getenv("JWT_SECRET_OLD")
 	port := getEnvOrDefault("PORT", "8080")
 	dbHost := getEnvOrDefault("DB_HOST", "localhost")
 	dbPort := getEnvOrDefault("DB_PORT", "5432")
@@ -55,6 +60,20 @@ func LoadConfig() *Config {
 	redisPort := getEnvOrDefault("REDIS_PORT", "6379")
 	cloudinaryURL := os.Getenv("CLOUDINARY_SECRET")
 
+	// Parse trusted proxies
+	proxiesEnv := os.Getenv("TRUSTED_PROXIES")
+	var trustedProxies []string
+	if proxiesEnv != "" {
+		for _, p := range strings.Split(proxiesEnv, ",") {
+			if trimmed := strings.TrimSpace(p); trimmed != "" {
+				trustedProxies = append(trustedProxies, trimmed)
+			}
+		}
+	}
+	if len(trustedProxies) == 0 {
+		trustedProxies = []string{"127.0.0.1", "::1"}
+	}
+
 	// Parse allowed CORS origins from env, with sensible local dev defaults
 	originsEnv := os.Getenv("ALLOWED_ORIGINS")
 	var allowedOrigins []string
@@ -62,6 +81,11 @@ func LoadConfig() *Config {
 		for _, o := range strings.Split(originsEnv, ",") {
 			trimmed := strings.TrimSpace(o)
 			if trimmed != "" {
+				// In production, reject plain HTTP unless explicitly localhost
+				if appEnv == "production" && !strings.HasPrefix(trimmed, "https://") && !strings.HasPrefix(trimmed, "http://localhost") {
+					slog.Warn("Ignoring non-HTTPS origin in production CORS whitelist", "origin", trimmed)
+					continue
+				}
 				allowedOrigins = append(allowedOrigins, trimmed)
 			}
 		}
@@ -74,6 +98,7 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
+		AppEnv:         appEnv,
 		Port:           port,
 		DBHost:         dbHost,
 		DBPort:         dbPort,
@@ -81,6 +106,7 @@ func LoadConfig() *Config {
 		DBPassword:     os.Getenv("DB_PASSWORD"),
 		DBName:         dbName,
 		JWTSecret:      secret,
+		JWTSecretOld:   secretOld,
 		CloudinaryURL:  cloudinaryURL,
 		RedisHost:      redisHost,
 		RedisPort:      redisPort,
@@ -91,6 +117,7 @@ func LoadConfig() *Config {
 		SMTPPassword:   os.Getenv("SMTP_PASSWORD"),
 		AppBaseURL:     baseURL,
 		AllowedOrigins: allowedOrigins,
+		TrustedProxies: trustedProxies,
 	}
 }
 

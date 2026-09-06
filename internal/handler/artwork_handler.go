@@ -3,12 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	_ "golang.org/x/image/webp"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -83,6 +88,13 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 
 	limit, _ := strconv.Atoi(limitStr)
 	page, _ := strconv.Atoi(pageStr)
+
+	// Validate search query length to prevent ReDoS / CPU exhaustion
+	if len(search) > 200 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Search query too long (maximum 200 characters)"})
+		return
+	}
+
 	var userID uint
 	if userIDParam != "" {
 		if uid, err := hashid.Decode(userIDParam); err == nil && uid > 0 {
@@ -103,12 +115,19 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 	}
 	offset := (page - 1) * limit
 
+	// Prevent scanning massive tables via deep offset DoS attacks
+	if offset > 50000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pagination offset exceeds maximum allowed limit (50000)"})
+		return
+	}
+
 	cacheKey := fmt.Sprintf("artworks:page:%d:limit:%d:s:%s:t:%s:u:%d:cu:%d", page, limit, search, tag, userID, currentUserID)
 	ctx := c.Request.Context()
 
 	// Check cache
 	cachedData, err := h.rdb.Get(ctx, cacheKey).Result()
 	if err == nil {
+		c.Header("Cache-Control", "public, max-age=60")
 		c.Data(http.StatusOK, "application/json", []byte(cachedData))
 		return
 	}
@@ -133,7 +152,13 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 			return nil, err
 		}
 
-		h.rdb.Set(ctx, cacheKey, responseJSON, 1*time.Minute)
+		// Public non-search feed gets 3m TTL, personalized/search gets 1m TTL
+		ttl := 3 * time.Minute
+		if search != "" || currentUserID > 0 {
+			ttl = 1 * time.Minute
+		}
+
+		h.rdb.Set(ctx, cacheKey, responseJSON, ttl)
 		return responseJSON, nil
 	})
 
@@ -142,6 +167,7 @@ func (h *ArtworkHandler) GetAllArtworks(c *gin.Context) {
 		return
 	}
 
+	c.Header("Cache-Control", "public, max-age=60")
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
@@ -214,6 +240,16 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	contentType := http.DetectContentType(buffer)
 	if contentType != "image/jpeg" && contentType != "image/png" && contentType != "image/webp" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file format. Only JPEG, PNG, and WebP are allowed"})
+		return
+	}
+
+	// Secondary validation: Decode image config to ensure structurally valid image, rejecting polyglot payloads
+	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
+		return
+	}
+	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
 		return
 	}
 
@@ -292,6 +328,7 @@ func (h *ArtworkHandler) GetArtworkByID(c *gin.Context) {
 		artwork.User.IsFollowing, _ = h.followRepo.IsFollowing(currentUserID, artwork.UserID)
 	}
 
+	c.Header("Cache-Control", "public, max-age=60")
 	c.JSON(http.StatusOK, gin.H{"data": artwork})
 }
 
@@ -419,6 +456,7 @@ func (h *ArtworkHandler) GetTrendingArtworks(c *gin.Context) {
 		return
 	}
 
+	c.Header("Cache-Control", "public, max-age=120")
 	c.Data(http.StatusOK, "application/json", responseBytes.([]byte))
 }
 
