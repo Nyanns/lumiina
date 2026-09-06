@@ -24,6 +24,7 @@ type Config struct {
 	RedisHost      string
 	RedisPort      string
 	RedisPassword  string
+	RedisUseTLS    bool
 	SMTPHost       string
 	SMTPPort       string
 	SMTPEmail      string
@@ -111,6 +112,7 @@ func LoadConfig() *Config {
 		RedisHost:      redisHost,
 		RedisPort:      redisPort,
 		RedisPassword:  os.Getenv("REDIS_PASSWORD"),
+		RedisUseTLS:    os.Getenv("REDIS_USE_TLS") == "true" || strings.Contains(redisHost, "upstash.io"),
 		SMTPHost:       os.Getenv("SMTP_HOST"),
 		SMTPPort:       os.Getenv("SMTP_PORT"),
 		SMTPEmail:      os.Getenv("SMTP_EMAIL"),

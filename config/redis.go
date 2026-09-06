@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"time"
@@ -9,23 +10,31 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ConnectRedis initializes and returns a tuned Redis client
+// ConnectRedis initializes and returns a tuned Redis client with optional TLS support
 func ConnectRedis(cfg *Config) *redis.Client {
 	addr := fmt.Sprintf("%s:%s", cfg.RedisHost, cfg.RedisPort)
 
-	rdb := redis.NewClient(&redis.Options{
+	opts := &redis.Options{
 		Addr:         addr,
 		Password:     cfg.RedisPassword,
 		DB:           0,
 		PoolSize:     50,
 		MinIdleConns: 10,
-		DialTimeout:  3 * time.Second,
-		ReadTimeout:  2 * time.Second,
-		WriteTimeout: 2 * time.Second,
-		PoolTimeout:  4 * time.Second,
-	})
+		DialTimeout:  5 * time.Second,
+		ReadTimeout:  3 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		PoolTimeout:  5 * time.Second,
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	if cfg.RedisUseTLS {
+		opts.TLSConfig = &tls.Config{
+			ServerName: cfg.RedisHost,
+		}
+	}
+
+	rdb := redis.NewClient(opts)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err := rdb.Ping(ctx).Err()
