@@ -543,7 +543,7 @@ export const HomePage = () => {
               
               {/* Brand */}
               <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <img src="/logo_icon.png" alt="Lumiina" className="w-7 h-7 object-contain rounded-md shadow-xs" />
+                <img src="/pwa-192x192.png" alt="Lumiina" className="w-7 h-7 object-contain rounded-md shadow-xs" />
                 <div className="flex flex-col leading-none">
                   <span className="font-extrabold text-xs text-slate-900 dark:text-white tracking-tight">Lumiina</span>
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Illustration & Creator Community</span>

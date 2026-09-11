@@ -82,11 +82,16 @@ export const AuthLayout = ({ children }) => {
         
         {/* Centered Logo & Pixiv Tagline */}
         <div className="flex flex-col items-center text-center mb-5">
-          <Link to="/" className="inline-block transition-transform active:scale-95">
+          <Link to="/" className="inline-flex flex-col items-center group transition-transform active:scale-95">
+            <img
+              src="/pwa-192x192.png"
+              alt="Lumiina"
+              className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-200 mb-2"
+            />
             <img
               src="/logo_wordmark.png"
               alt="Lumiina"
-              className="h-8 sm:h-9 w-auto object-contain"
+              className="h-7 sm:h-8 w-auto object-contain"
             />
           </Link>
           <p className="text-[12px] font-bold text-[#0096fa] tracking-tight mt-1.5">

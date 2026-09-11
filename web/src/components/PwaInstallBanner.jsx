@@ -35,8 +35,8 @@ export const PwaInstallBanner = () => {
       className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-40 max-w-sm w-[calc(100%-2rem)] md:w-auto bg-white dark:bg-[#1f242c] border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-black/40 p-3.5 sm:p-4 animate-in fade-in slide-in-from-bottom-3 duration-300"
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800/60 flex items-center justify-center shrink-0 text-sky-600 dark:text-sky-400">
-          <Smartphone className="w-5 h-5" />
+        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-xs shrink-0 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+          <img src="/pwa-192x192.png" alt="Lumiina" className="w-full h-full object-contain" />
         </div>
 
         <div className="flex-1 min-w-0 pr-1">
