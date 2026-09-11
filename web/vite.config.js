@@ -21,6 +21,8 @@ export default defineConfig({
         'pwa-192x192.png',
         'pwa-512x512.png',
         'maskable-icon-512x512.png',
+        'logo_mark.png',
+        'logo_wordmark.png',
         'robots.txt'
       ],
       manifest: {

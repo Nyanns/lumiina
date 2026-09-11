@@ -108,7 +108,7 @@ export function LegalInfoPage({ defaultTab }) {
             </Link>
             <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
             <div className="flex items-center gap-2">
-              <img src="/pwa-192x192.png" alt="Lumiina" className="w-5 h-5 object-contain rounded-md shadow-xs" />
+              <img src="/logo_mark.png" alt="Lumiina" className="w-5 h-5 object-contain" />
               <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-white">Lumiina Docs & Legal</span>
             </div>
           </div>

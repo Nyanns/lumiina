@@ -71,7 +71,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body class="bg-[#f1f3f7] dark:bg-[#121519] text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-sky-100 selection:text-sky-900">
-    <div id="root"></div>
+    <div id="root">
+      <!-- Native PWA / Fast Initial Splash Screen (Zero-CLS, instant feedback) -->
+      <div id="lumiina-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f1f3f7;z-index:9999;user-select:none;font-family:'Inter',system-ui,sans-serif;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;">
+          <img src="/logo_mark.png" alt="Lumiina" style="width:76px;height:76px;object-fit:contain;animation:lumiinaSplashPulse 1.6s ease-in-out infinite;" />
+          <img src="/logo_wordmark.png" alt="Lumiina" style="height:28px;width:auto;object-fit:contain;opacity:0.92;" />
+        </div>
+        <div style="position:absolute;bottom:32px;font-size:11px;font-weight:600;color:#94a3b8;letter-spacing:0.5px;">
+          Your Art, Your World
+        </div>
+        <style>
+          @keyframes lumiinaSplashPulse {
+            0%, 100% { transform: scale(1); opacity: 0.92; }
+            50% { transform: scale(1.06); opacity: 1; filter: drop-shadow(0 4px 16px rgba(0, 150, 250, 0.28)); }
+          }
+          @media (prefers-color-scheme: dark) {
+            #lumiina-splash { background: #121519 !important; }
+            #lumiina-splash div { color: #64748b !important; }
+          }
+        </style>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {

@@ -22,9 +22,9 @@ const LegalInfoPage = lazy(() => import('./pages/LegalInfoPage').then(m => ({ de
 // Ultra-lightweight page loading fallback (zero layout shift, fast transition)
 const PageLoadingFallback = () => (
   <div className="flex-1 min-h-[50vh] flex items-center justify-center p-8">
-    <div className="flex flex-col items-center gap-2.5">
-      <div className="w-6 h-6 border-2 border-[#0096fa] border-t-transparent rounded-full animate-spin" />
-      <span className="text-[11px] font-medium text-slate-400">Loading...</span>
+    <div className="flex flex-col items-center gap-3">
+      <img src="/logo_mark.png" alt="Lumiina" className="w-8 h-8 object-contain animate-pulse" />
+      <div className="w-5 h-5 border-2 border-[#0096fa] border-t-transparent rounded-full animate-spin" />
     </div>
   </div>
 );
