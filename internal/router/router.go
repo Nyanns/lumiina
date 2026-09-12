@@ -73,7 +73,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	}
 
 	// Global Atomic Token Bucket Rate Limiter
-	r.Use(middleware.RateLimiterMiddleware(rdb, 300, 1*time.Minute))
+	r.Use(middleware.RateLimiterMiddleware(rdb, "global", 300, 1*time.Minute))
 
 	// Health Probes
 	r.GET("/livez", func(c *gin.Context) {
@@ -143,7 +143,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		users.GET("/:id/bookmarks", optionalAuth, bookmarkHandler.GetUserBookmarks)
 	}
 
-	rateLimiter := middleware.RateLimiterMiddleware(rdb, 60, 1*time.Minute)
+	rateLimiter := middleware.RateLimiterMiddleware(rdb, "auth", 60, 1*time.Minute)
 	auth := v1.Group("/auth")
 	auth.Use(rateLimiter)
 	{

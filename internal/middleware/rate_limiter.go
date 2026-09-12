@@ -20,7 +20,7 @@ return {current, ttl}
 `)
 
 // RateLimiterMiddleware limits incoming requests per client IP with atomic Redis Lua script
-func RateLimiterMiddleware(rdb *redis.Client, limit int, window time.Duration) gin.HandlerFunc {
+func RateLimiterMiddleware(rdb *redis.Client, prefix string, limit int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if rdb == nil {
 			c.Next()
@@ -29,6 +29,9 @@ func RateLimiterMiddleware(rdb *redis.Client, limit int, window time.Duration) g
 
 		ip := c.ClientIP()
 		key := "rate_limit:" + ip
+		if prefix != "" {
+			key = "rate_limit:" + prefix + ":" + ip
+		}
 		ctx := c.Request.Context()
 
 		windowSeconds := int(window.Seconds())
