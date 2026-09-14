@@ -112,8 +112,20 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
 	optionalAuth := middleware.OptionalAuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
 
-	// Swagger Docs
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger Docs & Canonical Redirects
+	swaggerHandler := ginSwagger.WrapHandler(swaggerFiles.Handler)
+	redirectToSwaggerIndex := func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "/swagger/index.html")
+	}
+	r.GET("/swagger", redirectToSwaggerIndex)
+	r.GET("/swagger/*any", func(c *gin.Context) {
+		p := c.Param("any")
+		if p == "" || p == "/" {
+			redirectToSwaggerIndex(c)
+			return
+		}
+		swaggerHandler(c)
+	})
 
 	// Public routes
 	artwork := v1.Group("/artworks")
