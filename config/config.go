@@ -51,11 +51,13 @@ func LoadConfig() *Config {
 
 	appEnv := getEnvOrDefault("APP_ENV", "development")
 	baseURL := os.Getenv("APP_BASE_URL")
-	if baseURL == "" {
+	if baseURL == "" || (!strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://")) {
 		if vercelURL := os.Getenv("VERCEL_PROJECT_PRODUCTION_URL"); vercelURL != "" {
 			baseURL = "https://" + vercelURL
 		} else if vercelURL := os.Getenv("VERCEL_URL"); vercelURL != "" {
 			baseURL = "https://" + vercelURL
+		} else if appEnv == "production" {
+			baseURL = "https://www.lumiina.art"
 		} else {
 			baseURL = "http://localhost:8080"
 		}

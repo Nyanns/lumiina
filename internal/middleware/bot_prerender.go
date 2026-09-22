@@ -66,8 +66,8 @@ func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqPath, baseURL string) []b
 
 	htmlStr := string(rawHTML)
 	cleanBase := strings.TrimRight(baseURL, "/")
-	if cleanBase == "" {
-		cleanBase = "https://lumiina.art"
+	if cleanBase == "" || (!strings.HasPrefix(cleanBase, "http://") && !strings.HasPrefix(cleanBase, "https://")) {
+		cleanBase = "https://www.lumiina.art"
 	}
 
 	cleanPath := strings.TrimPrefix(reqPath, "/")

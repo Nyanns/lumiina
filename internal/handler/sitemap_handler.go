@@ -23,8 +23,8 @@ type SitemapHandler struct {
 
 func NewSitemapHandler(db *gorm.DB, rdb *redis.Client, baseURL string) *SitemapHandler {
 	cleanBase := strings.TrimRight(baseURL, "/")
-	if cleanBase == "" {
-		cleanBase = "https://lumiina.art"
+	if cleanBase == "" || (!strings.HasPrefix(cleanBase, "http://") && !strings.HasPrefix(cleanBase, "https://")) {
+		cleanBase = "https://www.lumiina.art"
 	}
 	return &SitemapHandler{
 		db:      db,
@@ -45,11 +45,10 @@ type sitemapUserRecord struct {
 	UpdatedAt time.Time
 }
 
-// GenerateSitemap dynamically builds a Google Sitemaps 0.9 & Image Sitemap 1.1 compliant XML.
-// Caches XML in Redis with 30-minute TTL to ensure sub-millisecond response to crawlers.
+// GenerateSitemap generates dynamic sitemap XML with Google Image Sitemap extensions
 func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 	ctx := c.Request.Context()
-	cacheKey := "seo:sitemap_xml"
+	cacheKey := "seo:sitemap_xml:v2"
 
 	// 1. Try Redis cache first
 	if h.rdb != nil {
