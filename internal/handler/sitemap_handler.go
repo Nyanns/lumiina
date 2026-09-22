@@ -48,7 +48,7 @@ type sitemapUserRecord struct {
 // GenerateSitemap generates dynamic sitemap XML with Google Image Sitemap extensions
 func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 	ctx := c.Request.Context()
-	cacheKey := "seo:sitemap_xml:v2"
+	cacheKey := "seo:sitemap_xml:v3"
 
 	// 1. Try Redis cache first
 	if h.rdb != nil {
@@ -60,24 +60,28 @@ func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 		}
 	}
 
-	// 2. Query database for artworks and artists
+	// 2. Query database for artworks and artists (with defensive nil-db check)
 	var artworks []sitemapArtworkRecord
-	if err := h.db.Model(&model.Artwork{}).
-		Select("id, title, image_url, updated_at").
-		Order("updated_at desc").
-		Limit(5000).
-		Scan(&artworks).Error; err != nil {
-		slog.Error("Sitemap: failed to query artworks", "error", err)
-	}
-
 	var artists []sitemapUserRecord
-	if err := h.db.Model(&model.User{}).
-		Select("username, updated_at").
-		Where("is_verified = ?", true).
-		Order("updated_at desc").
-		Limit(1000).
-		Scan(&artists).Error; err != nil {
-		slog.Error("Sitemap: failed to query artists", "error", err)
+
+	if h.db != nil {
+		if err := h.db.Model(&model.Artwork{}).
+			Select("id, title, image_url, updated_at").
+			Order("updated_at desc").
+			Limit(5000).
+			Scan(&artworks).Error; err != nil {
+			slog.Error("Sitemap: failed to query artworks", "error", err)
+		}
+
+		// Index verified artists OR any creator who has published at least one active artwork
+		if err := h.db.Model(&model.User{}).
+			Select("username, updated_at").
+			Where("is_verified = ? OR id IN (SELECT DISTINCT user_id FROM artworks WHERE deleted_at IS NULL)", true).
+			Order("updated_at desc").
+			Limit(1000).
+			Scan(&artists).Error; err != nil {
+			slog.Error("Sitemap: failed to query artists", "error", err)
+		}
 	}
 
 	// 3. Assemble standard XML sitemap

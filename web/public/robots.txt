@@ -15,9 +15,11 @@ Allow: /privacy
 Allow: /favicon.png
 Allow: /logo_icon.png
 
-# Protect private studio & authentication workflows
+# Protect private studio, internal monitoring & authentication workflows
 Disallow: /upload
 Disallow: /api/
+Disallow: /metrics
+Disallow: /swagger/
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /login
@@ -28,21 +30,30 @@ User-agent: GPTBot
 Allow: /
 Disallow: /upload
 Disallow: /api/
+Disallow: /metrics
+Disallow: /swagger/
 
 User-agent: PerplexityBot
 Allow: /
 Disallow: /upload
 Disallow: /api/
+Disallow: /metrics
+Disallow: /swagger/
 
 User-agent: ClaudeBot
 Allow: /
 Disallow: /upload
 Disallow: /api/
+Disallow: /metrics
+Disallow: /swagger/
 
 User-agent: Google-Extended
 Allow: /
 Disallow: /upload
 Disallow: /api/
+Disallow: /metrics
+Disallow: /swagger/
 
-# Canonical Sitemap
-Sitemap: https://lumiina.art/sitemap.xml
+# Canonical Sitemap (Eliminates Apex 308 redirect jump)
+Sitemap: https://www.lumiina.art/sitemap.xml
+
