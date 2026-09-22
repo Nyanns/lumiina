@@ -73,8 +73,23 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/swagger/, /^\/api/],
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,webp}'],
+        globIgnores: ['**/mascot/*.png'],
         runtimeCaching: [
+          {
+            urlPattern: /\/mascot\/.*\.(?:png|webp)/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mascot-assets-cache',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 60 // 60 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'CacheFirst',

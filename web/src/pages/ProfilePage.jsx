@@ -718,8 +718,12 @@ export const ProfilePage = () => {
           {activeTab === 'illustrations' ? (
             artworksList.length === 0 ? (
               <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
-                  <ImageIcon className="w-6 h-6" />
+                <div className="relative mb-3">
+                  <img
+                    src="/mascot/emojis/9_thumb.webp"
+                    alt="Thinking Lumiina"
+                    className="w-16 h-16 object-contain filter drop-shadow-xs select-none pointer-events-none"
+                  />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Artworks Published Yet</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4">
@@ -756,13 +760,17 @@ export const ProfilePage = () => {
               </div>
             ) : bookmarkedArtworks.length === 0 ? (
               <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-xs">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-3">
-                  <Bookmark className="w-6 h-6 fill-amber-500" />
+                <div className="relative mb-3">
+                  <img
+                    src="/mascot/emojis/6_thumb.webp"
+                    alt="Love Lumiina"
+                    className="w-16 h-16 object-contain filter drop-shadow-xs select-none pointer-events-none"
+                  />
                 </div>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Bookmarked Artworks Yet</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-4">
                   {isOwnProfile
-                    ? 'Save your favorite artworks by clicking the bookmark icon on any illustration to build your personal collection.'
+                    ? 'No bookmarks collected yet. Save artworks that inspire your creative journey!'
                     : 'This user has not bookmarked any artworks yet.'}
                 </p>
                 <Link

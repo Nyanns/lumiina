@@ -9,7 +9,17 @@ import {
   Sparkles, 
   Lock, 
   Sun, 
-  Moon 
+  Moon,
+  Heart,
+  Palette,
+  Star,
+  Maximize2,
+  X,
+  Check,
+  Copy,
+  Layers,
+  Compass,
+  Smile
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -17,6 +27,8 @@ export function LegalInfoPage({ defaultTab }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const [selectedSheet, setSelectedSheet] = useState(null);
+  const [copiedEmoji, setCopiedEmoji] = useState(null);
 
   // Determine active tab from path or prop
   const getTabFromPath = () => {
@@ -34,13 +46,13 @@ export function LegalInfoPage({ defaultTab }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
-  const handleTabChange = (tabKey) => {
-    setActiveTab(tabKey);
-    navigate(`/${tabKey}`);
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+    navigate(`/${key}`);
   };
 
   const navItems = [
-    { key: 'about', label: 'About Us', icon: Sparkles, badge: 'Mascots & Mission' },
+    { key: 'about', label: 'About & Mascot', icon: Sparkles, badge: 'Character Bible' },
     { key: 'guidelines', label: 'Community Guidelines', icon: BookOpen, badge: 'Content Standards' },
     { key: 'terms', label: 'Terms of Service', icon: FileText, badge: 'Artist Ownership' },
     { key: 'privacy', label: 'Privacy Policy', icon: ShieldCheck, badge: 'No Data Selling' },
@@ -48,8 +60,8 @@ export function LegalInfoPage({ defaultTab }) {
 
   const metaConfig = {
     about: {
-      title: 'About Lumiina — Mission, Mascots Lumi & Ina, and Creator Ownership',
-      description: 'Learn about Lumiina, the creator-first anime and manga illustration sharing platform celebrating human artistic craftsmanship without artificial noise.',
+      title: 'About Lumiina — Official Mascot & Creative Guide (Character Bible v1.0)',
+      description: 'Meet Lumiina (ルミーナ), the gentle creative guide of the Lumiina art community. A small light in a big world, celebrating human anime artists and original fan art.',
       canonical: 'https://lumiina.art/about',
     },
     guidelines: {
@@ -73,6 +85,12 @@ export function LegalInfoPage({ defaultTab }) {
     canonical: 'https://lumiina.art/about',
   };
 
+  const copyEmojiCode = (code) => {
+    navigator.clipboard.writeText(code);
+    setCopiedEmoji(code);
+    setTimeout(() => setCopiedEmoji(null), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#0b0f17] text-slate-800 dark:text-slate-200 transition-colors duration-200">
       <Helmet>
@@ -85,7 +103,7 @@ export function LegalInfoPage({ defaultTab }) {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={metaConfig.title} />
         <meta property="og:description" content={metaConfig.description} />
-        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={metaConfig.canonical} />
 
         {/* Twitter Card */}
@@ -93,7 +111,7 @@ export function LegalInfoPage({ defaultTab }) {
         <meta name="twitter:site" content="@lumiina_art" />
         <meta name="twitter:title" content={metaConfig.title} />
         <meta name="twitter:description" content={metaConfig.description} />
-        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
       </Helmet>
       {/* Top Header Bar */}
       <header className="sticky top-0 z-30 bg-white/90 dark:bg-[#121722]/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/80">
@@ -166,7 +184,7 @@ export function LegalInfoPage({ defaultTab }) {
                   Last updated: <span className="font-medium text-slate-600 dark:text-slate-400">September 2026</span>
                 </div>
                 <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  Version: <span className="font-mono text-slate-600 dark:text-slate-400">2.1.0-prod</span>
+                  Character Bible: <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">v1.0</span>
                 </div>
               </div>
             </div>
@@ -175,42 +193,348 @@ export function LegalInfoPage({ defaultTab }) {
           {/* Right Content Area */}
           <main className="lg:col-span-9 bg-white dark:bg-[#121722] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-10 shadow-xs">
             
-            {/* TAB 1: ABOUT US */}
+            {/* TAB 1: ABOUT US & CHARACTER BIBLE */}
             {activeTab === 'about' && (
-              <article className="space-y-8 animate-fadeIn">
+              <article className="space-y-10 animate-fadeIn">
+                {/* Intro Header */}
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/50 mb-3">
-                    <Sparkles className="w-3 h-3" />
-                    <span>Our Story & Mission</span>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/50 mb-3">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Official Mascot & Creative Guide • Character Bible v1.0</span>
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    About Lumiina
+                    About Lumiina & Character Bible
                   </h1>
                   <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Lumiina is an independent illustration sharing community crafted for anime, manga, and digital fan art creators. Built from the ground up to celebrate human artistic craft without artificial noise.
+                    Lumiina is an independent illustration sharing community crafted for anime, manga, and digital creators. Built from the ground up to celebrate human artistic craft without artificial noise — guided by our official character property, <strong>Lumiina (ルミーナ)</strong>.
                   </p>
                 </div>
 
-                {/* Mascots Banner Spotlight */}
-                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 relative">
-                  <img
-                    src="/lumi_ina_studio_hd.jpg"
-                    alt="Lumi and Ina at the Art Studio"
-                    className="w-full h-64 sm:h-80 object-cover object-top"
-                  />
-                  <div className="p-4 sm:p-5 bg-gradient-to-t from-black/80 via-black/40 to-transparent absolute inset-x-0 bottom-0 text-white">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-sky-300">
-                      Official Lumiina Mascots
+                {/* 1. Official Mascot Hero Spotlight */}
+                <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 relative shadow-md group">
+                  <picture>
+                    <source srcSet="/mascot/bg2.webp" type="image/webp" />
+                    <img
+                      src="/mascot/bg2.png"
+                      alt="Lumiina — Official Mascot & Creative Guide"
+                      className="w-full h-80 sm:h-96 object-cover object-center group-hover:scale-[1.01] transition-transform duration-700 ease-out"
+                    />
+                  </picture>
+                  <div className="p-5 sm:p-7 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent absolute inset-x-0 bottom-0 text-white flex flex-col justify-end">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/30 text-sky-300 border border-sky-400/30">
+                        Official Character Property
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                        Design Bible v1.0
+                      </span>
                     </div>
-                    <div className="text-lg font-bold">Lumi & Ina</div>
-                    <p className="text-xs text-slate-200 mt-1 max-w-xl">
-                      <strong>Lumi</strong> (The Golden Light) represents bright passion, bold brushstrokes, and creative courage. <strong>Ina</strong> (The Gentle Silver) represents quiet contemplation, patience, and meticulous digital craftsmanship.
+                    <div className="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+                      <span>Lumiina</span>
+                      <span className="text-sm sm:text-base font-medium text-sky-300">/ ルミーナ</span>
+                      <span className="text-sky-400 text-sm">✦</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-200 mt-1 max-w-2xl leading-relaxed italic">
+                      "A small light in a big world. She doesn't create in place of the artist; she simply stays beside them, discovering, preserving, and illuminating the work they choose to share."
                     </p>
+                    <div className="mt-2.5 text-[11px] font-medium text-sky-300 flex items-center gap-2">
+                      <span>「ずっと、そばにいるよ。」</span>
+                      <span className="text-slate-400">•</span>
+                      <span>I'll always be with you.</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Core Pillars */}
+                {/* 2. Character Lore & Philosophy */}
+                <div className="bg-sky-50/50 dark:bg-sky-950/20 rounded-2xl border border-sky-100 dark:border-sky-900/40 p-5 sm:p-6 space-y-3">
+                  <div className="flex items-center gap-2 text-sky-700 dark:text-sky-400 font-bold text-sm">
+                    <Heart className="w-4 h-4" />
+                    <span>The "Small Light" Lore & Philosophy</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                    Lumiina is born from the countless ideas, sketches, and visual stories created by illustrators. In our universe, <strong>every creator carries an inner creative light</strong>. A viral artwork seen by millions has a brilliant blaze, but an intimate doodle seen by only a handful of friends holds that very same creative warmth.
+                  </p>
+                  <blockquote className="pl-3.5 border-l-2 border-sky-500 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 italic my-2">
+                    "A small light is still a light."
+                  </blockquote>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    This core belief defines Lumiina's role: <strong>the artist remains the sole protagonist</strong>. Lumiina never takes the spotlight away from creators; she is the companion and guardian who helps their light reach the world.
+                  </p>
+                </div>
+
+                {/* 3. Character Profile & Specifications Matrix */}
                 <div className="space-y-4">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <Compass className="w-4 h-4 text-sky-500" />
+                    <span>Character Profile & Biological Specs</span>
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Name & Role</span>
+                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">Lumiina (ルミーナ)</strong>
+                      <span className="text-[11px] text-sky-600 dark:text-sky-400">Official Mascot / Creative Guide</span>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Height & Birthday</span>
+                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">158 cm • July 7 (7月7日)</strong>
+                      <span className="text-[11px] text-slate-500">Tanabata (Festival of the Stars 🎋)</span>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Archetype</span>
+                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">Creative Companion</strong>
+                      <span className="text-[11px] text-slate-500">Calm, warm, curious, playful</span>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 sm:col-span-2 lg:col-span-1">
+                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Likes (好きなもの)</span>
+                      <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-medium">
+                        Stars, blue shades, sweets, hard-working artists, and you (きみ).
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 sm:col-span-2">
+                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Dislikes & Boundaries</span>
+                      <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-medium">
+                        Being left all alone, falsehoods, and creators overworking themselves without rest (無理すること).
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Visual DNA & Costume Philosophy */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-sky-500" />
+                    <span>Visual DNA & Design Philosophy</span>
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                      <div>
+                        <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 dark:border-slate-700 mb-2" />
+                        <strong className="text-slate-900 dark:text-white block text-sm">Pure White (#F8FAFC)</strong>
+                        <span className="text-[11px] text-slate-500">The Blank Canvas</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Represents the boundless starting point of every digital illustration.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                      <div>
+                        <div className="w-6 h-6 rounded-full bg-[#0096fa] mb-2" />
+                        <strong className="text-slate-900 dark:text-white block text-sm">Ice Blue (#0096FA / #7FB3FF)</strong>
+                        <span className="text-[11px] text-sky-500">Creativity & Light</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        The luminous spark of imagination, color theory, and digital craft.
+                      </p>
+                    </div>
+
+                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                      <div>
+                        <div className="w-6 h-6 rounded-full bg-[#1e293b] mb-2" />
+                        <strong className="text-slate-900 dark:text-white block text-sm">Deep Navy (#1E293B)</strong>
+                        <span className="text-[11px] text-slate-400">Structure & Lineart</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Provides grounding contrast, representing the structure and discipline behind art.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="space-y-1">
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span className="text-sky-500 text-sm">✦ + ●</span>
+                        <span>The Signature Motif (Sparkle & Orb)</span>
+                      </div>
+                      <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                        The permanent visual link between the Lumiina logo and the character's hair clip, jacket zipper, sneakers, and accessories.
+                      </p>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-mono text-[11px] font-bold shrink-0">
+                      Streetwear × Digital Artist
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Production Reference Sheets Showcase (Clickable Modal) */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-sky-500" />
+                      <span>Production Character Sheets & Turnarounds</span>
+                    </h2>
+                    <span className="text-[11px] text-slate-400">Click image to inspect</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Sheet 1: Master Bible */}
+                    <div 
+                      onClick={() => setSelectedSheet('/mascot/character_bible_master.png')}
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative shadow-2xs hover:shadow-md transition-all"
+                    >
+                      <div className="aspect-[3/2] overflow-hidden bg-slate-100 dark:bg-slate-950">
+                        <img 
+                          src="/mascot/character_bible_master.png" 
+                          alt="Lumiina Master Character Bible" 
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-3.5 flex items-center justify-between bg-white dark:bg-[#151a22] border-t border-slate-100 dark:border-slate-800">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>Master Reference Bible</span>
+                            <span className="text-[10px] text-sky-500">v1.0</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">Palette, turnarounds, facial close-ups & props</span>
+                        </div>
+                        <Maximize2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                      </div>
+                    </div>
+
+                    {/* Sheet 2: Full Turnaround */}
+                    <div 
+                      onClick={() => setSelectedSheet('/mascot/character_sheet_full.png')}
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative shadow-2xs hover:shadow-md transition-all"
+                    >
+                      <div className="aspect-[3/2] overflow-hidden bg-slate-100 dark:bg-slate-950">
+                        <img 
+                          src="/mascot/character_sheet_full.png" 
+                          alt="Lumiina Turnaround Sheet" 
+                          className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="p-3.5 flex items-center justify-between bg-white dark:bg-[#151a22] border-t border-slate-100 dark:border-slate-800">
+                        <div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>Turnaround & Chibi Library</span>
+                            <span className="text-[10px] text-sky-500">3-View</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">Front, side, back silhouettes & expressions</span>
+                        </div>
+                        <Maximize2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 6. Official Props & Equipment */}
+                <div className="space-y-4">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <Star className="w-4 h-4 text-sky-500" />
+                    <span>Official Props & Signature Gear</span>
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">📱 Lumiina Tablet</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        Her primary tool used when drawing digital sketches or exploring creators' artworks across the platform.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">✏️ Digital Stylus</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        Symbolizes her deep affinity with digital creators and their delicate brushwork.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">✨ Hoshi Mascot (星)</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        Lumiina's soft blob/star companion and plush pillow, wearing a matching blue ✦ clip.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">🎒 Lumiina Bag</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        Crossbody messenger bag equipped with the ✦ + ● badge and strap keychain.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">🕶️ Sunglasses</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        Worn during her playful and confident "Cool" moments.
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
+                      <strong className="text-slate-900 dark:text-white block text-xs">👟 High-Top Sneakers</strong>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+                        White and ice-blue chunky anime sneakers built for agile, comfortable studio walks.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7. Official 9-Expression Library & Emoji Sticker Pack */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <Smile className="w-4 h-4 text-sky-500" />
+                        <span>Official 9-Expression Emoji Sticker Pack</span>
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Interactive reaction stickers available in Lumiina discussion threads. Click any sticker to copy shortcode!
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-9 gap-2.5">
+                    {[
+                      { id: 1, name: 'Happy', code: ':lumiina_happy:', thumb: '/mascot/emojis/1_thumb.webp', desc: 'Laughing cheerfully' },
+                      { id: 2, name: 'Shy / Pout', code: ':lumiina_shy:', thumb: '/mascot/emojis/2_thumb.webp', desc: 'Flustered tucked in collar' },
+                      { id: 3, name: 'Excited', code: ':lumiina_excited:', thumb: '/mascot/emojis/3_thumb.webp', desc: 'Cheering with fists' },
+                      { id: 4, name: 'Secret / Wink', code: ':lumiina_wink:', thumb: '/mascot/emojis/4_thumb.webp', desc: 'Playful shh with wink' },
+                      { id: 5, name: 'Angry Pout', code: ':lumiina_pout:', thumb: '/mascot/emojis/5_thumb.webp', desc: 'Puffy angry cheeks' },
+                      { id: 6, name: 'Love / Hoshi', code: ':lumiina_love:', thumb: '/mascot/emojis/6_thumb.webp', desc: 'Hugging Hoshi blob' },
+                      { id: 7, name: 'Cool', code: ':lumiina_cool:', thumb: '/mascot/emojis/7_thumb.webp', desc: 'Stylish sunglasses wink' },
+                      { id: 8, name: 'Tablet Peeking', code: ':lumiina_tablet:', thumb: '/mascot/emojis/8_thumb.webp', desc: 'Peeking over tablet' },
+                      { id: 9, name: 'Thinking', code: ':lumiina_thinking:', thumb: '/mascot/emojis/9_thumb.webp', desc: 'Stylus pen on lips' },
+                    ].map((emoji) => {
+                      const isCopied = copiedEmoji === emoji.code;
+                      return (
+                        <button
+                          key={emoji.id}
+                          type="button"
+                          onClick={() => copyEmojiCode(emoji.code)}
+                          className="group relative flex flex-col items-center p-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-md transition-all active:scale-95 cursor-pointer text-center"
+                          title={`${emoji.name} — Click to copy ${emoji.code}`}
+                        >
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform">
+                            <img
+                              src={emoji.thumb}
+                              alt={emoji.name}
+                              className="w-full h-full object-contain"
+                              loading="lazy"
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 mt-1 truncate max-w-full">
+                            {emoji.name}
+                          </span>
+                          <span className="text-[8px] font-mono text-slate-400 group-hover:text-sky-500 transition-colors">
+                            {emoji.code}
+                          </span>
+                          {isCopied && (
+                            <div className="absolute inset-0 bg-sky-600/95 rounded-2xl flex flex-col items-center justify-center text-white text-[10px] font-bold animate-fadeIn">
+                              <Check className="w-3.5 h-3.5 mb-0.5" />
+                              Copied!
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 8. Core Pillars */}
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
                     Our Core Pillars
                   </h2>
@@ -497,6 +821,41 @@ export function LegalInfoPage({ defaultTab }) {
           </main>
         </div>
       </div>
+
+      {/* Lightbox Modal for Character Turnaround Sheets */}
+      {selectedSheet && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
+          onClick={() => setSelectedSheet(null)}
+        >
+          <div 
+            className="relative max-w-5xl max-h-[92vh] w-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                <span>Lumiina Production Character Sheet (Click anywhere to close)</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setSelectedSheet(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-auto max-h-[85vh] p-2 flex items-center justify-center bg-[#0d1117]">
+              <img 
+                src={selectedSheet} 
+                alt="Lumiina Production Sheet" 
+                className="w-auto h-auto max-w-full max-h-[82vh] object-contain rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

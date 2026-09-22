@@ -18,13 +18,16 @@ export const AuthLayout = ({ children }) => {
       
       {/* 1. Fullscreen Background Artwork (Pixiv Style) */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <img
-          src="/auth_bg_default.jpg"
-          alt="Lumiina Featured Artwork"
-          className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000 ease-out"
-        />
+        <picture className="w-full h-full">
+          <source srcSet="/mascot/bg2.webp" type="image/webp" />
+          <img
+            src="/mascot/bg2.png"
+            alt="Lumiina — Official Mascot & Creative Guide"
+            className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000 ease-out"
+          />
+        </picture>
         {/* Subtle dark vignette to make the white card pop crisply without muting the art */}
-        <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px]" />
+        <div className="absolute inset-0 bg-slate-950/35 backdrop-blur-[1px]" />
       </div>
 
       {/* 2. Top-Left Floating Navigation */}
@@ -40,22 +43,26 @@ export const AuthLayout = ({ children }) => {
       {/* 3. Bottom-Right Artwork Attribution Card (Pixiv Style) */}
       <Link
         to="/about"
-        className="fixed bottom-4 right-6 z-20 hidden md:flex items-center gap-3 p-2 pr-4 bg-slate-900/80 hover:bg-slate-900/95 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl transition-all hover:scale-[1.02] text-left group"
+        className="fixed bottom-4 right-6 z-20 hidden md:flex items-center gap-3 p-2.5 pr-4 bg-slate-900/85 hover:bg-slate-900/95 backdrop-blur-md border border-white/15 rounded-2xl shadow-xl transition-all hover:scale-[1.02] text-left group"
+        title="View Lumiina Character Bible & Story"
       >
-        <img
-          src="/lumi_ina_studio_hd.jpg"
-          alt="Lumi & Ina"
-          className="w-10 h-10 rounded-xl object-cover border border-white/20"
-        />
+        <div className="w-10 h-10 rounded-xl bg-sky-950/50 border border-sky-400/30 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+          <img
+            src="/mascot/emojis/1_thumb.webp"
+            alt="Lumiina Mascot"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform"
+          />
+        </div>
         <div className="flex flex-col leading-tight">
-          <span className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors">
-            Lumi & Ina — Art Studio
+          <span className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors flex items-center gap-1.5">
+            Lumiina (ルミーナ)
+            <span className="text-[10px] text-sky-400 font-medium">✦</span>
           </span>
           <span className="text-[10px] text-slate-300">
-            Art by <strong className="text-white">@lumiina_studio</strong>
+            Creative Guide • Art by <strong className="text-white">@lumiina_studio</strong>
           </span>
-          <span className="text-[9px] font-bold text-sky-400 uppercase tracking-wider mt-0.5">
-            LUMIINA OFFICIAL MASCOTS
+          <span className="text-[9px] font-extrabold text-sky-400 uppercase tracking-wider mt-0.5">
+            A SMALL LIGHT IN A BIG WORLD
           </span>
         </div>
       </Link>

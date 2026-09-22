@@ -27,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLikes } from '../context/LikesContext';
 import { useFollow } from '../context/FollowContext';
+import { LumiinaStickerPicker, renderCommentText } from '../components/LumiinaStickerPicker';
 
 export const ArtworkDetailPage = () => {
   const { id } = useParams();
@@ -53,6 +54,7 @@ export const ArtworkDetailPage = () => {
   const [newComment, setNewComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [commentError, setCommentError] = useState('');
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [activeCommentMenu, setActiveCommentMenu] = useState(null);
   const commentsEndRef = useRef(null);
 
@@ -753,18 +755,36 @@ export const ArtworkDetailPage = () => {
                           type="text"
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
-                          placeholder="Write your thoughts..."
+                          placeholder="Write your thoughts... (try :lumiina_love:)"
                           maxLength={500}
-                          className="w-full pl-4 pr-10 py-2 text-xs bg-slate-100/90 dark:bg-slate-800/80 hover:bg-slate-200/60 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-200 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
+                          className="w-full pl-4 pr-16 py-2 text-xs bg-slate-100/90 dark:bg-slate-800/80 hover:bg-slate-200/60 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-200 dark:border-slate-700/80 focus:border-sky-500 rounded-full outline-none transition-all"
                         />
-                        <button
-                          type="submit"
-                          disabled={!newComment.trim() || submittingComment}
-                          className="absolute right-1 p-1.5 bg-[#0096fa] hover:bg-[#0085df] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
-                          title="Send comment"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="absolute right-1.5 flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setShowStickerPicker(!showStickerPicker)}
+                            className="p-1 text-slate-400 hover:text-[#0096fa] dark:hover:text-sky-400 rounded-full hover:bg-sky-50 dark:hover:bg-sky-950/40 transition-colors cursor-pointer"
+                            title="Insert Lumiina Sticker"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-[#0096fa]" />
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={!newComment.trim() || submittingComment}
+                            className="p-1.5 bg-[#0096fa] hover:bg-[#0085df] disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white rounded-full transition-colors cursor-pointer"
+                            title="Send comment"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        {/* Lumiina Mascot Sticker Picker */}
+                        <LumiinaStickerPicker
+                          isOpen={showStickerPicker}
+                          onClose={() => setShowStickerPicker(false)}
+                          onSelect={(code) => {
+                            setNewComment((prev) => (prev ? `${prev.trim()} ${code} ` : `${code} `));
+                          }}
+                        />
                       </div>
                     </div>
                   </form>
@@ -783,8 +803,20 @@ export const ArtworkDetailPage = () => {
               {/* Comments List */}
               <div className="flex flex-col max-h-[380px] overflow-y-auto">
                 {comments.length === 0 ? (
-                  <div className="text-center py-10 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    No comments yet. Be the first to share your appreciation!
+                  <div className="text-center py-8 px-4 flex flex-col items-center justify-center select-none">
+                    <div className="w-14 h-14 mb-2 hover:scale-110 transition-transform">
+                      <img
+                        src="/mascot/emojis/8_thumb.webp"
+                        alt="Lumiina peeking"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      No thoughts shared yet
+                    </p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 max-w-xs leading-relaxed">
+                      Be the first to leave a gentle light of appreciation for the artist!
+                    </p>
                   </div>
                 ) : (
                   comments.map((c) => {
@@ -878,9 +910,9 @@ export const ArtworkDetailPage = () => {
                             )}
                           </div>
 
-                          {/* Content */}
+                          {/* Content with rich Lumiina sticker rendering */}
                           <p className="text-[13px] text-slate-700 dark:text-slate-300 leading-snug mt-1 break-words">
-                            {c.content}
+                            {renderCommentText(c.content)}
                           </p>
                         </div>
                       </div>

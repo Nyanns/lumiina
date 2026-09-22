@@ -242,7 +242,7 @@ export const HomePage = () => {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={homeDescription} />
-        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={homeCanonicalUrl} />
 
         {/* Twitter Card */}
@@ -250,7 +250,7 @@ export const HomePage = () => {
         <meta name="twitter:site" content="@lumiina_art" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={homeDescription} />
-        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
 
         {/* Schema.org CollectionPage */}
         <script type="application/ld+json">{JSON.stringify(collectionJsonLd)}</script>
@@ -342,9 +342,13 @@ export const HomePage = () => {
                   ))}
                 </div>
               ) : artworks.length === 0 ? (
-                <div className="py-20 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-sm">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4">
-                    <ImageIcon className="w-7 h-7" />
+                <div className="py-16 bg-white dark:bg-[#1a1e24] rounded-3xl border border-slate-200 dark:border-slate-800 text-center p-8 flex flex-col items-center justify-center shadow-sm">
+                  <div className="relative mb-3">
+                    <img
+                      src="/mascot/emojis/9_thumb.webp"
+                      alt="Thinking Lumiina"
+                      className="w-20 h-20 object-contain filter drop-shadow-xs select-none pointer-events-none"
+                    />
                   </div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">No Artworks Found</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-1 mb-6">
@@ -537,6 +541,36 @@ export const HomePage = () => {
                 </div>
               </div>
             )}
+
+            {/* Widget 3.5: Meet Lumiina (Official Mascot Companion Card) */}
+            <div className="bg-gradient-to-br from-sky-50 via-white to-blue-50/40 dark:from-sky-950/20 dark:via-[#1a1e24] dark:to-blue-950/20 rounded-2xl border border-sky-100 dark:border-sky-900/40 p-4 shadow-xs flex flex-col gap-3 relative overflow-hidden group">
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden bg-sky-100 dark:bg-sky-950/80 border border-sky-200 dark:border-sky-800 shrink-0 shadow-xs">
+                  <img
+                    src="/mascot/emojis/8_thumb.webp"
+                    alt="Lumiina"
+                    className="w-full h-full object-contain p-0.5"
+                  />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-extrabold text-xs text-slate-900 dark:text-white">Lumiina</span>
+                    <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">ルミーナ</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">"A small light is still a light"</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                Meet our official mascot & creative guide. Explore character sheets, turnarounds, and sticker packs.
+              </p>
+              <Link
+                to="/about"
+                className="inline-flex items-center justify-between px-3 py-1.5 rounded-xl bg-white dark:bg-[#121519] border border-sky-200/80 dark:border-sky-800/80 text-[11px] font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/40 transition-all shadow-2xs"
+              >
+                <span>Character Bible & Lore</span>
+                <span className="text-xs">→</span>
+              </Link>
+            </div>
 
             {/* Widget 4: Application Footer (Clean & Simple) */}
             <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] flex flex-col gap-3.5 transition-colors">

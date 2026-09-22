@@ -104,7 +104,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={canonicalUrl} />
 
         {/* Twitter Card */}
@@ -112,7 +112,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
         <meta name="twitter:site" content="@lumiina_art" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content="https://lumiina.art/lumi_ina_studio_hd.jpg" />
+        <meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
       </Helmet>
 
       <main className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 pb-24 md:pb-12 flex flex-col gap-4">
@@ -214,12 +214,19 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
             ))}
           </div>
         ) : filteredArtworks.length === 0 ? (
-          <div className="py-20 text-center">
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
-              {selectedTag ? `No results for "${selectedTag}"` : 'No artworks yet'}
+          <div className="py-16 text-center flex flex-col items-center justify-center">
+            <div className="relative mb-3">
+              <img
+                src="/mascot/emojis/9_thumb.webp"
+                alt="Thinking Lumiina"
+                className="w-20 h-20 object-contain filter drop-shadow-xs select-none pointer-events-none"
+              />
+            </div>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">
+              {selectedTag ? `No results for "${selectedTag}"` : 'No artworks found'}
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">
-              {selectedTag ? 'Try another tag or show all.' : 'Check back later.'}
+              {selectedTag ? 'Try another tag or show all.' : 'Check back later for new illustrations.'}
             </p>
             {selectedTag ? (
               <button
