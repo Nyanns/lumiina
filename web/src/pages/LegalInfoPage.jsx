@@ -19,7 +19,15 @@ import {
   Copy,
   Layers,
   Compass,
-  Smile
+  Smile,
+  Laptop,
+  PenTool,
+  Package,
+  Footprints,
+  Shield,
+  Zap,
+  CheckCircle2,
+  Eye
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -60,8 +68,8 @@ export function LegalInfoPage({ defaultTab }) {
 
   const metaConfig = {
     about: {
-      title: 'About Lumiina — Official Mascot & Creative Guide (Character Bible v1.0)',
-      description: 'Meet Lumiina (ルミーナ), the gentle creative guide of the Lumiina art community. A small light in a big world, celebrating human anime artists and original fan art.',
+      title: 'About Lumiina — Creative Guide & Character Bible v1.0',
+      description: 'Meet Lumiina, the official creative guide of the Lumiina art community. A small light in a big world, celebrating human anime artists and original fan art.',
       canonical: 'https://lumiina.art/about',
     },
     guidelines: {
@@ -193,66 +201,66 @@ export function LegalInfoPage({ defaultTab }) {
           {/* Right Content Area */}
           <main className="lg:col-span-9 bg-white dark:bg-[#121722] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-6 sm:p-10 shadow-xs">
             
-            {/* TAB 1: ABOUT US & CHARACTER BIBLE */}
+            {/* TAB 1: ABOUT US & CHARACTER BIBLE (HUMAN-CRAFTED EDITORIAL DESIGN) */}
             {activeTab === 'about' && (
-              <article className="space-y-10 animate-fadeIn">
-                {/* Intro Header */}
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-900/50 mb-3">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Official Mascot & Creative Guide • Character Bible v1.0</span>
+              <article className="space-y-12 animate-fadeIn text-slate-800 dark:text-slate-200">
+                
+                {/* 1. Header & Mission Manifesto */}
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/60">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+                    <span>Creative Guide & Community Manifesto</span>
                   </div>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    About Lumiina & Character Bible
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                    A Sanctuary for Digital Illustrators & Fan Artists
                   </h1>
-                  <p className="mt-2 text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-                    Lumiina is an independent illustration sharing community crafted for anime, manga, and digital creators. Built from the ground up to celebrate human artistic craft without artificial noise — guided by our official character property, <strong>Lumiina (ルミーナ)</strong>.
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl">
+                    Lumiina is an independent illustration sharing community built for anime, manga, and digital fan art creators. We reject algorithmic slop, intrusive advertising, and unauthorized data scraping — providing a calm, lightning-fast stage where human artistic craftsmanship is protected, celebrated, and preserved.
                   </p>
                 </div>
 
-                {/* 1. Official Mascot Hero Spotlight */}
-                <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 relative shadow-md group">
+                {/* 2. Official Mascot Hero Visual Spotlight */}
+                <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 relative shadow-sm group">
                   <picture>
                     <source srcSet="/mascot/bg2.webp" type="image/webp" />
                     <img
                       src="/mascot/bg2.png"
-                      alt="Lumiina — Official Mascot & Creative Guide"
+                      alt="Lumiina — Official Creative Guide"
                       className="w-full h-80 sm:h-96 object-cover object-center group-hover:scale-[1.01] transition-transform duration-700 ease-out"
                     />
                   </picture>
-                  <div className="p-5 sm:p-7 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent absolute inset-x-0 bottom-0 text-white flex flex-col justify-end">
-                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/30 text-sky-300 border border-sky-400/30">
+                  <div className="p-6 sm:p-8 bg-gradient-to-t from-slate-950/95 via-slate-950/60 to-transparent absolute inset-x-0 bottom-0 text-white flex flex-col justify-end">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-sky-500/25 text-sky-300 border border-sky-400/30">
                         Official Character Property
                       </span>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
-                        Design Bible v1.0
+                        Character Bible v1.0
                       </span>
                     </div>
-                    <div className="text-xl sm:text-2xl font-extrabold flex items-center gap-2">
+                    <div className="text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center gap-2">
                       <span>Lumiina</span>
-                      <span className="text-sm sm:text-base font-medium text-sky-300">/ ルミーナ</span>
-                      <span className="text-sky-400 text-sm">✦</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-white/10 text-sky-200 uppercase tracking-wider">
+                        Creative Guide
+                      </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-200 mt-1 max-w-2xl leading-relaxed italic">
-                      "A small light in a big world. She doesn't create in place of the artist; she simply stays beside them, discovering, preserving, and illuminating the work they choose to share."
+                    <p className="text-xs sm:text-sm text-slate-200 mt-1.5 max-w-2xl leading-relaxed">
+                      "A small light in a big world. She does not create in place of the artist; she stays beside them, discovering, preserving, and illuminating the work they choose to share."
                     </p>
-                    <div className="mt-2.5 text-[11px] font-medium text-sky-300 flex items-center gap-2">
-                      <span>「ずっと、そばにいるよ。」</span>
-                      <span className="text-slate-400">•</span>
-                      <span>I'll always be with you.</span>
+                    <div className="mt-3 text-xs font-medium text-sky-300 flex items-center gap-2">
+                      <span>I'll always be by your side.</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Character Lore & Philosophy */}
-                <div className="bg-sky-50/50 dark:bg-sky-950/20 rounded-2xl border border-sky-100 dark:border-sky-900/40 p-5 sm:p-6 space-y-3">
+                {/* 3. The "Small Light" Lore & Philosophy */}
+                <div className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 sm:p-7 space-y-3">
                   <div className="flex items-center gap-2 text-sky-700 dark:text-sky-400 font-bold text-sm">
-                    <Heart className="w-4 h-4" />
-                    <span>The "Small Light" Lore & Philosophy</span>
+                    <Compass className="w-4 h-4" />
+                    <span>The "Small Light" Philosophy</span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                    Lumiina is born from the countless ideas, sketches, and visual stories created by illustrators. In our universe, <strong>every creator carries an inner creative light</strong>. A viral artwork seen by millions has a brilliant blaze, but an intimate doodle seen by only a handful of friends holds that very same creative warmth.
+                    Lumiina is born from the countless sketches, color experiments, and visual stories created by illustrators. In our universe, <strong>every creator carries an inner creative light</strong>. A viral artwork admired by millions has a brilliant blaze, but an intimate doodle shared with only a few friends holds that very same creative warmth.
                   </p>
                   <blockquote className="pl-3.5 border-l-2 border-sky-500 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 italic my-2">
                     "A small light is still a light."
@@ -262,119 +270,132 @@ export function LegalInfoPage({ defaultTab }) {
                   </p>
                 </div>
 
-                {/* 3. Character Profile & Specifications Matrix */}
+                {/* 4. Character Profile Matrix */}
                 <div className="space-y-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <Compass className="w-4 h-4 text-sky-500" />
-                    <span>Character Profile & Biological Specs</span>
-                  </h2>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                      Character Profile & Specifications
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Production character matrix for cross-media consistency.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Name & Role</span>
-                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">Lumiina (ルミーナ)</strong>
-                      <span className="text-[11px] text-sky-600 dark:text-sky-400">Official Mascot / Creative Guide</span>
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block">Name & Designation</span>
+                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">Lumiina</strong>
+                      <span className="text-[11px] text-sky-600 dark:text-sky-400 font-medium">Official Creative Guide</span>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Height & Birthday</span>
-                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">158 cm • July 7 (7月7日)</strong>
-                      <span className="text-[11px] text-slate-500">Tanabata (Festival of the Stars 🎋)</span>
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block">Height & Birthday</span>
+                      <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">158 cm • July 7</strong>
+                      <span className="text-[11px] text-slate-500">Star Festival (Tanabata)</span>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Archetype</span>
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block">Archetype</span>
                       <strong className="text-slate-900 dark:text-white text-sm block mt-0.5">Creative Companion</strong>
-                      <span className="text-[11px] text-slate-500">Calm, warm, curious, playful</span>
+                      <span className="text-[11px] text-slate-500">Calm, warm, curious, observant</span>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 sm:col-span-2 lg:col-span-1">
-                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Likes (好きなもの)</span>
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs sm:col-span-2 lg:col-span-1">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block">Key Traits</span>
                       <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-medium">
-                        Stars, blue shades, sweets, hard-working artists, and you (きみ).
+                        Silver-white long hair, crystalline blue eyes, floating ahoge, ✦ + ● sparkle clip.
                       </span>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 sm:col-span-2">
-                      <span className="text-slate-400 dark:text-slate-500 font-medium block">Dislikes & Boundaries</span>
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs sm:col-span-2">
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium block">Likes & Boundaries</span>
                       <span className="text-slate-800 dark:text-slate-200 mt-0.5 block font-medium">
-                        Being left all alone, falsehoods, and creators overworking themselves without rest (無理すること).
+                        Cherishes starry nights, blue hues, sketchbooks, and hard-working artists. Dislikes art theft, cluttered desks, and creators overworking without proper rest.
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 4. Visual DNA & Costume Philosophy */}
+                {/* 5. Visual DNA & Color System */}
                 <div className="space-y-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-sky-500" />
-                    <span>Visual DNA & Design Philosophy</span>
-                  </h2>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Palette className="w-4 h-4 text-sky-500" />
+                      <span>Visual DNA & Color System</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Production palette tokens ensuring visual balance across illustration and UI.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] flex flex-col justify-between gap-3 shadow-2xs">
                       <div>
-                        <div className="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 dark:border-slate-700 mb-2" />
-                        <strong className="text-slate-900 dark:text-white block text-sm">Pure White (#F8FAFC)</strong>
-                        <span className="text-[11px] text-slate-500">The Blank Canvas</span>
+                        <div className="w-6 h-6 rounded-md bg-[#F8FAFC] border border-slate-300 dark:border-slate-700 mb-2.5 shadow-2xs" />
+                        <strong className="text-slate-900 dark:text-white block text-sm font-bold">Canvas White</strong>
+                        <span className="font-mono text-[11px] text-slate-500">#F8FAFC</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Represents the boundless starting point of every digital illustration.
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        The oversized studio jacket and the limitless starting surface of every illustration.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] flex flex-col justify-between gap-3 shadow-2xs">
                       <div>
-                        <div className="w-6 h-6 rounded-full bg-[#0096fa] mb-2" />
-                        <strong className="text-slate-900 dark:text-white block text-sm">Ice Blue (#0096FA / #7FB3FF)</strong>
-                        <span className="text-[11px] text-sky-500">Creativity & Light</span>
+                        <div className="w-6 h-6 rounded-md bg-[#0096FA] mb-2.5 shadow-2xs" />
+                        <strong className="text-slate-900 dark:text-white block text-sm font-bold">Ice Blue Light</strong>
+                        <span className="font-mono text-[11px] text-sky-500">#0096FA / #38BDF8</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        The luminous spark of imagination, color theory, and digital craft.
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Structural ribbons, hair highlights, and the luminous spark of imagination.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between gap-2 shadow-2xs">
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] flex flex-col justify-between gap-3 shadow-2xs">
                       <div>
-                        <div className="w-6 h-6 rounded-full bg-[#1e293b] mb-2" />
-                        <strong className="text-slate-900 dark:text-white block text-sm">Deep Navy (#1E293B)</strong>
-                        <span className="text-[11px] text-slate-400">Structure & Lineart</span>
+                        <div className="w-6 h-6 rounded-md bg-[#0F172A] mb-2.5 shadow-2xs" />
+                        <strong className="text-slate-900 dark:text-white block text-sm font-bold">Deep Navy</strong>
+                        <span className="font-mono text-[11px] text-slate-400">#0F172A</span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                        Provides grounding contrast, representing the structure and discipline behind art.
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Inner layer and dark shorts, providing structural grounding and lineart contrast.
                       </p>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                    <div className="space-y-1">
+                  <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="space-y-0.5">
                       <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                        <span className="text-sky-500 text-sm">✦ + ●</span>
-                        <span>The Signature Motif (Sparkle & Orb)</span>
+                        <span className="text-sky-500 font-mono">✦ + ●</span>
+                        <span>The Signature Motif</span>
                       </div>
                       <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-                        The permanent visual link between the Lumiina logo and the character's hair clip, jacket zipper, sneakers, and accessories.
+                        The geometric sparkle and orb icon connecting hairpins, zipper pulls, messenger strap, and sneakers.
                       </p>
                     </div>
-                    <div className="px-3 py-1.5 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 font-mono text-[11px] font-bold shrink-0">
-                      Streetwear × Digital Artist
+                    <div className="px-3 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-[11px] shrink-0">
+                      Streetwear × Digital Craft
                     </div>
                   </div>
                 </div>
 
-                {/* 5. Production Reference Sheets Showcase (Clickable Modal) */}
+                {/* 6. Production Reference Sheets Showcase */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-sky-500" />
-                      <span>Production Character Sheets & Turnarounds</span>
-                    </h2>
-                    <span className="text-[11px] text-slate-400">Click image to inspect</span>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-sky-500" />
+                        <span>Production Character Sheets & Turnarounds</span>
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Click any sheet to inspect the native full-resolution file.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Sheet 1: Master Bible */}
                     <div 
                       onClick={() => setSelectedSheet('/mascot/character_bible_master.png')}
-                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative shadow-2xs hover:shadow-md transition-all"
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs hover:shadow-md transition-all"
                     >
                       <div className="aspect-[3/2] overflow-hidden bg-slate-100 dark:bg-slate-950">
                         <img 
@@ -383,13 +404,13 @@ export function LegalInfoPage({ defaultTab }) {
                           className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <div className="p-3.5 flex items-center justify-between bg-white dark:bg-[#151a22] border-t border-slate-100 dark:border-slate-800">
+                      <div className="p-3.5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80">
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>Master Reference Bible</span>
-                            <span className="text-[10px] text-sky-500">v1.0</span>
+                            <span className="text-[10px] text-sky-500 font-mono">v1.0</span>
                           </div>
-                          <span className="text-[10px] text-slate-400">Palette, turnarounds, facial close-ups & props</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Palette, turnarounds, facial close-ups & props</span>
                         </div>
                         <Maximize2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
                       </div>
@@ -398,7 +419,7 @@ export function LegalInfoPage({ defaultTab }) {
                     {/* Sheet 2: Full Turnaround */}
                     <div 
                       onClick={() => setSelectedSheet('/mascot/character_sheet_full.png')}
-                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 relative shadow-2xs hover:shadow-md transition-all"
+                      className="group cursor-pointer rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs hover:shadow-md transition-all"
                     >
                       <div className="aspect-[3/2] overflow-hidden bg-slate-100 dark:bg-slate-950">
                         <img 
@@ -407,13 +428,13 @@ export function LegalInfoPage({ defaultTab }) {
                           className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
-                      <div className="p-3.5 flex items-center justify-between bg-white dark:bg-[#151a22] border-t border-slate-100 dark:border-slate-800">
+                      <div className="p-3.5 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80">
                         <div>
                           <div className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>Turnaround & Chibi Library</span>
-                            <span className="text-[10px] text-sky-500">3-View</span>
+                            <span className="text-[10px] text-sky-500 font-mono">3-View</span>
                           </div>
-                          <span className="text-[10px] text-slate-400">Front, side, back silhouettes & expressions</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400">Front, side, and back full-body models</span>
                         </div>
                         <Maximize2 className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-500 transition-colors" />
                       </div>
@@ -421,82 +442,103 @@ export function LegalInfoPage({ defaultTab }) {
                   </div>
                 </div>
 
-                {/* 6. Official Props & Equipment */}
+                {/* 7. Signature Gear & Props */}
                 <div className="space-y-4">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <Star className="w-4 h-4 text-sky-500" />
-                    <span>Official Props & Signature Gear</span>
-                  </h2>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Package className="w-4 h-4 text-sky-500" />
+                      <span>Signature Gear & Creative Toolkit</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Functional items carried by Lumiina during studio work and city explorations.
+                    </p>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">📱 Lumiina Tablet</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        Her primary tool used when drawing digital sketches or exploring creators' artworks across the platform.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <Laptop className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Digital Drawing Tablet</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Her primary handheld device for companion sketches and discovering art across the gallery.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">✏️ Digital Stylus</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        Symbolizes her deep affinity with digital creators and their delicate brushwork.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <PenTool className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Precision Stylus</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Equipped with a miniature star charm, symbolizing clean linework and deliberate brushstrokes.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">✨ Hoshi Mascot (星)</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        Lumiina's soft blob/star companion and plush pillow, wearing a matching blue ✦ clip.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <Star className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Hoshi Plush Mascot</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        A soft companion plush carrying a blue star clip, resting beside her during late studio nights.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">🎒 Lumiina Bag</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        Crossbody messenger bag equipped with the ✦ + ● badge and strap keychain.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <Package className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Studio Messenger Bag</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Compact utility bag designed to hold reference sketchbooks and tablet cables.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">🕶️ Sunglasses</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        Worn during her playful and confident "Cool" moments.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <Eye className="w-3.5 h-3.5 text-sky-500" />
+                        <span>Studio Sunglasses</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Worn casually during outdoor walks and relaxed cafe breaks.
                       </p>
                     </div>
 
-                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block text-xs">👟 High-Top Sneakers</strong>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-                        White and ice-blue chunky anime sneakers built for agile, comfortable studio walks.
+                    <div className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+                        <Footprints className="w-3.5 h-3.5 text-sky-500" />
+                        <span>High-Top Sneakers</span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Chunky white and ice-blue anime sneakers built for long days exploring artist exhibitions.
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* 7. Official 9-Expression Library & Emoji Sticker Pack */}
+                {/* 8. Official 9-Expression Sticker Library */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <Smile className="w-4 h-4 text-sky-500" />
-                        <span>Official 9-Expression Emoji Sticker Pack</span>
-                      </h2>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Interactive reaction stickers available in Lumiina discussion threads. Click any sticker to copy shortcode!
-                      </p>
-                    </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                      <Smile className="w-4 h-4 text-sky-500" />
+                      <span>Community Expression Stickers</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Available in comment sections. Click any sticker to copy its shortcode.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-9 gap-2.5">
                     {[
-                      { id: 1, name: 'Happy', code: ':lumiina_happy:', thumb: '/mascot/emojis/1_thumb.webp', desc: 'Laughing cheerfully' },
-                      { id: 2, name: 'Shy / Pout', code: ':lumiina_shy:', thumb: '/mascot/emojis/2_thumb.webp', desc: 'Flustered tucked in collar' },
-                      { id: 3, name: 'Excited', code: ':lumiina_excited:', thumb: '/mascot/emojis/3_thumb.webp', desc: 'Cheering with fists' },
-                      { id: 4, name: 'Secret / Wink', code: ':lumiina_wink:', thumb: '/mascot/emojis/4_thumb.webp', desc: 'Playful shh with wink' },
-                      { id: 5, name: 'Angry Pout', code: ':lumiina_pout:', thumb: '/mascot/emojis/5_thumb.webp', desc: 'Puffy angry cheeks' },
-                      { id: 6, name: 'Love / Hoshi', code: ':lumiina_love:', thumb: '/mascot/emojis/6_thumb.webp', desc: 'Hugging Hoshi blob' },
-                      { id: 7, name: 'Cool', code: ':lumiina_cool:', thumb: '/mascot/emojis/7_thumb.webp', desc: 'Stylish sunglasses wink' },
-                      { id: 8, name: 'Tablet Peeking', code: ':lumiina_tablet:', thumb: '/mascot/emojis/8_thumb.webp', desc: 'Peeking over tablet' },
-                      { id: 9, name: 'Thinking', code: ':lumiina_thinking:', thumb: '/mascot/emojis/9_thumb.webp', desc: 'Stylus pen on lips' },
+                      { id: 1, name: 'Happy', code: ':lumiina_1:', thumb: '/mascot/emojis/1_thumb.webp' },
+                      { id: 2, name: 'Shy', code: ':lumiina_2:', thumb: '/mascot/emojis/2_thumb.webp' },
+                      { id: 3, name: 'Excited', code: ':lumiina_3:', thumb: '/mascot/emojis/3_thumb.webp' },
+                      { id: 4, name: 'Wink', code: ':lumiina_4:', thumb: '/mascot/emojis/4_thumb.webp' },
+                      { id: 5, name: 'Pout', code: ':lumiina_5:', thumb: '/mascot/emojis/5_thumb.webp' },
+                      { id: 6, name: 'Love', code: ':lumiina_6:', thumb: '/mascot/emojis/6_thumb.webp' },
+                      { id: 7, name: 'Cool', code: ':lumiina_7:', thumb: '/mascot/emojis/7_thumb.webp' },
+                      { id: 8, name: 'Peeking', code: ':lumiina_8:', thumb: '/mascot/emojis/8_thumb.webp' },
+                      { id: 9, name: 'Thinking', code: ':lumiina_9:', thumb: '/mascot/emojis/9_thumb.webp' },
                     ].map((emoji) => {
                       const isCopied = copiedEmoji === emoji.code;
                       return (
@@ -504,10 +546,10 @@ export function LegalInfoPage({ defaultTab }) {
                           key={emoji.id}
                           type="button"
                           onClick={() => copyEmojiCode(emoji.code)}
-                          className="group relative flex flex-col items-center p-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-md transition-all active:scale-95 cursor-pointer text-center"
+                          className="group relative flex flex-col items-center p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] hover:border-sky-400 dark:hover:border-sky-500 hover:shadow-sm transition-all active:scale-95 cursor-pointer text-center"
                           title={`${emoji.name} — Click to copy ${emoji.code}`}
                         >
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center p-0.5 group-hover:scale-110 transition-transform">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform">
                             <img
                               src={emoji.thumb}
                               alt={emoji.name}
@@ -522,7 +564,7 @@ export function LegalInfoPage({ defaultTab }) {
                             {emoji.code}
                           </span>
                           {isCopied && (
-                            <div className="absolute inset-0 bg-sky-600/95 rounded-2xl flex flex-col items-center justify-center text-white text-[10px] font-bold animate-fadeIn">
+                            <div className="absolute inset-0 bg-sky-600 rounded-xl flex flex-col items-center justify-center text-white text-[10px] font-bold animate-fadeIn">
                               <Check className="w-3.5 h-3.5 mb-0.5" />
                               Copied!
                             </div>
@@ -533,66 +575,85 @@ export function LegalInfoPage({ defaultTab }) {
                   </div>
                 </div>
 
-                {/* 8. Core Pillars */}
+                {/* 9. Core Platform Pillars */}
                 <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
-                    Our Core Pillars
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs mb-2.5">
-                        01
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Artist-First Ownership</h3>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        Creators retain 100% intellectual property rights over their original works. We provide the stage, you keep the crown.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs mb-2.5">
-                        02
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Zero Unsolicited AI Scraping</h3>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        We reject selling creator portfolios to third-party generative AI datasets. Your art is meant for human eyes and appreciation.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs mb-2.5">
-                        03
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">High-Speed Pure Architecture</h3>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        Engineered with Go, PostgreSQL, and React. Sub-millisecond response times, zero bloated tracking scripts, and maximum visual fidelity.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs mb-2.5">
-                        04
-                      </div>
-                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">Respectful Fan Community</h3>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                        A supportive space celebrating original anime characters, VTubers, manga adaptations, and personal creative visions.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white">Want to join our creator roster?</div>
-                    <div className="text-[11px] text-slate-500">Registration is open and free for all illustrators.</div>
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                      Platform Core Pillars
+                    </h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      The engineering and ethical commitments governing Lumiina.
+                    </p>
                   </div>
-                  <Link
-                    to="/register"
-                    className="px-4 py-2 rounded-xl bg-[#0096fa] hover:bg-[#0082d6] text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
-                  >
-                    Create Account
-                  </Link>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">100% Artist Ownership</h3>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Creators retain full intellectual property rights over every illustration they publish. We provide the gallery stage; you retain total sovereign copyright.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Zero Unsolicited AI Scraping</h3>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        We actively prohibit automated data harvesting and never sell creator portfolios to commercial model training datasets. Art is meant for human connection.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">High-Speed Pure Architecture</h3>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        Powered by Go, PostgreSQL, and Redis. Sub-millisecond response times, zero third-party behavioral ad trackers, and maximum image fidelity.
+                      </p>
+                    </div>
+
+                    <div className="p-5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#141820] shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Heart className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Sanctuary for Creators</h3>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                        A peaceful, constructive community celebrating original characters, VTubers, manga drawings, and personal artistic journeys.
+                      </p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* 10. Open Architecture & Creator Call-to-Action */}
+                <div className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">
+                      Ready to share your illustrations?
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Open and free for artists worldwide. Powered by Go 1.22+ and PostgreSQL.
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Link
+                      to="/"
+                      className="px-4 py-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
+                    >
+                      Explore Gallery
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="px-4 py-2 rounded-xl bg-[#0096fa] hover:bg-[#0082d6] text-white text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      Join Lumiina
+                    </Link>
+                  </div>
+                </div>
+
               </article>
             )}
 
@@ -619,15 +680,24 @@ export function LegalInfoPage({ defaultTab }) {
                   </h2>
                   <div className="space-y-3 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block mb-1">🟢 All-Ages (General Content)</strong>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                        <strong className="text-slate-900 dark:text-white">All-Ages (General Content)</strong>
+                      </div>
                       Illustrations suitable for viewing in public. Includes character portraits, landscapes, fantasy action, and wholesome slice-of-life scenes.
                     </div>
                     <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
-                      <strong className="text-slate-900 dark:text-white block mb-1">🟡 Sensitive / Mature Warning</strong>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                        <strong className="text-slate-900 dark:text-white">Sensitive / Mature Warning</strong>
+                      </div>
                       Works containing artistic swimwear, suggestive poses, or light fanservice must be uploaded with accurate content tags so viewers can filter their feeds appropriately.
                     </div>
                     <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-300">
-                      <strong className="text-rose-900 dark:text-rose-200 block mb-1">🔴 Zero Tolerance Violations</strong>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                        <strong className="text-rose-900 dark:text-rose-200">Zero Tolerance Violations</strong>
+                      </div>
                       The following result in permanent ban and immediate law enforcement escalation: Child Sexual Abuse Material (CSAM/CSAE), real-life gore/violence, hate speech, non-consensual imagery, and doxxing.
                     </div>
                   </div>

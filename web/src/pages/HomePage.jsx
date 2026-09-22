@@ -555,7 +555,7 @@ export const HomePage = () => {
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="font-extrabold text-xs text-slate-900 dark:text-white">Lumiina</span>
-                    <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold">ルミーナ</span>
+                    <span className="text-[10px] text-sky-600 dark:text-sky-400 font-bold uppercase tracking-wider">Guide</span>
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">"A small light is still a light"</span>
                 </div>

@@ -55,7 +55,7 @@ export const AuthLayout = ({ children }) => {
         </div>
         <div className="flex flex-col leading-tight">
           <span className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors flex items-center gap-1.5">
-            Lumiina (ルミーナ)
+            Lumiina
             <span className="text-[10px] text-sky-400 font-medium">✦</span>
           </span>
           <span className="text-[10px] text-slate-300">
