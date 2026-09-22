@@ -48,7 +48,7 @@ type sitemapUserRecord struct {
 // GenerateSitemap generates dynamic sitemap XML with Google Image Sitemap extensions
 func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 	ctx := c.Request.Context()
-	cacheKey := "seo:sitemap_xml:v3"
+	cacheKey := "seo:sitemap_xml:v4"
 
 	// 1. Try Redis cache first
 	if h.rdb != nil {
@@ -76,7 +76,7 @@ func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 		// Index verified artists OR any creator who has published at least one active artwork
 		if err := h.db.Model(&model.User{}).
 			Select("username, updated_at").
-			Where("is_verified = ? OR id IN (SELECT DISTINCT user_id FROM artworks WHERE deleted_at IS NULL)", true).
+			Where("is_verified = ? OR id IN (SELECT DISTINCT user_id FROM artworks)", true).
 			Order("updated_at desc").
 			Limit(1000).
 			Scan(&artists).Error; err != nil {
