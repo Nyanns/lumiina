@@ -158,3 +158,64 @@ func TestMetricsAuthMiddleware_ExternalAuthorizedWithBearerOrHeader(t *testing.T
 	assert.Equal(t, http.StatusOK, wCustom.Code)
 }
 
+func TestIsBotUserAgent(t *testing.T) {
+	// Search engine bots
+	assert.True(t, IsBotUserAgent("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"))
+	assert.True(t, IsBotUserAgent("Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"))
+	
+	// Social media link preview crawlers
+	assert.True(t, IsBotUserAgent("Twitterbot/1.0"))
+	assert.True(t, IsBotUserAgent("facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)"))
+	assert.True(t, IsBotUserAgent("Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"))
+	assert.True(t, IsBotUserAgent("TelegramBot (like TwitterBot)"))
+	assert.True(t, IsBotUserAgent("WhatsApp/2.21.12.21 A"))
+
+	// AI search bots (GEO)
+	assert.True(t, IsBotUserAgent("Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.0; +https://openai.com/gptbot)"))
+	assert.True(t, IsBotUserAgent("PerplexityBot/1.0 (+https://perplexity.ai/perplexitybot)"))
+	assert.True(t, IsBotUserAgent("ClaudeBot/1.0; +claudebot@anthropic.com"))
+
+	// Normal user browser agents (must NOT trigger bot rendering)
+	assert.False(t, IsBotUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"))
+	assert.False(t, IsBotUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1"))
+	assert.False(t, IsBotUserAgent(""))
+}
+
+func TestInjectTags(t *testing.T) {
+	templateHTML := `<!doctype html>
+<html>
+<head>
+<title>Default Title</title>
+<meta name="description" content="Default Description" />
+<link rel="canonical" href="https://lumiina.art/" />
+<meta property="og:title" content="Default OG Title" />
+<meta property="og:description" content="Default OG Description" />
+<meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+<meta property="og:url" content="https://lumiina.art/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:title" content="Default Twitter Title" />
+<meta name="twitter:description" content="Default Twitter Description" />
+<meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
+</head>
+<body><div id="root"></div></body>
+</html>`
+
+	injected := injectTags(
+		templateHTML,
+		"Cyberpunk Miku by kuro",
+		"Stunning cyberpunk illustration of Hatsune Miku",
+		"https://res.cloudinary.com/lumiina/image/upload/miku.jpg",
+		"https://lumiina.art/artworks/Xk9L2m",
+		"article",
+	)
+
+	assert.Contains(t, injected, "<title>Cyberpunk Miku by kuro</title>")
+	assert.Contains(t, injected, `<meta name="description" content="Stunning cyberpunk illustration of Hatsune Miku" />`)
+	assert.Contains(t, injected, `<link rel="canonical" href="https://lumiina.art/artworks/Xk9L2m" />`)
+	assert.Contains(t, injected, `<meta property="og:title" content="Cyberpunk Miku by kuro" />`)
+	assert.Contains(t, injected, `<meta property="og:image" content="https://res.cloudinary.com/lumiina/image/upload/miku.jpg" />`)
+	assert.Contains(t, injected, `<meta property="og:url" content="https://lumiina.art/artworks/Xk9L2m" />`)
+	assert.Contains(t, injected, `<meta property="og:type" content="article" />`)
+}
+
+

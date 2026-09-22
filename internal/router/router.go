@@ -130,6 +130,10 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	// Prometheus Metrics (Hardened with MetricsAuthMiddleware)
 	r.GET("/metrics", middleware.MetricsAuthMiddleware(cfg.MetricsToken, cfg.AppEnv), gin.WrapH(promhttp.Handler()))
 
+	// Dynamic Google & Search Engine XML Sitemap
+	sitemapHandler := handler.NewSitemapHandler(db, rdb, cfg.AppBaseURL)
+	r.GET("/sitemap.xml", sitemapHandler.GenerateSitemap)
+
 	v1 := r.Group("/api/v1")
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
 	optionalAuth := middleware.OptionalAuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
@@ -262,6 +266,13 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 
 			// SPA fallback: return index.html for client-side routing
 			if readErr == nil {
+				// Wave-1 Bot Pre-rendering: If requested by Googlebot, social crawlers, or AI bots, inject dynamic OG/Title metadata
+				if middleware.IsBotUserAgent(c.GetHeader("User-Agent")) {
+					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.URL.Path, cfg.AppBaseURL)
+					c.Data(http.StatusOK, "text/html; charset=utf-8", prerendered)
+					return
+				}
+
 				c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
 				return
 			}
