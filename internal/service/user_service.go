@@ -11,6 +11,7 @@ import (
 	"html"
 	"log/slog"
 	"mime/multipart"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -131,23 +132,62 @@ func (s *userService) Register(user *model.User) error {
 	return nil
 }
 
+func (s *userService) recordLoginFailure(ctx context.Context, failKey, lockKey string) {
+	if s.rdb == nil {
+		return
+	}
+	count, err := s.rdb.Incr(ctx, failKey).Result()
+	if err == nil {
+		if count == 1 {
+			_ = s.rdb.Expire(ctx, failKey, 15*time.Minute).Err()
+		}
+		if count >= 5 {
+			// Trigger temporary 15-minute account lockout
+			_ = s.rdb.Set(ctx, lockKey, "locked", 15*time.Minute).Err()
+			_ = s.rdb.Del(ctx, failKey).Err()
+			slog.Warn("Security Audit: Account locked due to repeated failed logins", "lock_key", lockKey)
+		}
+	}
+}
+
 func (s *userService) Login(identifier, password string) (*model.User, error) {
-	normalizedIdentifier := strings.TrimSpace(identifier)
-	user, err := s.repo.FindByIdentifier(normalizedIdentifier)
+	normalizedIdentifier := strings.ToLower(strings.TrimSpace(identifier))
+	ctx := context.Background()
+
+	// Check if account is locked due to repeated failed attempts (OWASP API2)
+	lockKey := fmt.Sprintf("login_lock:%s", normalizedIdentifier)
+	failKey := fmt.Sprintf("login_failures:%s", normalizedIdentifier)
+
+	if s.rdb != nil {
+		if locked, _ := s.rdb.Exists(ctx, lockKey).Result(); locked > 0 {
+			ttl, _ := s.rdb.TTL(ctx, lockKey).Result()
+			mins := int(ttl.Minutes()) + 1
+			return nil, apperror.New("AUTH_ACCOUNT_LOCKED", fmt.Sprintf("Too many failed attempts. Account temporarily locked for %d minute(s).", mins), http.StatusTooManyRequests, nil)
+		}
+	}
+
+	user, err := s.repo.FindByIdentifier(strings.TrimSpace(identifier))
 	if err != nil {
 		// Constant-time mitigation against timing attacks:
 		// Always execute bcrypt comparison against precomputed hash even when user is not found.
 		_ = bcrypt.CompareHashAndPassword(dummyBcryptHash, []byte(password))
+		s.recordLoginFailure(ctx, failKey, lockKey)
 		return nil, apperror.ErrInvalidCredentials
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
+		s.recordLoginFailure(ctx, failKey, lockKey)
 		return nil, apperror.ErrInvalidCredentials
 	}
 
 	if !user.IsVerified {
 		return nil, apperror.ErrUserUnverified
+	}
+
+	// Login succeeded: Clear failure and lockout counters
+	if s.rdb != nil {
+		_ = s.rdb.Del(ctx, failKey, lockKey).Err()
 	}
 
 	return user, nil

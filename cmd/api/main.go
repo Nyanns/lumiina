@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sandi/lumiina/config"
 	_ "github.com/sandi/lumiina/docs"
 	"github.com/sandi/lumiina/internal/pkg/cloudinary"
@@ -29,6 +30,11 @@ func main() {
 	if err := cfg.Validate(); err != nil {
 		slog.Error("Configuration validation failed", "error", err)
 		os.Exit(1)
+	}
+
+	// Security: Silence verbose framework logs in production
+	if cfg.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	db := config.ConnectDB(cfg)

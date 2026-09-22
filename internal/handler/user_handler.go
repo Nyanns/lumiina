@@ -421,10 +421,22 @@ func (h *UserHandler) UploadAvatar(c *gin.Context) {
 	}
 
 	// Secondary validation: Decode image config to ensure structurally valid image
-	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+	imgConfig, _, err := image.DecodeConfig(uploadedFile)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
 		return
 	}
+
+	// Security: Guard against decompression bomb DoS (Pixel Flood attack)
+	if imgConfig.Width > 5000 || imgConfig.Height > 5000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Avatar dimensions exceed maximum allowed limit of 5,000 x 5,000 pixels"})
+		return
+	}
+	if imgConfig.Width < 10 || imgConfig.Height < 10 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Avatar dimensions too small (minimum 10 x 10 pixels)"})
+		return
+	}
+
 	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
 		return
@@ -489,10 +501,22 @@ func (h *UserHandler) UploadBanner(c *gin.Context) {
 	}
 
 	// Secondary validation: Decode image config to ensure structurally valid image
-	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+	bannerConfig, _, err := image.DecodeConfig(uploadedFile)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
 		return
 	}
+
+	// Security: Guard against decompression bomb DoS (Pixel Flood attack)
+	if bannerConfig.Width > 6000 || bannerConfig.Height > 6000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Banner dimensions exceed maximum allowed limit of 6,000 x 6,000 pixels"})
+		return
+	}
+	if bannerConfig.Width < 10 || bannerConfig.Height < 10 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Banner dimensions too small (minimum 10 x 10 pixels)"})
+		return
+	}
+
 	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
 		return

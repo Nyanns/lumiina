@@ -246,10 +246,22 @@ func (h *ArtworkHandler) CreateArtwork(c *gin.Context) {
 	}
 
 	// Secondary validation: Decode image config to ensure structurally valid image, rejecting polyglot payloads
-	if _, _, err := image.DecodeConfig(uploadedFile); err != nil {
+	imgConfig, _, err := image.DecodeConfig(uploadedFile)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Corrupted or invalid image file structure"})
 		return
 	}
+
+	// Security: Guard against image decompression bomb DoS (Pixel Flood attack)
+	if imgConfig.Width > 10000 || imgConfig.Height > 10000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image dimensions exceed maximum allowed limit of 10,000 x 10,000 pixels"})
+		return
+	}
+	if imgConfig.Width < 10 || imgConfig.Height < 10 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Image dimensions too small (minimum 10 x 10 pixels)"})
+		return
+	}
+
 	if _, err := uploadedFile.Seek(0, io.SeekStart); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process file"})
 		return

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -52,7 +53,13 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 
 	followHandler := handler.NewFollowHandler(followService, userRepo)
 
-	r := gin.Default()
+	// Security: Enforce release mode in production to suppress framework verbosity
+	if cfg.AppEnv == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	r := gin.New()
+	r.Use(gin.Recovery())
 	r.TrustedPlatform = "X-Forwarded-For"
 
 	// Security: Configure trusted proxies
@@ -83,18 +90,33 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 	r.GET("/readyz", func(c *gin.Context) {
 		sqlDB, err := db.DB()
 		if err != nil || sqlDB.Ping() != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"status": "not ready",
-				"reason": "database unreachable",
-			})
+			slog.Error("Readyz probe: database unreachable", "error", err)
+			if cfg.AppEnv == "production" {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready"})
+			} else {
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"status": "not ready",
+					"reason": "database unreachable",
+				})
+			}
 			return
 		}
 
 		if rdb != nil && rdb.Ping(c.Request.Context()).Err() != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"status": "not ready",
-				"reason": "redis unreachable",
-			})
+			slog.Error("Readyz probe: redis unreachable", "error", rdb.Ping(c.Request.Context()).Err())
+			if cfg.AppEnv == "production" {
+				c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready"})
+			} else {
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"status": "not ready",
+					"reason": "redis unreachable",
+				})
+			}
+			return
+		}
+
+		if cfg.AppEnv == "production" {
+			c.JSON(http.StatusOK, gin.H{"status": "ready"})
 			return
 		}
 
@@ -105,8 +127,8 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		})
 	})
 
-	// Prometheus Metrics
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// Prometheus Metrics (Hardened with MetricsAuthMiddleware)
+	r.GET("/metrics", middleware.MetricsAuthMiddleware(cfg.MetricsToken, cfg.AppEnv), gin.WrapH(promhttp.Handler()))
 
 	v1 := r.Group("/api/v1")
 	authGuard := middleware.AuthMiddleware(cfg.JWTSecret, cfg.JWTSecretOld, rdb)
@@ -155,12 +177,16 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		users.GET("/:id/bookmarks", optionalAuth, bookmarkHandler.GetUserBookmarks)
 	}
 
-	rateLimiter := middleware.RateLimiterMiddleware(rdb, "auth", 60, 1*time.Minute)
+	// Granular Rate Limiters (OWASP API4 & API6)
+	authGeneralLimiter := middleware.RateLimiterMiddleware(rdb, "auth_general", 60, 1*time.Minute)
+	authStrictLimiter := middleware.RateLimiterMiddleware(rdb, "auth_strict", 15, 1*time.Minute)
+	uploadLimiter := middleware.RateLimiterMiddleware(rdb, "upload", 10, 1*time.Minute)
+
 	auth := v1.Group("/auth")
-	auth.Use(rateLimiter)
+	auth.Use(authGeneralLimiter)
 	{
-		auth.POST("/register", userHandler.Register)
-		auth.POST("/login", userHandler.Login)
+		auth.POST("/register", authStrictLimiter, userHandler.Register)
+		auth.POST("/login", authStrictLimiter, userHandler.Login)
 		auth.GET("/verify-email", userHandler.VerifyEmail)
 		auth.POST("/resend-verification", userHandler.ResendVerification)
 		auth.POST("/forgot-password", userHandler.ForgotPassword)
@@ -175,12 +201,12 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 
 		protected.GET("/users/me", userHandler.GetMe)
 		protected.PUT("/users/profile", userHandler.UpdateProfile)
-		protected.POST("/users/avatar", userHandler.UploadAvatar)
-		protected.POST("/users/banner", userHandler.UploadBanner)
+		protected.POST("/users/avatar", uploadLimiter, userHandler.UploadAvatar)
+		protected.POST("/users/banner", uploadLimiter, userHandler.UploadBanner)
 
 		protected.POST("/users/:id/follow", followHandler.ToggleFollow)
 
-		protected.POST("/artworks", artworkHandler.CreateArtwork)
+		protected.POST("/artworks", uploadLimiter, artworkHandler.CreateArtwork)
 		protected.PUT("/artworks/:id", artworkHandler.UpdateArtwork)
 		protected.DELETE("/artworks/:id", artworkHandler.DeleteArtwork)
 

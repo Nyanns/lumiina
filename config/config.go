@@ -30,6 +30,7 @@ type Config struct {
 	SMTPEmail      string
 	SMTPPassword   string
 	AppBaseURL     string
+	MetricsToken   string
 	AllowedOrigins []string
 	TrustedProxies []string
 }
@@ -130,6 +131,7 @@ func LoadConfig() *Config {
 		SMTPEmail:      os.Getenv("SMTP_EMAIL"),
 		SMTPPassword:   os.Getenv("SMTP_PASSWORD"),
 		AppBaseURL:     baseURL,
+		MetricsToken:   os.Getenv("METRICS_TOKEN"),
 		AllowedOrigins: allowedOrigins,
 		TrustedProxies: trustedProxies,
 	}
