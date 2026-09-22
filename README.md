@@ -8,9 +8,11 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Lumiina** is an illustration and creator community platform designed for digital artists, illustrators, and visual creators of all backgrounds to publish, curate, and discover original artworks. Engineered with a high-performance Go backend and a responsive React frontend, Lumiina focuses on digital artist workflows, community engagement, and defense-in-depth API security.
+**Lumiina** is an illustration and creator community platform designed for digital artists, illustrators, and visual creators to publish, curate, and discover original artworks. Engineered with a high-performance Go backend and a responsive React frontend, Lumiina focuses on digital artist workflows, community engagement, defense-in-depth API security, and search engine infrastructure.
 
-Official platform mascots: **Lumi** and **Ina**.
+- **Official Production Domain**: [https://www.lumiina.art](https://www.lumiina.art) *(Apex 308 redirect, Vercel Edge Global Anycast)*
+- **Edge Deployment Fallback**: [https://lumiina-art.vercel.app](https://lumiina-art.vercel.app)
+- **Official Character Property**: **Lumiina** *(Creative Guide for Artists, Slogan: "A small light in a big world")*
 
 ---
 
@@ -19,6 +21,11 @@ Official platform mascots: **Lumi** and **Ina**.
 - **Curated Discovery Feeds**:
   - Dual-axis homepage featuring daily engagement carousels and an organic Masonry grid.
   - Dedicated galleries for **Trending** and **Recommended** artworks (`/trending`, `/recommended`) with real-time tag filters and 48-item batch pagination.
+- **Official Character Property & Interactive Sticker Engine**:
+  - **Lumiina Character Bible v1.0**: Single unified character identity, 158cm, July 7 birthday, ISTP/INTP creative guide vibe.
+  - **9 Official Expressions & Sticker Picker**: One-click sticker popover in comments supporting shortcodes (`:lumiina_1:` through `:lumiina_9:`).
+  - **High-Performance Visual Pipeline**: Optimized WebP background (`bg2.webp`, 281 KB, 90% bandwidth saving) with PWA runtime caching (`mascot-assets-cache`, 60-day TTL).
+  - **Editorial About Page (`/about`)**: Human-crafted documentation hub featuring interactive master turnaround Lightbox modal, signature props breakdown, and expression matrix.
 - **Digital Artist Studio Tools (`/upload`)**:
   - **Value Check Mode (Grayscale)**: Instant high-contrast monochrome preview to audit light-to-shadow values before publication.
   - **Feed Crop Simulator**: 1:1 square preview with top, center, and bottom focal point anchoring.
@@ -29,9 +36,9 @@ Official platform mascots: **Lumi** and **Ina**.
   - **Follow and Unfollow System**: End-to-end user subscriptions with optimistic UI updates and synchronized live follower counts.
   - **Followers and Following Modal**: Interactive list modal on artist profiles with instant follow action toggles.
   - **Bookmarks and Collections**: Ribbon collection system with a dedicated Bookmarks tab on user profiles (`/profile/:username?tab=bookmarks`).
-  - **Discussion Threads**: Compact, left-aligned comment section with author deletion controls and stored XSS sanitization.
+  - **Discussion Threads**: Compact comment section with author deletion controls, sticker parsing, and stored XSS sanitization.
 - **Entity Obfuscation and Vanity URLs**:
-  - Sequential database IDs are shielded using Sqids-based HashID strings (`/artworks/H1rJsY`).
+  - Sequential database IDs are shielded using Sqids-based HashID strings (`/artworks/6wNPmG`).
   - Canonical creator profiles use case-insensitive vanity handles (`/profile/Nyanns`).
 - **Instagram-Style Client-Side Image Preprocessing & Optimization (`/upload`)**:
   - **Zero-Wait Uploads**: High-performance client-side Canvas & GPU downsampling pipelines (`web/src/utils/imageOptimizer.js`).
@@ -39,19 +46,24 @@ Official platform mascots: **Lumi** and **Ina**.
   - **Visually Lossless Compression**: Encodes to WebP (with JPEG fallback) at 0.88–0.90 quality factor, shrinking 10MB–20MB raw files down to **~600KB–1.2MB (-85% to -95% bandwidth saved)**.
   - **Alpha-Channel Aware**: Automatically detects PNG transparency to prevent black bounding boxes on transparent stickers and character illustrations.
   - **Artist Autonomy**: Instagram-style live compression metrics badge with an opt-out toggle for artists desiring uncompressed master files.
-- **Technical SEO, GEO & AI Crawler Discoverability**:
-  - Standardized Schema.org JSON-LD rich data: `VisualArtwork`, `ProfilePage`, `Person` (with `sameAs` social links), `BreadcrumbList`, and `WebSite` with Sitelinks `SearchAction`.
-  - Machine-readable discovery: `robots.txt` optimized for search and AI crawlers (GPTBot, ClaudeBot, PerplexityBot) alongside dynamic XML `sitemap.xml`.
-  - Dynamic Open Graph and Twitter Large Summary Cards for viral social sharing.
+- **Search Engine Infrastructure & Technical SEO Engine**:
+  - **Dynamic XML Sitemap Engine (`GET /sitemap.xml`)**: Go native handler dynamically indexing active artworks with Google Image Sitemap schema (`<image:image>`, `<image:loc>`, `<image:title>`) and verified artist profiles.
+  - **Redis Edge Caching (`seo:sitemap_xml:v2`)**: 30-minute cache TTL shielding PostgreSQL from crawler stampedes.
+  - **Wave-1 Bot Pre-rendering (`bot_prerender.go`)**: Regex bot detector dynamically injecting OpenGraph, Twitter Cards, Titles, and Schema.org JSON-LD into `index.html` byte stream for search bots and chat previews (WhatsApp, Discord, Twitter, Telegram).
+  - **Google Search Console Indexing**: Domain property (`sc-domain:lumiina.art`) verified via Hostinger DNS TXT record; confirmed live indexing on Google (`URL is on Google`, `Page is indexed`).
+  - **AI Discovery & Generative Engine Optimization (GEO)**: Machine-readable `robots.txt` supporting GPTBot, ClaudeBot, and PerplexityBot with structured Schema.org microdata.
 - **Extreme Frontend Performance & Bundle Optimization**:
   - Route-level code-splitting with `React.lazy()` and zero-CLS `PageLoadingFallback`. Initial bundle entry reduced by **>93% (from 640 kB to 22.07 kB)**.
   - Off-screen GPU render containment via CSS `.card-containment` (`content-visibility: auto; contain-intrinsic-size: 380px;`).
   - Gin backend HTTP Gzip compression (`github.com/gin-contrib/gzip`) with minimum size thresholds.
-- **Defense-in-Depth API Security Hardening**:
-  - Transport & Headers: HSTS (`Strict-Transport-Security: max-age=31536000`), lockdown `Permissions-Policy`, and strict CSP.
-  - Stream DoS Mitigation: Enforced `http.MaxBytesReader` on upload streams (6MB Avatar, 12MB Banner, 22MB Artwork).
-  - Anti-XSS: Server-side `html.EscapeString` and strict safe URI scheme neutralization against `javascript:`/`data:` vectors.
-  - BOLA Remediation: Artwork owners granted full comment moderation privileges on their artworks.
+- **Defense-in-Depth API Security Hardening (Vectors 1–7)**:
+  - **Metrics Lockdown (`GET /metrics`)**: `MetricsAuthMiddleware` with loopback bypass, constant-time token comparison (`subtle.ConstantTimeCompare`), and HTTP 404 in production to defeat port scanners.
+  - **Release Mode & Error Shielding**: `gin.ReleaseMode` enforced with `gin.New()` + `gin.Recovery()`, suppressing verbose routing banners and stack trace leakage.
+  - **Opaque Health Probes (`/readyz`)**: Returns clean `{"status":"ready"}` in production without leaking internal infrastructure topology (DB/Redis hostnames).
+  - **Granular Rate Limiting & Account Lockout**: Auth limiters (15 req/min), upload limiters (10 uploads/min), and Redis-backed account lockout (5 consecutive failed logins trigger 15-minute lock).
+  - **Pixel Flood Defense**: Pre-allocation dimension inspection via `image.DecodeConfig`, rejecting decompression bombs (>10,000 × 10,000 px) before allocating RGBA buffers.
+  - **CSP Hardening**: Eliminated `'unsafe-eval'` from `Content-Security-Policy`.
+  - **BOLA Remediation**: Artwork owners granted full comment moderation privileges on their artworks.
 - **Human-Crafted Visual Standard**:
   - Built strictly on clean slate surfaces, 1px tactile borders, and Pixiv Sky Blue (`#0096fa`) accents.
   - Zero glassmorphism blur; content-first typography using **Inter** paired with native Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`).
