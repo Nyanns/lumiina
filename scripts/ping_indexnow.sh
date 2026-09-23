@@ -21,7 +21,13 @@ PAYLOAD=$(cat <<EOF
     "https://${HOST}/about",
     "https://${HOST}/guidelines",
     "https://${HOST}/terms",
-    "https://${HOST}/privacy"
+    "https://${HOST}/privacy",
+    "https://${HOST}/?tag=GenshinImpact",
+    "https://${HOST}/?tag=Frieren",
+    "https://${HOST}/?tag=BokuNoHeroAcademia",
+    "https://${HOST}/?tag=FanArt",
+    "https://${HOST}/?tag=ConceptArt",
+    "https://${HOST}/profile/Nyanns"
   ]
 }
 EOF
