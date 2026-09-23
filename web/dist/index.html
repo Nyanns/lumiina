@@ -41,31 +41,78 @@
     <meta name="twitter:description" content="Discover, share, and appreciate authentic digital fan art, anime illustrations, and manga works from creators worldwide." />
     <meta name="twitter:image" content="https://www.lumiina.art/mascot/bg2.png" />
 
-    <!-- Schema.org WebSite & Sitelinks Searchbox JSON-LD -->
+    <!-- Schema.org WebSite, Organization & SiteNavigationElement JSON-LD -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "Lumiina",
-      "alternateName": ["Lumiina Art", "Lumiina Illustration Community"],
-      "url": "https://www.lumiina.art/",
-      "description": "Lumiina is an independent illustration sharing community crafted for anime, manga, and digital fan art creators.",
-      "publisher": {
-        "@type": "Organization",
-        "name": "Lumiina",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://www.lumiina.art/logo_icon.png"
-        }
-      },
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "https://www.lumiina.art/?search={search_term_string}"
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.lumiina.art/#website",
+          "name": "Lumiina",
+          "alternateName": ["lumiina.art", "Lumiina Art", "Lumiina Illustration Community"],
+          "url": "https://www.lumiina.art/",
+          "description": "Lumiina is an independent illustration sharing community crafted for anime, manga, and digital fan art creators.",
+          "publisher": { "@id": "https://www.lumiina.art/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.lumiina.art/?search={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
         },
-        "query-input": "required name=search_term_string"
-      }
+        {
+          "@type": "Organization",
+          "@id": "https://www.lumiina.art/#organization",
+          "name": "Lumiina",
+          "url": "https://www.lumiina.art/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.lumiina.art/logo_icon.png",
+            "width": 1262,
+            "height": 932
+          },
+          "image": "https://www.lumiina.art/logo_icon.png",
+          "sameAs": [
+            "https://github.com/Nyanns/lumiina"
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "itemListElement": [
+            {
+              "@type": "SiteNavigationElement",
+              "position": 1,
+              "name": "Explore Artworks",
+              "description": "Browse authentic anime illustrations and digital artwork.",
+              "url": "https://www.lumiina.art/explore"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 2,
+              "name": "Trending Illustrations",
+              "description": "Discover today's most popular fan art and featured creators.",
+              "url": "https://www.lumiina.art/trending"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 3,
+              "name": "About Lumiina",
+              "description": "Learn about the mission, values, and mascots of Lumiina.",
+              "url": "https://www.lumiina.art/about"
+            },
+            {
+              "@type": "SiteNavigationElement",
+              "position": 4,
+              "name": "Community Guidelines",
+              "description": "Platform standards and artist intellectual property rights.",
+              "url": "https://www.lumiina.art/guidelines"
+            }
+          ]
+        }
+      ]
     }
     </script>
 

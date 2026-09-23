@@ -1,0 +1,23 @@
+# Lumiina
+
+> Lumiina (https://www.lumiina.art) is an independent, high-performance illustration sharing community crafted for anime fan art creators, manga illustrators, and digital artists worldwide.
+
+## Platform Identity & Philosophy
+- **Name**: Lumiina (Artistic anime illustration platform)
+- **Tagline**: Authentic Digital Fan Art & Illustration Community
+- **Mascot**: Lumiina, the creative guide and guardian of authentic human artists
+- **Core Mission**: Championing human artistry, genuine creative expression, and zero unsolicited AI training on artist works.
+
+## Core Discovery Endpoints
+- [Explore Feed](https://www.lumiina.art/explore): The latest anime illustrations, character fan art, and digital paintings.
+- [Trending Illustrations](https://www.lumiina.art/trending): Real-time ranking of top creator works and popular artwork tags.
+- [Recommended Art](https://www.lumiina.art/recommended): Curated artistic creations and emerging independent illustrators.
+- [About Lumiina](https://www.lumiina.art/about): Detailed platform story, artist rights charter, and mascot turnaround bible.
+- [Community Guidelines](https://www.lumiina.art/guidelines): Comprehensive community standards for respectful interactions and copyright safety.
+- [Terms of Service](https://www.lumiina.art/terms): Artist intellectual property rights and platform service agreement.
+- [Privacy Policy](https://www.lumiina.art/privacy): Transparent data handling with zero third-party selling.
+
+## Technical Architecture
+- **Backend Stack**: Go (Golang) v1.22+, Gin Web Framework, PostgreSQL, GORM, Upstash Redis caching, Supabase database pooling.
+- **Frontend Stack**: React 19, Vite, TailwindCSS, Framer Motion, Workbox Progressive Web App (PWA).
+- **SEO & Discovery**: Automated XML Image Sitemaps (`/sitemap.xml`), Wave-1 Bot Pre-rendering, IndexNow instant crawler dispatch, Schema.org microdata.

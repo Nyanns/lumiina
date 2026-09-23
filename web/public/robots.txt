@@ -27,6 +27,8 @@ Allow: /mascot/
 Allow: /manifest.webmanifest
 Allow: /registerSW.js
 Allow: /sw.js
+Allow: /llms.txt
+Allow: /*.txt$
 
 # Allow public discovery endpoints for headless browser SPA indexing
 Allow: /api/v1/artworks
