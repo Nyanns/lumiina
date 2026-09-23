@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Navbar } from './components/Navbar';
@@ -6,6 +6,8 @@ import { BottomNav } from './components/BottomNav';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { FollowProvider } from './context/FollowContext';
 import { BookmarkProvider } from './context/BookmarkContext';
+import { CommandPalette } from './components/CommandPalette';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
 
 // Route-level code splitting for maximum loading speed & minimal initial bundle
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -31,6 +33,42 @@ const PageLoadingFallback = () => (
 
 export default function App() {
   const location = useLocation();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K, /, ?)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // 1. Command Palette: Cmd+K / Ctrl+K
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
+      // Ignore shortcuts if user is currently typing in an input or textarea
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable) {
+        return;
+      }
+
+      // 2. Quick Search: "/"
+      if (e.key === '/') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
+      }
+
+      // 3. Shortcuts Cheat Sheet: "?"
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setShortcutsModalOpen((prev) => !prev);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
 
   // Hide global browsing Navbar on dedicated auth pages, upload studio, legal docs, and artwork viewer for a focused workspace
   const hideGlobalNavbar = 
@@ -46,7 +84,9 @@ export default function App() {
     <FollowProvider>
       <BookmarkProvider>
         <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#121519] flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-sky-100 selection:text-sky-900 transition-colors">
-          {!hideGlobalNavbar && <Navbar />}
+          {!hideGlobalNavbar && (
+            <Navbar onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
+          )}
 
           <div className="flex-1 flex flex-col">
             <Suspense fallback={<PageLoadingFallback />}>
@@ -77,6 +117,19 @@ export default function App() {
           {!hideBottomNav && <BottomNav />}
           <PwaInstallBanner />
           <SpeedInsights />
+
+          {/* Global Command Palette */}
+          <CommandPalette
+            isOpen={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+            onOpenShortcuts={() => setShortcutsModalOpen(true)}
+          />
+
+          {/* Global Keyboard Shortcuts Cheat-sheet Modal */}
+          <KeyboardShortcutsModal
+            isOpen={shortcutsModalOpen}
+            onClose={() => setShortcutsModalOpen(false)}
+          />
         </div>
       </BookmarkProvider>
     </FollowProvider>

@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
-export const Navbar = ({ searchQuery, onSearchChange }) => {
+export const Navbar = ({ searchQuery, onSearchChange, onOpenCommandPalette }) => {
   const { user, isAuthenticated, logout, refreshUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -48,9 +48,7 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
     if (onSearchChange) {
       onSearchChange(localSearch);
     }
-    if (location.pathname !== '/') {
-      navigate(`/?search=${encodeURIComponent(localSearch)}`);
-    }
+    navigate(`/?search=${encodeURIComponent(localSearch.trim())}`);
   };
 
   const handleClear = () => {
@@ -91,9 +89,9 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                   if (onSearchChange) onSearchChange(e.target.value);
                 }}
                 placeholder="Search illustrations, tags, or creators..."
-                className="w-full pl-10 pr-9 py-2 text-sm bg-slate-100/90 dark:bg-[#252a32] hover:bg-slate-200/60 dark:hover:bg-[#2c323c] focus:bg-white dark:focus:bg-[#21262d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-full border border-slate-200/80 dark:border-transparent focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-950/40 transition-all outline-none"
+                className="w-full pl-10 pr-12 py-2 text-sm bg-slate-100/90 dark:bg-[#252a32] hover:bg-slate-200/60 dark:hover:bg-[#2c323c] focus:bg-white dark:focus:bg-[#21262d] text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 rounded-full border border-slate-200/80 dark:border-transparent focus:border-sky-400 focus:ring-4 focus:ring-sky-100 dark:focus:ring-sky-950/40 transition-all outline-none"
               />
-              {localSearch && (
+              {localSearch ? (
                 <button
                   type="button"
                   onClick={handleClear}
@@ -102,7 +100,16 @@ export const Navbar = ({ searchQuery, onSearchChange }) => {
                 >
                   <X className="w-4 h-4" />
                 </button>
-              )}
+              ) : onOpenCommandPalette ? (
+                <button
+                  type="button"
+                  onClick={onOpenCommandPalette}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold font-mono text-slate-400 dark:text-slate-400 bg-white/90 dark:bg-slate-700/80 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-slate-600 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  title="Open Command Palette (⌘K)"
+                >
+                  ⌘K
+                </button>
+              ) : null}
             </div>
           </form>
 

@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { 
   ArrowLeft, 
   Heart, 
+  Bookmark,
   MessageSquare, 
   Share2, 
   Trash2, 
@@ -21,13 +22,21 @@ import {
   UserPlus,
   UserCheck,
   Loader2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Palette,
 } from 'lucide-react';
 import { artworksAPI, commentsAPI, usersAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLikes } from '../context/LikesContext';
 import { useFollow } from '../context/FollowContext';
+import { useBookmarks } from '../context/BookmarkContext';
 import { LumiinaStickerPicker, renderCommentText } from '../components/LumiinaStickerPicker';
+import { PaletteStudio } from '../components/PaletteStudio';
+import { ShareCardModal } from '../components/ShareCardModal';
+import { KeyboardShortcutsModal } from '../components/KeyboardShortcutsModal';
 
 export const ArtworkDetailPage = () => {
   const { id } = useParams();
@@ -35,6 +44,7 @@ export const ArtworkDetailPage = () => {
   const { user, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { getLikeInfo, toggleLike, syncFromServer } = useLikes();
+  const { getBookmarkInfo, toggleBookmark } = useBookmarks();
   const { isFollowed, toggleFollow, setInitialFollowState, loadingMap } = useFollow();
 
   const [artwork, setArtwork] = useState(null);
@@ -42,6 +52,12 @@ export const ArtworkDetailPage = () => {
   const [artistWorks, setArtistWorks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  // Modals & Enhanced Features State
+  const [shareCardModalOpen, setShareCardModalOpen] = useState(false);
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
 
   // Canvas display modes: 'oled' | 'studio' | 'clean'
   const [canvasBg, setCanvasBg] = useState('oled');
@@ -59,21 +75,70 @@ export const ArtworkDetailPage = () => {
   const commentsEndRef = useRef(null);
 
   const { isLiked, count: likeCount } = getLikeInfo(id, artwork?.like_count || 0);
+  const { isBookmarked, count: bookmarkCount } = getBookmarkInfo(id, artwork?.bookmark_count || 0);
 
-  // Keyboard navigation: Escape closes lightbox / returns to feed
+  // Keyboard navigation & power-user shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't intercept if user is typing in form inputs or contentEditable
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable) {
+        return;
+      }
+
       if (e.key === 'Escape') {
-        if (lightboxOpen) {
+        if (focusMode) {
+          setFocusMode(false);
+        } else if (shareCardModalOpen) {
+          setShareCardModalOpen(false);
+        } else if (shortcutsModalOpen) {
+          setShortcutsModalOpen(false);
+        } else if (lightboxOpen) {
           setLightboxOpen(false);
         } else if (deleteModalOpen) {
           setDeleteModalOpen(false);
         }
+      } else if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setShortcutsModalOpen((prev) => !prev);
+      } else if (e.key.toLowerCase() === 'l' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        if (!isAuthenticated) {
+          navigate('/login');
+          return;
+        }
+        toggleLike(id, artwork?.like_count || 0);
+      } else if (e.key.toLowerCase() === 'b' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        toggleBookmark(id, artwork?.bookmark_count || 0);
+      } else if (e.key.toLowerCase() === 'f' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setFocusMode((prev) => !prev);
+      } else if (e.key.toLowerCase() === 's' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setShareCardModalOpen(true);
+      } else if (e.key === 'ArrowRight' && artistWorks.length > 0) {
+        e.preventDefault();
+        navigate(`/artworks/${artistWorks[0].id}`);
+      } else if (e.key === 'ArrowLeft' && artistWorks.length > 1) {
+        e.preventDefault();
+        navigate(`/artworks/${artistWorks[artistWorks.length - 1].id}`);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxOpen, deleteModalOpen]);
+  }, [lightboxOpen, deleteModalOpen, focusMode, shareCardModalOpen, shortcutsModalOpen, artwork, id, isAuthenticated, artistWorks]);
+
+  const handleImageDoubleClick = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (!isLiked) {
+      toggleLike(id, artwork?.like_count || 0);
+    }
+    setShowHeartBurst(true);
+    setTimeout(() => setShowHeartBurst(false), 800);
+  };
 
   const authorKey = artwork?.user?.username || (artwork?.user_id ? String(artwork.user_id) : null);
   const isFollowing = isFollowed(authorKey, artwork?.user?.is_following || false);
@@ -477,9 +542,12 @@ export const ArtworkDetailPage = () => {
           <div className="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
             
             {/* Stage Box (Dynamic Viewport Height dvh - Mobile & Desktop Adaptable) */}
-            <div className={`relative ${getCanvasBgClass()} rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/90 shadow-sm overflow-hidden flex items-center justify-center min-h-[260px] sm:min-h-[420px] max-h-[75dvh] sm:max-h-[85dvh] transition-colors group p-2 sm:p-4`}>
+            <div 
+              onDoubleClick={handleImageDoubleClick}
+              className={`relative ${getCanvasBgClass()} rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/90 shadow-sm overflow-hidden flex items-center justify-center min-h-[260px] sm:min-h-[420px] max-h-[75dvh] sm:max-h-[85dvh] transition-colors group p-2 sm:p-4 select-none`}
+            >
               
-              {/* Artwork Image with Click-to-Zoom */}
+              {/* Artwork Image with Click-to-Zoom & Double-Click to Like */}
               <img
                 src={artwork.image_url}
                 alt={artwork.title}
@@ -487,11 +555,48 @@ export const ArtworkDetailPage = () => {
                 decoding="async"
                 onClick={() => setLightboxOpen(true)}
                 className="max-h-[70dvh] sm:max-h-[80dvh] w-auto max-w-full object-contain mx-auto select-none cursor-zoom-in transition-transform duration-300 group-hover:scale-[1.008]"
-                title="Click to inspect in fullscreen"
+                title="Click to inspect in fullscreen (Double-click to like)"
               />
 
+              {/* Double-Click Heart Burst Pop Animation */}
+              {showHeartBurst && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
+                  <div className="p-4 rounded-full bg-black/40 backdrop-blur-xs animate-ping">
+                    <Heart className="w-16 h-16 fill-rose-500 text-rose-500 drop-shadow-2xl" />
+                  </div>
+                </div>
+              )}
+
+              {/* Prev / Next Chevrons on Stage Hover */}
+              {artistWorks.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/artworks/${artistWorks[artistWorks.length - 1].id}`);
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white backdrop-blur-xs border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hidden sm:block shadow-lg"
+                    title="Previous work by this artist (←)"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/artworks/${artistWorks[0].id}`);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white backdrop-blur-xs border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hidden sm:block shadow-lg"
+                    title="Next work by this artist (→)"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
+
               {/* Floating Backdrop Switcher (Visible on mobile touch, hover on desktop) */}
-              <div className="absolute top-2.5 sm:top-3.5 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/80 backdrop-blur-sm p-0.5 rounded-lg border border-white/10 text-[10px] sm:text-[11px] font-semibold text-slate-300 shadow-md opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-2.5 sm:top-3.5 left-1/2 -translate-x-1/2 flex items-center bg-slate-900/80 backdrop-blur-sm p-0.5 rounded-lg border border-white/10 text-[10px] sm:text-[11px] font-semibold text-slate-300 shadow-md opacity-85 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10">
                 <button
                   onClick={() => setCanvasBg('oled')}
                   className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded transition-colors cursor-pointer ${canvasBg === 'oled' ? 'bg-white/20 text-white font-bold' : 'hover:text-white'}`}
@@ -516,7 +621,17 @@ export const ArtworkDetailPage = () => {
               </div>
 
               {/* Floating Quick Action Overlay (Bottom Right) */}
-              <div className="absolute bottom-2.5 sm:bottom-3.5 right-2.5 sm:right-3.5 flex items-center gap-1.5 sm:gap-2">
+              <div className="absolute bottom-2.5 sm:bottom-3.5 right-2.5 sm:right-3.5 flex items-center gap-1.5 sm:gap-2 z-10">
+                {/* Zen View Button */}
+                <button
+                  onClick={() => setFocusMode(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-slate-900/85 hover:bg-slate-950 text-white text-[11px] sm:text-xs font-bold rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all cursor-pointer"
+                  title="Zen Cinema View (F)"
+                >
+                  <Eye className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="hidden xs:inline">Zen View</span>
+                </button>
+
                 <button
                   onClick={() => setLightboxOpen(true)}
                   className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-slate-900/85 hover:bg-slate-950 text-white text-[11px] sm:text-xs font-bold rounded-lg shadow-md backdrop-blur-xs border border-white/10 transition-all cursor-pointer"
@@ -538,7 +653,7 @@ export const ArtworkDetailPage = () => {
               </div>
 
               {/* Resolution Pill (Bottom Left) */}
-              <div className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 sm:left-3.5 hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/75 text-slate-300 text-[10px] font-semibold rounded-md backdrop-blur-xs border border-white/10">
+              <div className="absolute bottom-2.5 sm:bottom-3.5 left-2.5 sm:left-3.5 hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/75 text-slate-300 text-[10px] font-semibold rounded-md backdrop-blur-xs border border-white/10 z-10">
                 <ImageIcon className="w-3 h-3 text-sky-400" />
                 <span>Original Quality</span>
               </div>
@@ -691,8 +806,8 @@ export const ArtworkDetailPage = () => {
                 </div>
               )}
 
-              {/* Tactile Engagement Dock (Like + Share) */}
-              <div className="flex items-center gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              {/* Tactile Engagement Dock (Like + Bookmark + Showcase Card + Share) */}
+              <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                 <button
                   onClick={() => {
                     if (!isAuthenticated) {
@@ -701,19 +816,42 @@ export const ArtworkDetailPage = () => {
                     }
                     toggleLike(id, artwork.like_count || 0);
                   }}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                     isLiked
                       ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shadow-2xs'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80'
                   }`}
+                  title="Like illustration (L)"
                 >
-                  <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                  <Heart className={`w-3.5 h-3.5 transition-transform active:scale-125 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
                   <span>{isLiked ? `Liked (${likeCount})` : `Like (${likeCount})`}</span>
                 </button>
 
                 <button
+                  onClick={() => toggleBookmark(id, artwork.bookmark_count || 0)}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    isBookmarked
+                      ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shadow-2xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80'
+                  }`}
+                  title="Bookmark illustration (B)"
+                >
+                  <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-500 text-amber-500' : ''}`} />
+                  <span>{bookmarkCount > 0 ? bookmarkCount : 'Bookmark'}</span>
+                </button>
+
+                <button
+                  onClick={() => setShareCardModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200/80 dark:border-sky-800/80 transition-colors cursor-pointer"
+                  title="Export Art Showcase Card (S)"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+                  <span>Card</span>
+                </button>
+
+                <button
                   onClick={handleShare}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 transition-colors cursor-pointer"
                   title="Share illustration link"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />}
@@ -722,6 +860,9 @@ export const ArtworkDetailPage = () => {
               </div>
 
             </div>
+
+            {/* Color Palette Studio */}
+            <PaletteStudio imageUrl={artwork.image_url} artworkTitle={artwork.title} />
 
             {/* Discussion & Comments Thread */}
             <div className="bg-white dark:bg-[#141820] rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col transition-colors">
@@ -1024,6 +1165,85 @@ export const ArtworkDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* 5. ZEN FOCUS / CINEMA THEATER MODE OVERLAY                                */}
+      {/* ========================================================================= */}
+      {focusMode && (
+        <div className="fixed inset-0 z-50 bg-[#07090d]/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in duration-200">
+          {/* Floating Header */}
+          <div className="w-full max-w-7xl flex items-center justify-between z-10">
+            <div className="flex items-center gap-3">
+              <h2 className="text-white font-bold text-sm sm:text-base drop-shadow-md truncate max-w-xs sm:max-w-md">
+                {artwork.title}
+              </h2>
+              <span className="text-slate-400 text-xs hidden sm:inline">by @{artwork.user?.username || 'artist'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    navigate('/login');
+                    return;
+                  }
+                  toggleLike(id, artwork.like_count || 0);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  isLiked ? 'bg-rose-500 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
+                <span>{likeCount}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleBookmark(id, artwork.bookmark_count || 0)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  isBookmarked ? 'bg-amber-500 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
+                }`}
+              >
+                <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-white' : ''}`} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setFocusMode(false)}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                title="Exit Focus Mode (Esc or F)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Centered High-Res Artwork */}
+          <div className="relative flex-1 w-full flex items-center justify-center overflow-hidden my-2">
+            <img
+              src={artwork.image_url}
+              alt={artwork.title}
+              className="max-h-[86vh] max-w-full w-auto object-contain select-none shadow-2xl rounded-lg"
+            />
+          </div>
+
+          {/* Footer Hint */}
+          <div className="text-[11px] text-slate-400 tracking-wide">
+            Press <kbd className="px-1.5 py-0.5 bg-white/10 rounded font-mono text-[10px]">Esc</kbd> or <kbd className="px-1.5 py-0.5 bg-white/10 rounded font-mono text-[10px]">F</kbd> to exit focus mode
+          </div>
+        </div>
+      )}
+
+      {/* Share Card Modal */}
+      <ShareCardModal
+        isOpen={shareCardModalOpen}
+        onClose={() => setShareCardModalOpen(false)}
+        artwork={artwork}
+      />
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={shortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
+      />
 
     </div>
   );
