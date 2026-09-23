@@ -218,4 +218,34 @@ func TestInjectTags(t *testing.T) {
 	assert.Contains(t, injected, `<meta property="og:type" content="article" />`)
 }
 
+func TestPreRenderMetadata_StaticRoutes(t *testing.T) {
+	templateHTML := `<!doctype html>
+<html>
+<head>
+<title>Default Title</title>
+<meta name="description" content="Default Description" />
+<link rel="canonical" href="https://lumiina.art/" />
+<meta property="og:title" content="Default OG Title" />
+<meta property="og:description" content="Default OG Description" />
+<meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+<meta property="og:url" content="https://lumiina.art/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:title" content="Default Twitter Title" />
+<meta name="twitter:description" content="Default Twitter Description" />
+<meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
+</head>
+<body><div id="root"></div></body>
+</html>`
+
+	prerendered := PreRenderMetadata(nil, []byte(templateHTML), "/about", "https://www.lumiina.art")
+	assert.Contains(t, string(prerendered), "<title>About Lumiina — Human-Crafted Illustration Platform</title>")
+	assert.Contains(t, string(prerendered), `<link rel="canonical" href="https://www.lumiina.art/about" />`)
+	assert.Contains(t, string(prerendered), `<meta property="og:title" content="About Lumiina — Human-Crafted Illustration Platform" />`)
+
+	trendingPrerendered := PreRenderMetadata(nil, []byte(templateHTML), "/trending", "https://www.lumiina.art")
+	assert.Contains(t, string(trendingPrerendered), "<title>Trending Fan Art &amp; Digital Illustrations — Lumiina</title>")
+	assert.Contains(t, string(trendingPrerendered), `<link rel="canonical" href="https://www.lumiina.art/trending" />`)
+}
+
+
 

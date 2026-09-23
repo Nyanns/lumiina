@@ -237,6 +237,11 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 
 		if readErr == nil {
 			serveIndex := func(c *gin.Context) {
+				if middleware.IsBotUserAgent(c.GetHeader("User-Agent")) {
+					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.URL.Path, cfg.AppBaseURL)
+					c.Data(http.StatusOK, "text/html; charset=utf-8", prerendered)
+					return
+				}
 				c.Data(http.StatusOK, "text/html; charset=utf-8", indexHTML)
 			}
 			r.GET("/", serveIndex)

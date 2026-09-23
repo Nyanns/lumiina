@@ -60,7 +60,7 @@ func injectTags(htmlStr, title, desc, imageURL, canonicalURL, ogType string) str
 // PreRenderMetadata injects dynamic Title, Open Graph, Twitter Cards, and canonical tags into the embedded index.html
 // when visited by Googlebot or social media crawlers.
 func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqPath, baseURL string) []byte {
-	if db == nil || len(rawHTML) == 0 {
+	if len(rawHTML) == 0 {
 		return rawHTML
 	}
 
@@ -71,6 +71,56 @@ func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqPath, baseURL string) []b
 	}
 
 	cleanPath := strings.TrimPrefix(reqPath, "/")
+
+	// 1. Core Static Informational Routes (Zero DB query needed)
+	switch cleanPath {
+	case "about":
+		return []byte(injectTags(htmlStr,
+			"About Lumiina — Human-Crafted Illustration Platform",
+			"Discover Lumiina's mission to champion human digital artists, authentic anime fan art, and creative freedom without artificial noise.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/about",
+			"website"))
+	case "guidelines":
+		return []byte(injectTags(htmlStr,
+			"Community Guidelines — Lumiina",
+			"Lumiina platform standards for authentic art sharing, respectful creator interactions, and copyright protection.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/guidelines",
+			"website"))
+	case "terms":
+		return []byte(injectTags(htmlStr,
+			"Terms of Service — Lumiina",
+			"Read the terms of service and artist intellectual property rights for the Lumiina illustration community.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/terms",
+			"website"))
+	case "privacy":
+		return []byte(injectTags(htmlStr,
+			"Privacy Policy — Lumiina",
+			"Learn how Lumiina respects and protects artist privacy and personal data without selling or third-party tracking.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/privacy",
+			"website"))
+	case "explore":
+		return []byte(injectTags(htmlStr,
+			"Explore Anime Illustrations & Digital Art — Lumiina",
+			"Browse authentic anime illustrations, manga fan art, and digital paintings created by artists worldwide.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/explore",
+			"website"))
+	case "trending":
+		return []byte(injectTags(htmlStr,
+			"Trending Fan Art & Digital Illustrations — Lumiina",
+			"Discover today's most popular anime illustrations, trending fan art, and featured creators on Lumiina.",
+			cleanBase+"/mascot/bg2.png",
+			cleanBase+"/trending",
+			"website"))
+	}
+
+	if db == nil {
+		return rawHTML
+	}
 
 	// 1. Artwork Route: artworks/:id
 	if strings.HasPrefix(cleanPath, "artworks/") {

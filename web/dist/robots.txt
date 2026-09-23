@@ -1,4 +1,4 @@
-# robots.txt for Lumiina (https://lumiina.art)
+# robots.txt for Lumiina (https://www.lumiina.art)
 # Human-crafted illustration & digital art platform
 
 User-agent: *
@@ -12,22 +12,40 @@ Allow: /about
 Allow: /guidelines
 Allow: /terms
 Allow: /privacy
-Allow: /favicon.png
-Allow: /logo_icon.png
 
-# Protect private studio, internal monitoring & authentication workflows
+# Public assets & Service Worker scripts
+Allow: /favicon.ico
+Allow: /favicon.png
+Allow: /favicon-32x32.png
+Allow: /apple-touch-icon.png
+Allow: /logo_icon.png
+Allow: /logo_mark.png
+Allow: /logo_wordmark.png
+Allow: /mascot/
+Allow: /manifest.webmanifest
+Allow: /registerSW.js
+Allow: /sw.js
+
+# Allow public discovery endpoints for headless browser SPA indexing
+Allow: /api/v1/artworks
+Allow: /api/v1/tags/popular
+Allow: /api/v1/users/
+
+# Protect private studio, internal monitoring, auth actions & sensitive endpoints
 Disallow: /upload
 Disallow: /api/
 Disallow: /metrics
 Disallow: /swagger/
-Disallow: /forgot-password
-Disallow: /reset-password
-Disallow: /login
-Disallow: /register
+Disallow: /forgot-password$
+Disallow: /reset-password$
+Disallow: /login$
+Disallow: /register$
 
 # AI Discovery & Generative Search Engines (GEO)
 User-agent: GPTBot
 Allow: /
+Allow: /api/v1/artworks
+Allow: /api/v1/tags/popular
 Disallow: /upload
 Disallow: /api/
 Disallow: /metrics
@@ -35,6 +53,8 @@ Disallow: /swagger/
 
 User-agent: PerplexityBot
 Allow: /
+Allow: /api/v1/artworks
+Allow: /api/v1/tags/popular
 Disallow: /upload
 Disallow: /api/
 Disallow: /metrics
@@ -42,6 +62,8 @@ Disallow: /swagger/
 
 User-agent: ClaudeBot
 Allow: /
+Allow: /api/v1/artworks
+Allow: /api/v1/tags/popular
 Disallow: /upload
 Disallow: /api/
 Disallow: /metrics
@@ -49,6 +71,8 @@ Disallow: /swagger/
 
 User-agent: Google-Extended
 Allow: /
+Allow: /api/v1/artworks
+Allow: /api/v1/tags/popular
 Disallow: /upload
 Disallow: /api/
 Disallow: /metrics
@@ -56,4 +80,3 @@ Disallow: /swagger/
 
 # Canonical Sitemap (Eliminates Apex 308 redirect jump)
 Sitemap: https://www.lumiina.art/sitemap.xml
-
