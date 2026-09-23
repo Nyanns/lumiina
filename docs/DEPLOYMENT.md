@@ -98,3 +98,48 @@ Configure your load balancer or container orchestrator with these probes:
   {"database":"ok","redis":"ok","status":"ready"}
   ```
 - If either PostgreSQL or Redis is unreachable, returns `503 Service Unavailable` with degraded component status.
+
+---
+
+## 5. 🌐 Frontend Vercel Edge Deployment
+
+The React frontend (`web/`) is deployed on **Vercel Edge Anycast** (`sin1` PoP) with automated GitHub integration.
+
+### Configuration (`vercel.json`)
+The repository includes a root `vercel.json` defining SPA rewrites, security headers, and static asset cache controls:
+- **Root Directory**: `web`
+- **Framework Preset**: `Vite`
+- **Apex Domain Handling**: `lumiina.art` automatically issues a `308 Permanent Redirect` to `https://www.lumiina.art`.
+- **SPA Rewrites**: All non-asset routes route to `/index.html` for client-side routing.
+- **Cache-Control**: Static chunks in `/assets/` receive `public, max-age=31536000, immutable`.
+
+### Deploy Command Matrix
+```bash
+# Production deployment via Vercel CLI (optional manual trigger):
+vercel --prod
+```
+
+---
+
+## 6. 🌍 DNS & Search Engine Verification (Hostinger)
+
+Domain records configured for `lumiina.art`:
+| Type | Name | Content / Target | TTL | Purpose |
+|---|---|---|---|---|
+| `A` | `@` | `76.76.21.21` | 3600 | Vercel Apex Anycast IP |
+| `CNAME` | `www` | `cname.vercel-dns.com.` | 3600 | Canonical WWW subdomain |
+| `TXT` | `@` | `google-site-verification=...` | 3600 | Google Search Console domain ownership |
+
+### Verifying Bot Pre-rendering & SEO Deployment
+To verify that search engine crawlers and social platforms receive pre-rendered HTML metadata:
+```bash
+# Test as Googlebot:
+curl -s -A "Googlebot/2.1 (+http://www.google.com/bot.html)" https://www.lumiina.art/ | grep -i "og:title"
+
+# Test as Twitterbot:
+curl -s -A "Twitterbot/1.0" https://www.lumiina.art/ | grep -i "twitter:card"
+
+# Verify Dynamic Sitemap generation:
+curl -I https://www.lumiina.art/sitemap.xml
+```
+

@@ -4,7 +4,9 @@
 [![CodeQL Security Analysis](https://github.com/Nyanns/lumiina/actions/workflows/codeql.yml/badge.svg)](https://github.com/Nyanns/lumiina/actions/workflows/codeql.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Nyanns/lumiina)](https://goreportcard.com/report/github.com/Nyanns/lumiina)
 [![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat&logo=react)](https://react.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -21,6 +23,19 @@
 - **Curated Discovery Feeds**:
   - Dual-axis homepage featuring daily engagement carousels and an organic Masonry grid.
   - Dedicated galleries for **Trending** and **Recommended** artworks (`/trending`, `/recommended`) with real-time tag filters and 48-item batch pagination.
+- **Viral Art Showcase Card Studio (`ShareCardModal`)**:
+  - **Social-Ready Aspect Ratio**: Generates 1080×1350 (4:5) fine art exhibition catalog placards via HTML5 Canvas.
+  - **Human-Crafted Placard Typography**: Elegant left-aligned typography featuring artwork title, creator handle (`@artist`), creation date, tags, and subtle `✦ LUMIINA  lumiina.art` footer.
+  - **1-Click Export & Clipboard Sharing**: Direct system clipboard PNG write (`navigator.clipboard.write([new ClipboardItem(...)])`) or file download for instant Twitter/X, Instagram, and Discord posting.
+- **Harmonic Color Palette Studio (`PaletteStudio` & `colorExtractor.js`)**:
+  - **Sub-5ms Quantization**: Offscreen 64×64 canvas downsampling with Euclidean distance clustering without blocking the main UI thread.
+  - **Tactile Swatches**: 6 dominant artwork color swatches with monospace HEX labels and one-click copy to clipboard with floating tooltip feedback.
+- **Global Command Palette (`CommandPalette`) & Power-User Shortcuts**:
+  - **Omnibox Launcher**: Instant navigation triggered by `Cmd+K` / `Ctrl+K` or `/`.
+  - **Live Debounced Search**: Fast real-time artwork discovery with keyboard navigation.
+  - **Cheatsheet Modal (`?`)**: GitHub-style shortcut matrix supporting `L` (Like), `B` (Bookmark), `F` (Zen Cinema Mode), `S` (Export Card), and `←`/`→` (Previous/Next artist artworks).
+- **Zen Focus Cinema Mode**:
+  - Distraction-free full-screen theater viewing with solid deep black backdrop (`#0a0d13`) and floating zoom controls.
 - **Official Character Property & Interactive Sticker Engine**:
   - **Lumiina Character Bible v1.0**: Single unified character identity, 158cm, July 7 birthday, ISTP/INTP creative guide vibe.
   - **9 Official Expressions & Sticker Picker**: One-click sticker popover in comments supporting shortcodes (`:lumiina_1:` through `:lumiina_9:`).
@@ -51,7 +66,7 @@
   - **Redis Edge Caching (`seo:sitemap_xml:v2`)**: 30-minute cache TTL shielding PostgreSQL from crawler stampedes.
   - **Wave-1 Bot Pre-rendering (`bot_prerender.go`)**: Regex bot detector dynamically injecting OpenGraph, Twitter Cards, Titles, and Schema.org JSON-LD into `index.html` byte stream for search bots and chat previews (WhatsApp, Discord, Twitter, Telegram).
   - **Google Search Console Indexing**: Domain property (`sc-domain:lumiina.art`) verified via Hostinger DNS TXT record; confirmed live indexing on Google (`URL is on Google`, `Page is indexed`).
-  - **AI Discovery & Generative Engine Optimization (GEO)**: Machine-readable `robots.txt` supporting GPTBot, ClaudeBot, and PerplexityBot with structured Schema.org microdata.
+  - **AI Discovery & Generative Engine Optimization (GEO)**: Machine-readable `robots.txt` and `llms.txt` supporting GPTBot, ClaudeBot, and PerplexityBot with structured Schema.org microdata.
 - **Extreme Frontend Performance & Bundle Optimization**:
   - Route-level code-splitting with `React.lazy()` and zero-CLS `PageLoadingFallback`. Initial bundle entry reduced by **>93% (from 640 kB to 22.07 kB)**.
   - Off-screen GPU render containment via CSS `.card-containment` (`content-visibility: auto; contain-intrinsic-size: 380px;`).
@@ -130,12 +145,13 @@ flowchart TD
 - **Documentation**: OpenAPI 2.0 / Swagger ([swaggo/swag](https://github.com/swaggo/swag))
 
 ### Frontend
-- **Framework**: React 18, [Vite](https://vitejs.dev/)
-- **Styling**: [TailwindCSS](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Framework**: React 19, [Vite 8](https://vitejs.dev/)
+- **Styling**: [TailwindCSS v4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion v13](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Typography**: Inter (Latin) with Japanese CJK font fallbacks
-- **Production Server**: Nginx Alpine with gzip compression and static cache headers
+- **Typography**: Inter (Latin) with Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`)
+- **PWA Engine**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox Service Worker, runtime asset caching)
+- **Production Server**: Nginx Alpine with Brotli/Gzip compression and static cache headers
 
 ---
 
@@ -272,6 +288,16 @@ Base path: `/api/v1`
 | `POST` | `/api/v1/users/banner` | Upload profile header banner | Bearer |
 | `GET` | `/api/v1/users/search` | Search users by username substring | Public |
 | `GET` | `/api/v1/users/:id` | Public profile by ID, handle, or HashID | Public |
+
+### Search Engine Optimization, AI Discovery & Probes
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/sitemap.xml` | Dynamic XML Sitemap with Google Image extensions (Redis cached) | Public (Crawlers) |
+| `GET` | `/robots.txt` | Crawler policies for GoogleBot, GPTBot, ClaudeBot, PerplexityBot | Public |
+| `GET` | `/llms.txt` | Machine-readable site overview & schema context for LLM agents | Public |
+| `GET` | `/livez` | Server liveness probe (orchestrator health) | Public |
+| `GET` | `/readyz` | Opaque dependency readiness probe (PostgreSQL & Redis check) | Public |
+| `GET` | `/metrics` | Prometheus telemetry (locked down in production: 404 / loopback) | Admin / Scraper |
 
 ---
 

@@ -35,15 +35,13 @@ Pixiv adalah platform sharing karya seni digital terbesar di Jepang. Namun, UI/U
 
 ### 1.3 Ruang Lingkup
 
-| Item | Detail |
-|---|---|
 | **Project Name** | Lumiina |
 | **Tagline** | "Your Art, Your World" |
-| **Mascots** | Lumi & Ina (karakter original buatan developer) |
-| **Type** | Full-stack Web Application |
+| **Official Mascot / Character** | Lumiina (Official Character Bible v1.0 — Creative Guide for Artists) |
+| **Type** | Full-stack Web Application (Go Backend + React 19 Frontend) |
 | **Developer** | Sandi (Backend) + AI (Frontend) |
 | **Timeline** | Sesi 7-17 (masing-masing 1 teknologi) |
-| **Target User** | Artist (upload karya) & Viewer (browse, like, follow) |
+| **Target User** | Artist (upload karya, export catalog) & Viewer (browse, like, follow) |
 
 ### 1.4 Stakeholder
 
@@ -120,12 +118,19 @@ flowchart LR
 - [x] Artist profile page dengan portfolio
 - [x] Pagination & infinite scroll
 
-### 1.2 Unique Features (Differentiator dari Pixiv)
+### 1.2 Unique Features & Studio Innovations (Differentiator dari Pixiv)
 
-| Fitur | Deskripsi | Teknologi yang Digunakan |
+| Fitur | Deskripsi | Status & Teknologi |
 |---|---|---|
-| 🎯 **Art Challenge** | Kontes mingguan bertema dengan leaderboard real-time & badge pemenang | Redis (leaderboard), WebSocket (live votes), Scheduled Jobs |
-| 🔗 **Remix Tree** | Visual rantai inspirasi karya turunan (Obsidian-like graph node) | Graph Relationships (parent-child), gRPC, React Flow / D3.js |
+| 📇 **Viral Art Showcase Card Studio** | Generator kartu eksibisi 1080×1350 (4:5) dengan tipografi human-crafted, export PNG & direct clipboard write | ✅ Live (`ShareCardModal.jsx`, HTML5 Canvas) |
+| 🎨 **Harmonic Color Palette Studio** | Ekstraksi 6 warna dominan karya seni secara instan (<5ms) tanpa blocking UI thread + 1-click HEX copy | ✅ Live (`PaletteStudio.jsx`, `colorExtractor.js`) |
+| ⚡ **Global Command Palette** | Omnibox navigasi instan via `Cmd+K`/`Ctrl+K` & `/` dengan live debounced search | ✅ Live (`CommandPalette.jsx`, Raycast/Linear pattern) |
+| ⌨️ **Keyboard Navigation Matrix** | Pintasan keyboard power-user (`?`, `L`, `B`, `F`, `S`, `←`/`→`) | ✅ Live (`KeyboardShortcutsModal.jsx`) |
+| 🎬 **Zen Focus Cinema Mode** | Tampilan karya seni layar penuh dengan latar teater pekat (`#0a0d13`) | ✅ Live (`ArtworkDetailPage.jsx`) |
+| 🌸 **Interactive Mascot Sticker Engine** | 9 ekspresi stiker resmi karakter Lumiina di kolom komentar (`:lumiina_1:` s/d `:lumiina_9:`) | ✅ Live (`LumiinaStickerPicker.jsx`, WebP pipeline) |
+| 🔍 **Wave-1 Bot Pre-renderer & SEO Engine** | Dynamic XML sitemap ber-skema Google Image + middleware bot pre-render untuk WhatsApp/Twitter | ✅ Live (Go `sitemap_handler.go`, `bot_prerender.go`) |
+| 🎯 **Art Challenge** | Kontes mingguan bertema dengan leaderboard real-time & badge pemenang | ⏳ Backlog: Redis (leaderboard), WebSocket |
+| 🔗 **Remix Tree** | Visual rantai inspirasi karya turunan (Obsidian-like graph node) | ⏳ Backlog: Graph Relationships, React Flow / D3.js |
 
 ### 1.3 Out of Scope (v2 Backlog)
 
@@ -133,7 +138,7 @@ flowchart LR
 |---|---|---|
 | 🛒 Komisi System | Marketplace jasa gambar custom | Medium |
 | ⏳ Ephemeral Exhibition | Pameran sementara (Redis TTL + FOMO) | Low |
-| 🎨 Color Palette Extraction | Search by color dominan (image processing) | Low |
+| 🎙️ Audio Visualizer Feed | Audio track pendukung karya seni (music + art loop) | Low |
 
 ### 1.4 Risk Analysis
 
