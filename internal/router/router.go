@@ -238,7 +238,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 		if readErr == nil {
 			serveIndex := func(c *gin.Context) {
 				if middleware.IsBotUserAgent(c.GetHeader("User-Agent")) {
-					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.URL.Path, cfg.AppBaseURL)
+					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.RequestURI, cfg.AppBaseURL)
 					c.Data(http.StatusOK, "text/html; charset=utf-8", prerendered)
 					return
 				}
@@ -273,7 +273,7 @@ func SetupRouter(cfg *config.Config, db *gorm.DB, rdb *redis.Client, cldService 
 			if readErr == nil {
 				// Wave-1 Bot Pre-rendering: If requested by Googlebot, social crawlers, or AI bots, inject dynamic OG/Title metadata
 				if middleware.IsBotUserAgent(c.GetHeader("User-Agent")) {
-					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.URL.Path, cfg.AppBaseURL)
+					prerendered := middleware.PreRenderMetadata(db, indexHTML, c.Request.RequestURI, cfg.AppBaseURL)
 					c.Data(http.StatusOK, "text/html; charset=utf-8", prerendered)
 					return
 				}

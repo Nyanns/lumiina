@@ -3,12 +3,15 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"html"
 	"mime/multipart"
 	"strings"
 
 	"github.com/sandi/lumiina/internal/model"
 	"github.com/sandi/lumiina/internal/pkg/cloudinary"
+	"github.com/sandi/lumiina/internal/pkg/hashid"
+	"github.com/sandi/lumiina/internal/pkg/indexnow"
 	"github.com/sandi/lumiina/internal/repository"
 )
 
@@ -46,7 +49,17 @@ func (s *ArtworkService) CreateArtwork(ctx context.Context, artwork *model.Artwo
 	}
 
 	artwork.ImageURL = imageURL
-	return s.repo.Create(artwork, tagNames)
+	if err := s.repo.Create(artwork, tagNames); err != nil {
+		return err
+	}
+
+	// Trigger real-time IndexNow dispatch for the newly published artwork slug
+	slug := hashid.Encode(artwork.ID)
+	if slug != "" {
+		indexnow.DispatchURLs("", fmt.Sprintf("/artworks/%s", slug))
+	}
+
+	return nil
 }
 
 func (s *ArtworkService) GetArtworkByID(id uint, currentUserID ...uint) (*model.Artwork, error) {

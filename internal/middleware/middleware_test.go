@@ -247,5 +247,34 @@ func TestPreRenderMetadata_StaticRoutes(t *testing.T) {
 	assert.Contains(t, string(trendingPrerendered), `<link rel="canonical" href="https://www.lumiina.art/trending" />`)
 }
 
+func TestPreRenderMetadata_DynamicTagAndSearch(t *testing.T) {
+	templateHTML := `<!doctype html>
+<html>
+<head>
+<title>Default Title</title>
+<meta name="description" content="Default Description" />
+<link rel="canonical" href="https://lumiina.art/" />
+<meta property="og:title" content="Default OG Title" />
+<meta property="og:description" content="Default OG Description" />
+<meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+<meta property="og:url" content="https://lumiina.art/" />
+<meta property="og:type" content="website" />
+<meta name="twitter:title" content="Default Twitter Title" />
+<meta name="twitter:description" content="Default Twitter Description" />
+<meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
+</head>
+<body><div id="root"></div></body>
+</html>`
+
+	tagPrerendered := PreRenderMetadata(nil, []byte(templateHTML), "/?tag=GenshinImpact", "https://www.lumiina.art")
+	assert.Contains(t, string(tagPrerendered), "<title>#GenshinImpact Anime Art &amp; Fan Illustrations — Lumiina</title>")
+	assert.Contains(t, string(tagPrerendered), `<link rel="canonical" href="https://www.lumiina.art/?tag=GenshinImpact" />`)
+
+	searchPrerendered := PreRenderMetadata(nil, []byte(templateHTML), "/?search=Miku", "https://www.lumiina.art")
+	assert.Contains(t, string(searchPrerendered), "<title>Search &#34;Miku&#34; — Lumiina Art Community</title>")
+	assert.Contains(t, string(searchPrerendered), `<link rel="canonical" href="https://www.lumiina.art/?search=Miku" />`)
+}
+
+
 
 

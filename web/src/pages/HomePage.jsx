@@ -327,6 +327,31 @@ export const HomePage = () => {
               {/* Clean Separator Line (Garis Pemisah tanpa teks) */}
               <div className="w-full border-t border-slate-200/80 dark:border-slate-800" />
 
+              {/* Active Search / Tag Filter Banner */}
+              {(queryTag || querySearch) && (
+                <div className="flex items-center justify-between bg-white dark:bg-[#181c24] border border-slate-200 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-[#0096fa] text-xs font-bold shrink-0">
+                      {queryTag ? '#' : '🔍'}
+                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        {queryTag ? 'Filtered by Tag' : 'Search Query'}
+                      </span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {queryTag ? `#${queryTag}` : `"${querySearch}"`}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    to="/"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors shrink-0"
+                  >
+                    Clear Filter ✕
+                  </Link>
+                </div>
+              )}
+
               {/* Feed Content */}
               {loading && artworks.length === 0 ? (
                 <div className="flex flex-col gap-6">

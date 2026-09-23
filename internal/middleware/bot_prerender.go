@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"html"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -59,7 +60,7 @@ func injectTags(htmlStr, title, desc, imageURL, canonicalURL, ogType string) str
 
 // PreRenderMetadata injects dynamic Title, Open Graph, Twitter Cards, and canonical tags into the embedded index.html
 // when visited by Googlebot or social media crawlers.
-func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqPath, baseURL string) []byte {
+func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqURI, baseURL string) []byte {
 	if len(rawHTML) == 0 {
 		return rawHTML
 	}
@@ -70,7 +71,32 @@ func PreRenderMetadata(db *gorm.DB, rawHTML []byte, reqPath, baseURL string) []b
 		cleanBase = "https://www.lumiina.art"
 	}
 
-	cleanPath := strings.TrimPrefix(reqPath, "/")
+	parsedURI, _ := url.Parse(reqURI)
+	cleanPath := ""
+	queryTag := ""
+	querySearch := ""
+	if parsedURI != nil {
+		cleanPath = strings.TrimPrefix(parsedURI.Path, "/")
+		queryTag = strings.TrimSpace(parsedURI.Query().Get("tag"))
+		querySearch = strings.TrimSpace(parsedURI.Query().Get("search"))
+	} else {
+		cleanPath = strings.TrimPrefix(reqURI, "/")
+	}
+
+	// 0. Dynamic Tag & Search Exploration Pre-rendering (Programmatic SEO)
+	if queryTag != "" {
+		title := fmt.Sprintf("#%s Anime Art & Fan Illustrations — Lumiina", queryTag)
+		desc := fmt.Sprintf("Explore popular #%s anime fan art, digital illustrations, and manga drawings created by authentic artists on Lumiina.", queryTag)
+		canonicalURL := fmt.Sprintf("%s/?tag=%s", cleanBase, url.QueryEscape(queryTag))
+		return []byte(injectTags(htmlStr, title, desc, cleanBase+"/mascot/bg2.png", canonicalURL, "website"))
+	}
+
+	if querySearch != "" {
+		title := fmt.Sprintf("Search \"%s\" — Lumiina Art Community", querySearch)
+		desc := fmt.Sprintf("Browse authentic anime fan art and digital illustrations matching \"%s\" on Lumiina.", querySearch)
+		canonicalURL := fmt.Sprintf("%s/?search=%s", cleanBase, url.QueryEscape(querySearch))
+		return []byte(injectTags(htmlStr, title, desc, cleanBase+"/mascot/bg2.png", canonicalURL, "website"))
+	}
 
 	// 1. Core Static Informational Routes (Zero DB query needed)
 	switch cleanPath {
