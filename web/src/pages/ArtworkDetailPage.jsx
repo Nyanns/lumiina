@@ -558,14 +558,20 @@ export const ArtworkDetailPage = () => {
                 title="Click to inspect in fullscreen (Double-click to like)"
               />
 
-              {/* Double-Click Heart Burst Pop Animation */}
-              {showHeartBurst && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20">
-                  <div className="p-4 rounded-full bg-black/40 backdrop-blur-xs animate-ping">
-                    <Heart className="w-16 h-16 fill-rose-500 text-rose-500 drop-shadow-2xl" />
-                  </div>
-                </div>
-              )}
+              {/* Double-Click Heart Pop (Instagram / Pixiv style) */}
+              <AnimatePresence>
+                {showHeartBurst && (
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: [0, 1.25, 1], opacity: [0, 1, 0] }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="absolute inset-0 pointer-events-none flex items-center justify-center z-20"
+                  >
+                    <Heart className="w-20 h-20 fill-white text-rose-500 stroke-[1.5] drop-shadow-[0_4px_20px_rgba(244,63,94,0.6)]" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Prev / Next Chevrons on Stage Hover */}
               {artistWorks.length > 0 && (
@@ -1170,11 +1176,11 @@ export const ArtworkDetailPage = () => {
       {/* 5. ZEN FOCUS / CINEMA THEATER MODE OVERLAY                                */}
       {/* ========================================================================= */}
       {focusMode && (
-        <div className="fixed inset-0 z-50 bg-[#07090d]/95 backdrop-blur-md flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 bg-[#0a0d13] flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in duration-150">
           {/* Floating Header */}
           <div className="w-full max-w-7xl flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
-              <h2 className="text-white font-bold text-sm sm:text-base drop-shadow-md truncate max-w-xs sm:max-w-md">
+              <h2 className="text-white font-bold text-sm sm:text-base truncate max-w-xs sm:max-w-md">
                 {artwork.title}
               </h2>
               <span className="text-slate-400 text-xs hidden sm:inline">by @{artwork.user?.username || 'artist'}</span>
@@ -1189,8 +1195,8 @@ export const ArtworkDetailPage = () => {
                   }
                   toggleLike(id, artwork.like_count || 0);
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  isLiked ? 'bg-rose-500 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                  isLiked ? 'bg-rose-500 text-white' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                 }`}
               >
                 <Heart className={`w-3.5 h-3.5 ${isLiked ? 'fill-white' : ''}`} />
@@ -1199,8 +1205,8 @@ export const ArtworkDetailPage = () => {
               <button
                 type="button"
                 onClick={() => toggleBookmark(id, artwork.bookmark_count || 0)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  isBookmarked ? 'bg-amber-500 text-white' : 'bg-white/10 hover:bg-white/20 text-white'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                  isBookmarked ? 'bg-amber-500 text-white' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                 }`}
               >
                 <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-white' : ''}`} />
@@ -1208,10 +1214,10 @@ export const ArtworkDetailPage = () => {
               <button
                 type="button"
                 onClick={() => setFocusMode(false)}
-                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 transition-colors cursor-pointer"
                 title="Exit Focus Mode (Esc or F)"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -1221,13 +1227,13 @@ export const ArtworkDetailPage = () => {
             <img
               src={artwork.image_url}
               alt={artwork.title}
-              className="max-h-[86vh] max-w-full w-auto object-contain select-none shadow-2xl rounded-lg"
+              className="max-h-[86vh] max-w-full w-auto object-contain select-none rounded-lg"
             />
           </div>
 
           {/* Footer Hint */}
-          <div className="text-[11px] text-slate-400 tracking-wide">
-            Press <kbd className="px-1.5 py-0.5 bg-white/10 rounded font-mono text-[10px]">Esc</kbd> or <kbd className="px-1.5 py-0.5 bg-white/10 rounded font-mono text-[10px]">F</kbd> to exit focus mode
+          <div className="text-[11px] text-slate-400 font-mono">
+            Press <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px]">Esc</kbd> or <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px]">F</kbd> to exit
           </div>
         </div>
       )}

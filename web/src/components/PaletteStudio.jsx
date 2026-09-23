@@ -36,35 +36,35 @@ export const PaletteStudio = ({ imageUrl, artworkTitle }) => {
   const handleCopy = (hex) => {
     navigator.clipboard.writeText(hex);
     setCopiedHex(hex);
-    setTimeout(() => setCopiedHex(null), 1800);
+    setTimeout(() => setCopiedHex(null), 1500);
   };
 
   const handleCopyAll = () => {
     const allHexes = palette.map((c) => c.hex).join(', ');
     navigator.clipboard.writeText(allHexes);
     setCopiedAll(true);
-    setTimeout(() => setCopiedAll(false), 1800);
+    setTimeout(() => setCopiedAll(false), 1500);
   };
 
   return (
-    <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="bg-white dark:bg-[#141820] rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2">
-          <Palette className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <Palette className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
             Color Palette
           </h4>
         </div>
         <button
           type="button"
           onClick={handleCopyAll}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
           title="Copy full palette HEX codes"
         >
           {copiedAll ? (
             <>
-              <Check className="w-3 h-3 text-emerald-500" />
-              <span className="text-emerald-500 font-semibold">Copied All!</span>
+              <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied All</span>
             </>
           ) : (
             <>
@@ -85,20 +85,28 @@ export const PaletteStudio = ({ imageUrl, artworkTitle }) => {
               type="button"
               onClick={() => handleCopy(color.hex)}
               className="group relative flex flex-col items-center gap-1.5 focus:outline-none cursor-pointer"
-              title={`Click to copy ${color.hex}`}
+              title={`Copy ${color.hex}`}
             >
+              {/* Tooltip feedback when copied */}
+              {isCopied && (
+                <div className="absolute -top-7 px-1.5 py-0.5 bg-slate-900 text-white text-[10px] font-semibold rounded shadow-md pointer-events-none z-10 whitespace-nowrap">
+                  Copied!
+                </div>
+              )}
+
+              {/* Swatch square with subtle border */}
               <div
-                className="w-full aspect-square rounded-xl shadow-sm border border-black/10 dark:border-white/10 group-hover:scale-105 group-active:scale-95 transition-all duration-150 flex items-center justify-center relative overflow-hidden"
+                className="w-full aspect-square rounded-lg border border-black/10 dark:border-white/10 group-hover:scale-105 group-active:scale-95 transition-transform duration-150 relative"
                 style={{ backgroundColor: color.hex }}
-              >
-                {isCopied && (
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white drop-shadow" />
-                  </div>
-                )}
-              </div>
-              <span className="text-[10px] font-mono font-medium text-slate-600 dark:text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                {isCopied ? 'COPIED' : color.hex}
+              />
+
+              {/* Monospace Hex Label */}
+              <span className={`text-[10px] font-mono font-medium transition-colors ${
+                isCopied 
+                  ? 'text-emerald-600 dark:text-emerald-400 font-bold' 
+                  : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'
+              }`}>
+                {color.hex}
               </span>
             </button>
           );
