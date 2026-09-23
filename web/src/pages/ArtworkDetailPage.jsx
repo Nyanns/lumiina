@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
   Heart, 
@@ -25,7 +26,6 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Palette,
 } from 'lucide-react';
 import { artworksAPI, commentsAPI, usersAPI } from '../api/client';
 import { useAuth } from '../context/AuthContext';
