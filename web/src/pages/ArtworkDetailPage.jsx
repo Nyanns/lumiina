@@ -271,7 +271,7 @@ export const ArtworkDetailPage = () => {
     ? `${tagsPrefix} / ${artwork.title} - ${artistName} — Lumiina`
     : `${artwork.title} - ${artistName} — Lumiina`;
 
-  const canonicalUrl = `https://lumiina.art/artworks/${artwork.id}`;
+  const canonicalUrl = `https://www.lumiina.art/artworks/${artwork.id}`;
   const artworkJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'VisualArtwork',
@@ -311,13 +311,13 @@ export const ArtworkDetailPage = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://lumiina.art/',
+        item: 'https://www.lumiina.art/',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Artworks',
-        item: 'https://lumiina.art/explore',
+        item: 'https://www.lumiina.art/explore',
       },
       {
         '@type': 'ListItem',

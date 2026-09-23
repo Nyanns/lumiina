@@ -70,27 +70,27 @@ export function LegalInfoPage({ defaultTab }) {
     about: {
       title: 'About Lumiina — Creative Guide & Character Bible v1.0',
       description: 'Meet Lumiina, the official creative guide of the Lumiina art community. A small light in a big world, celebrating human anime artists and original fan art.',
-      canonical: 'https://lumiina.art/about',
+      canonical: 'https://www.lumiina.art/about',
     },
     guidelines: {
       title: 'Community Guidelines — Content Standards & Safe Space | Lumiina',
       description: 'Explore Lumiina community guidelines, content classifications, anti-theft policies, and standards for a safe, welcoming anime art community.',
-      canonical: 'https://lumiina.art/guidelines',
+      canonical: 'https://www.lumiina.art/guidelines',
     },
     terms: {
       title: 'Terms of Service — 100% Artist Ownership Guarantee | Lumiina',
       description: 'Read the Lumiina Terms of Service. Creators retain 100% intellectual property rights. Strict anti-scraping and AI crawler restrictions.',
-      canonical: 'https://lumiina.art/terms',
+      canonical: 'https://www.lumiina.art/terms',
     },
     privacy: {
       title: 'Privacy Policy — No Data Selling & GDPR/CCPA Aligned | Lumiina',
       description: 'Lumiina privacy policy: We never sell creator portfolios or personal data to AI datasets or third-party brokers. Transparent data protection.',
-      canonical: 'https://lumiina.art/privacy',
+      canonical: 'https://www.lumiina.art/privacy',
     },
   }[activeTab] || {
     title: 'Documentation & Legal Hub — Lumiina',
     description: 'Documentation, community guidelines, terms, and privacy policy for Lumiina.',
-    canonical: 'https://lumiina.art/about',
+    canonical: 'https://www.lumiina.art/about',
   };
 
   const copyEmojiCode = (code) => {
@@ -111,7 +111,7 @@ export function LegalInfoPage({ defaultTab }) {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={metaConfig.title} />
         <meta property="og:description" content={metaConfig.description} />
-        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+        <meta property="og:image" content="https://www.lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={metaConfig.canonical} />
 
         {/* Twitter Card */}

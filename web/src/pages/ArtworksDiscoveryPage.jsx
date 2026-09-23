@@ -90,7 +90,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
     ? 'Explore the most popular and trending anime fan art, character designs, and digital illustrations loved by the Lumiina community today.'
     : 'Discover hand-curated and personalized illustration recommendations from top digital artists on Lumiina.';
 
-  const canonicalUrl = `https://lumiina.art/${activeTab === 'trending' ? 'trending' : 'recommended'}`;
+  const canonicalUrl = `https://www.lumiina.art/${activeTab === 'trending' ? 'trending' : 'recommended'}`;
 
   return (
     <div className="min-h-screen bg-[#f1f3f7] dark:bg-[#121519] text-slate-900 dark:text-slate-100 font-sans transition-colors">
@@ -104,7 +104,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
-        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+        <meta property="og:image" content="https://www.lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={canonicalUrl} />
 
         {/* Twitter Card */}
@@ -112,7 +112,7 @@ export const ArtworksDiscoveryPage = ({ defaultTab }) => {
         <meta name="twitter:site" content="@lumiina_art" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
-        <meta name="twitter:image" content="https://lumiina.art/mascot/bg2.png" />
+        <meta name="twitter:image" content="https://www.lumiina.art/mascot/bg2.png" />
       </Helmet>
 
       <main className="w-full max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 pb-24 md:pb-12 flex flex-col gap-4">

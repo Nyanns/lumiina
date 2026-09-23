@@ -202,10 +202,10 @@ export const HomePage = () => {
   else if (queryTag) pageTitle = `#${queryTag} — Lumiina`;
 
   const homeCanonicalUrl = querySearch 
-    ? `https://lumiina.art/?search=${encodeURIComponent(querySearch)}`
+    ? `https://www.lumiina.art/?search=${encodeURIComponent(querySearch)}`
     : queryTag
-    ? `https://lumiina.art/?tag=${encodeURIComponent(queryTag)}`
-    : 'https://lumiina.art/';
+    ? `https://www.lumiina.art/?tag=${encodeURIComponent(queryTag)}`
+    : 'https://www.lumiina.art/';
 
   const homeDescription = querySearch
     ? `Explore digital artwork and illustrations matching "${querySearch}" on Lumiina.`
@@ -224,7 +224,7 @@ export const HomePage = () => {
       itemListElement: artworks.slice(0, 10).map((art, idx) => ({
         '@type': 'ListItem',
         position: idx + 1,
-        url: `https://lumiina.art/artworks/${art.id}`,
+        url: `https://www.lumiina.art/artworks/${art.id}`,
         name: art.title,
       })),
     },
@@ -242,7 +242,7 @@ export const HomePage = () => {
         <meta property="og:site_name" content="Lumiina" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={homeDescription} />
-        <meta property="og:image" content="https://lumiina.art/mascot/bg2.png" />
+        <meta property="og:image" content="https://www.lumiina.art/mascot/bg2.png" />
         <meta property="og:url" content={homeCanonicalUrl} />
 
         {/* Twitter Card */}

@@ -314,12 +314,12 @@ export const ProfilePage = () => {
   const isBioLong = bioText.length > 280;
   const displayedBio = isBioLong && !isBioExpanded ? `${bioText.slice(0, 280)}...` : bioText;
 
-  const creatorCanonicalUrl = `https://lumiina.art/profile/${profile.username}`;
+  const creatorCanonicalUrl = `https://www.lumiina.art/profile/${profile.username}`;
   const creatorDisplayName = profile.display_name ? `${profile.display_name} (@${profile.username})` : `@${profile.username}`;
   const creatorDescription = profile.bio
     ? profile.bio.slice(0, 160)
     : `Explore illustrations, anime fan art, and creative works by ${profile.display_name || profile.username} on Lumiina.`;
-  const creatorImage = profile.avatar_url || profile.banner_url || 'https://lumiina.art/logo_icon.png';
+  const creatorImage = profile.avatar_url || profile.banner_url || 'https://www.lumiina.art/logo_icon.png';
 
   const personJsonLd = {
     '@context': 'https://schema.org',

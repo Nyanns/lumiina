@@ -5,6 +5,7 @@ import (
 	"html"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -45,10 +46,14 @@ type sitemapUserRecord struct {
 	UpdatedAt time.Time
 }
 
+type sitemapTagRecord struct {
+	Name string
+}
+
 // GenerateSitemap generates dynamic sitemap XML with Google Image Sitemap extensions
 func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 	ctx := c.Request.Context()
-	cacheKey := "seo:sitemap_xml:v4"
+	cacheKey := "seo:sitemap_xml:v5"
 
 	// 1. Try Redis cache first
 	if h.rdb != nil {
@@ -60,9 +65,10 @@ func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 		}
 	}
 
-	// 2. Query database for artworks and artists (with defensive nil-db check)
+	// 2. Query database for artworks, artists, and active tags (with defensive nil-db check)
 	var artworks []sitemapArtworkRecord
 	var artists []sitemapUserRecord
+	var tags []sitemapTagRecord
 
 	if h.db != nil {
 		if err := h.db.Model(&model.Artwork{}).
@@ -81,6 +87,16 @@ func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 			Limit(1000).
 			Scan(&artists).Error; err != nil {
 			slog.Error("Sitemap: failed to query artists", "error", err)
+		}
+
+		// Index active tags with at least one artwork for Programmatic SEO (pSEO)
+		if err := h.db.Table("tags").
+			Select("DISTINCT tags.name").
+			Joins("JOIN artwork_tags ON artwork_tags.tag_id = tags.id").
+			Order("tags.name asc").
+			Limit(500).
+			Scan(&tags).Error; err != nil {
+			slog.Error("Sitemap: failed to query tags", "error", err)
 		}
 	}
 
@@ -160,6 +176,20 @@ func (h *SitemapHandler) GenerateSitemap(c *gin.Context) {
 		b.WriteString(fmt.Sprintf("    <lastmod>%s</lastmod>\n", modDate))
 		b.WriteString("    <changefreq>daily</changefreq>\n")
 		b.WriteString("    <priority>0.7</priority>\n")
+		b.WriteString("  </url>\n")
+	}
+
+	// Dynamic Popular Tag Routes for Programmatic SEO (pSEO)
+	for _, tag := range tags {
+		if tag.Name == "" {
+			continue
+		}
+		cleanTag := url.QueryEscape(tag.Name)
+		b.WriteString("  <url>\n")
+		b.WriteString(fmt.Sprintf("    <loc>%s/?tag=%s</loc>\n", h.baseURL, cleanTag))
+		b.WriteString(fmt.Sprintf("    <lastmod>%s</lastmod>\n", nowDate))
+		b.WriteString("    <changefreq>daily</changefreq>\n")
+		b.WriteString("    <priority>0.8</priority>\n")
 		b.WriteString("  </url>\n")
 	}
 
