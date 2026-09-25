@@ -517,8 +517,7 @@ flowchart LR
 - [x] **Production Security Hardening**: Defense-in-depth vectors 1–7, account lockout, and timing attack protection.
 - [x] **Technical SEO & AI Discovery**: Dynamic XML Sitemaps, Google Image extensions, Wave-1 Bot Pre-renderer, and `llms.txt`.
 - [x] **Official Mascot Property & Creator Studio**: Lumiina Character Bible v1.0, 9-expression sticker engine, Showcase Card Studio, and Color Palette Extractor.
-- [ ] **QA Automation Suite (Modul 5)**: Comprehensive Playwright E2E automation for live production regression testing.
-- [ ] **Solo Capstone Project**: GoAntri — Smart Queue Management System.
+- [ ] **Real-Time Notification Pipeline**: WebSocket or Server-Sent Events (SSE) for instant interaction notifications.
 
 ---
 
