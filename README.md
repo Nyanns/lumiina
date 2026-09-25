@@ -411,7 +411,7 @@ flowchart LR
     Route -->|Yes: Sitemap/Public Feed| RCache["Check Redis Cache"]
     Route -->|No: Mutations/Auth| DB["Direct PostgreSQL"]
     
-    RCache -->|Hit (O(1))| Return["Instant HTTP Response"]
+    RCache -->|Cache Hit| Return["Instant HTTP Response"]
     RCache -->|Miss| DB
     DB --> Repopulate["Populate Redis with TTL"]
     Repopulate --> Return
@@ -518,7 +518,6 @@ flowchart LR
 - [x] **Technical SEO & AI Discovery**: Dynamic XML Sitemaps, Google Image extensions, Wave-1 Bot Pre-renderer, and `llms.txt`.
 - [x] **Official Mascot Property & Creator Studio**: Lumiina Character Bible v1.0, 9-expression sticker engine, Showcase Card Studio, and Color Palette Extractor.
 - [ ] **QA Automation Suite (Modul 5)**: Comprehensive Playwright E2E automation for live production regression testing.
-- [ ] **Real-Time Notification Pipeline**: WebSocket or Server-Sent Events (SSE) for instant interaction notifications.
 - [ ] **Solo Capstone Project**: GoAntri — Smart Queue Management System.
 
 ---
