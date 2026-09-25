@@ -10,125 +10,108 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://www.docker.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Lumiina** is an illustration and creator community platform designed for digital artists, illustrators, and visual creators to publish, curate, and discover original artworks. Engineered with a high-performance Go backend and a responsive React frontend, Lumiina focuses on digital artist workflows, community engagement, defense-in-depth API security, and search engine infrastructure.
-
-- **Official Production Domain**: [https://www.lumiina.art](https://www.lumiina.art) *(Apex 308 redirect, Vercel Edge Global Anycast)*
-- **Edge Deployment Fallback**: [https://lumiina-art.vercel.app](https://lumiina-art.vercel.app)
-- **Official Character Property**: **Lumiina** *(Creative Guide for Artists, Slogan: "A small light in a big world")*
+> **A production-oriented software system for digital artists, engineered with Clean Architecture, defense-in-depth API security, and high-throughput asset delivery.**
 
 ---
 
-## Product Features and Creator Experience
+## Table of Contents
 
-- **Curated Discovery Feeds**:
-  - Dual-axis homepage featuring daily engagement carousels and an organic Masonry grid.
-  - Dedicated galleries for **Trending** and **Recommended** artworks (`/trending`, `/recommended`) with real-time tag filters and 48-item batch pagination.
-- **Viral Art Showcase Card Studio (`ShareCardModal`)**:
-  - **Social-Ready Aspect Ratio**: Generates 1080×1350 (4:5) fine art exhibition catalog placards via HTML5 Canvas.
-  - **Human-Crafted Placard Typography**: Elegant left-aligned typography featuring artwork title, creator handle (`@artist`), creation date, tags, and subtle `✦ LUMIINA  lumiina.art` footer.
-  - **1-Click Export & Clipboard Sharing**: Direct system clipboard PNG write (`navigator.clipboard.write([new ClipboardItem(...)])`) or file download for instant Twitter/X, Instagram, and Discord posting.
-- **Harmonic Color Palette Studio (`PaletteStudio` & `colorExtractor.js`)**:
-  - **Sub-5ms Quantization**: Offscreen 64×64 canvas downsampling with Euclidean distance clustering without blocking the main UI thread.
-  - **Tactile Swatches**: 6 dominant artwork color swatches with monospace HEX labels and one-click copy to clipboard with floating tooltip feedback.
-- **Global Command Palette (`CommandPalette`) & Power-User Shortcuts**:
-  - **Omnibox Launcher**: Instant navigation triggered by `Cmd+K` / `Ctrl+K` or `/`.
-  - **Live Debounced Search**: Fast real-time artwork discovery with keyboard navigation.
-  - **Cheatsheet Modal (`?`)**: GitHub-style shortcut matrix supporting `L` (Like), `B` (Bookmark), `F` (Zen Cinema Mode), `S` (Export Card), and `←`/`→` (Previous/Next artist artworks).
-- **Zen Focus Cinema Mode**:
-  - Distraction-free full-screen theater viewing with solid deep black backdrop (`#0a0d13`) and floating zoom controls.
-- **Official Character Property & Interactive Sticker Engine**:
-  - **Lumiina Character Bible v1.0**: Single unified character identity, 158cm, July 7 birthday, ISTP/INTP creative guide vibe.
-  - **9 Official Expressions & Sticker Picker**: One-click sticker popover in comments supporting shortcodes (`:lumiina_1:` through `:lumiina_9:`).
-  - **High-Performance Visual Pipeline**: Optimized WebP background (`bg2.webp`, 281 KB, 90% bandwidth saving) with PWA runtime caching (`mascot-assets-cache`, 60-day TTL).
-  - **Editorial About Page (`/about`)**: Human-crafted documentation hub featuring interactive master turnaround Lightbox modal, signature props breakdown, and expression matrix.
-- **Digital Artist Studio Tools (`/upload`)**:
-  - **Value Check Mode (Grayscale)**: Instant high-contrast monochrome preview to audit light-to-shadow values before publication.
-  - **Feed Crop Simulator**: 1:1 square preview with top, center, and bottom focal point anchoring.
-  - **Harmonic Palette Extractor**: Automatic canvas extraction of 5 dominant HEX color codes from uploaded artwork.
-  - **Studio Backdrop Switcher**: Preview illustrations against 18% Neutral Gray, OLED Deep Dark, Pure White, or Alpha Checkerboard.
-  - **1:1 Native Resolution Inspector**: Full-screen modal for pixel-level lineart and brush texture inspection.
-- **Social and Community Interaction**:
-  - **Follow and Unfollow System**: End-to-end user subscriptions with optimistic UI updates and synchronized live follower counts.
-  - **Followers and Following Modal**: Interactive list modal on artist profiles with instant follow action toggles.
-  - **Bookmarks and Collections**: Ribbon collection system with a dedicated Bookmarks tab on user profiles (`/profile/:username?tab=bookmarks`).
-  - **Discussion Threads**: Compact comment section with author deletion controls, sticker parsing, and stored XSS sanitization.
-- **Entity Obfuscation and Vanity URLs**:
-  - Sequential database IDs are shielded using Sqids-based HashID strings (`/artworks/6wNPmG`).
-  - Canonical creator profiles use case-insensitive vanity handles (`/profile/Nyanns`).
-- **Instagram-Style Client-Side Image Preprocessing & Optimization (`/upload`)**:
-  - **Zero-Wait Uploads**: High-performance client-side Canvas & GPU downsampling pipelines (`web/src/utils/imageOptimizer.js`).
-  - **Intelligent Resampling**: Scales oversized 4K/8K illustrations to optimal display bounds (2560px max dimension, 2K QHD crisp) preserving razor-sharp line-art.
-  - **Visually Lossless Compression**: Encodes to WebP (with JPEG fallback) at 0.88–0.90 quality factor, shrinking 10MB–20MB raw files down to **~600KB–1.2MB (-85% to -95% bandwidth saved)**.
-  - **Alpha-Channel Aware**: Automatically detects PNG transparency to prevent black bounding boxes on transparent stickers and character illustrations.
-  - **Artist Autonomy**: Instagram-style live compression metrics badge with an opt-out toggle for artists desiring uncompressed master files.
-- **Search Engine Infrastructure & Technical SEO Engine**:
-  - **Dynamic XML Sitemap Engine (`GET /sitemap.xml`)**: Go native handler dynamically indexing active artworks with Google Image Sitemap schema (`<image:image>`, `<image:loc>`, `<image:title>`) and verified artist profiles.
-  - **Redis Edge Caching (`seo:sitemap_xml:v2`)**: 30-minute cache TTL shielding PostgreSQL from crawler stampedes.
-  - **Wave-1 Bot Pre-rendering (`bot_prerender.go`)**: Regex bot detector dynamically injecting OpenGraph, Twitter Cards, Titles, and Schema.org JSON-LD into `index.html` byte stream for search bots and chat previews (WhatsApp, Discord, Twitter, Telegram).
-  - **Google Search Console Indexing**: Domain property (`sc-domain:lumiina.art`) verified via Hostinger DNS TXT record; confirmed live indexing on Google (`URL is on Google`, `Page is indexed`).
-  - **AI Discovery & Generative Engine Optimization (GEO)**: Machine-readable `robots.txt` and `llms.txt` supporting GPTBot, ClaudeBot, and PerplexityBot with structured Schema.org microdata.
-- **Extreme Frontend Performance & Bundle Optimization**:
-  - Route-level code-splitting with `React.lazy()` and zero-CLS `PageLoadingFallback`. Initial bundle entry reduced by **>93% (from 640 kB to 22.07 kB)**.
-  - Off-screen GPU render containment via CSS `.card-containment` (`content-visibility: auto; contain-intrinsic-size: 380px;`).
-  - Gin backend HTTP Gzip compression (`github.com/gin-contrib/gzip`) with minimum size thresholds.
-- **Defense-in-Depth API Security Hardening (Vectors 1–7)**:
-  - **Metrics Lockdown (`GET /metrics`)**: `MetricsAuthMiddleware` with loopback bypass, constant-time token comparison (`subtle.ConstantTimeCompare`), and HTTP 404 in production to defeat port scanners.
-  - **Release Mode & Error Shielding**: `gin.ReleaseMode` enforced with `gin.New()` + `gin.Recovery()`, suppressing verbose routing banners and stack trace leakage.
-  - **Opaque Health Probes (`/readyz`)**: Returns clean `{"status":"ready"}` in production without leaking internal infrastructure topology (DB/Redis hostnames).
-  - **Granular Rate Limiting & Account Lockout**: Auth limiters (15 req/min), upload limiters (10 uploads/min), and Redis-backed account lockout (5 consecutive failed logins trigger 15-minute lock).
-  - **Pixel Flood Defense**: Pre-allocation dimension inspection via `image.DecodeConfig`, rejecting decompression bombs (>10,000 × 10,000 px) before allocating RGBA buffers.
-  - **CSP Hardening**: Eliminated `'unsafe-eval'` from `Content-Security-Policy`.
-  - **BOLA Remediation**: Artwork owners granted full comment moderation privileges on their artworks.
-- **Human-Crafted Visual Standard**:
-  - Built strictly on clean slate surfaces, 1px tactile borders, and Pixiv Sky Blue (`#0096fa`) accents.
-  - Zero glassmorphism blur; content-first typography using **Inter** paired with native Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`).
+- [What is Lumiina?](#what-is-lumiina)
+- [Live Demo](#live-demo)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Repository Structure](#repository-structure)
+- [Local Development](#local-development)
+- [Environment Variables](#environment-variables)
+- [API Overview](#api-overview)
+- [Database Architecture](#database-architecture)
+- [Caching Strategy](#caching-strategy)
+- [Security](#security)
+- [Testing](#testing)
+- [Performance](#performance)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
 
 ---
 
-## System Architecture
+## What is Lumiina?
+
+**Lumiina** is an illustration and creator community platform designed for digital artists, illustrators, and visual creators to publish, curate, and discover original artworks. 
+
+Rather than serving as a basic CRUD prototype, Lumiina is engineered as a **production-oriented software system** designed to solve real-world backend and full-stack challenges:
+- **Zero-Latency Content Discovery**: Wave-1 server-side bot pre-rendering, programmatic SEO for tags, and Redis edge caching for crawlers.
+- **Client-Side Asset Preprocessing**: Canvas GPU downsampling pipeline shrinking 10–20 MB master illustrations to ~800 KB WebP before network transit.
+- **Enterprise Defense-in-Depth**: Constant-time Bcrypt canary execution against username enumeration, Redis token revocation epochs, and decompression bomb pre-allocation bounds checks.
+- **Platform Mascot & Identity**: Single unified official character guide, **Lumiina** (*"A small light in a big world"*), integrated via an interactive 9-expression sticker engine and editorial design system.
+
+---
+
+## Live Demo
+
+| Environment | Endpoint | Description |
+| :--- | :--- | :--- |
+| **Official Production** | [https://www.lumiina.art](https://www.lumiina.art) | Primary production domain (Vercel Anycast Edge, Hostinger DNS, Let's Encrypt TLS) |
+| **Apex 308 Redirect** | [https://lumiina.art](https://lumiina.art) | Permanent apex redirect to canonical `www.lumiina.art` |
+
+---
+
+## Architecture
+
+Lumiina strictly implements **Clean Layered Architecture (Handler-Service-Repository)** with complete Dependency Inversion.
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Layer"]
-        Browser["React 18 + Vite (TailwindCSS)"]
-        Nginx["Nginx Alpine (SPA Routing & Asset Cache)"]
-        Browser --- Nginx
+    Browser(["Client Browser (End-User)"])
+    
+    subgraph ClientLayer ["Client & Delivery Layer"]
+        React["React 19 + Vite 8 SPA\n(TailwindCSS v4, Framer Motion)"]
+        Edge["Edge Network & CDN\n(Vercel Anycast sin1 + Cloudinary)"]
     end
 
-    subgraph Gateway ["HTTP & Security Middleware"]
-        Gin["Gin Web Router (:8080)"]
-        CORS["Strict CORS Whitelist"]
-        SecHeaders["Security Headers (CSP, HSTS)"]
-        RateLimit["Atomic Redis Rate Limiter"]
-        AuthMid["JWT Auth & Revocation Epoch"]
+    subgraph GatewayLayer ["Go HTTP Engine (:8080)"]
+        Gin["Gin Router & Security Pipeline\n(CORS, CSP, Rate Limiting, Wave-1 Prerender)"]
     end
 
-    subgraph ServiceLayer ["Clean Architecture Services"]
-        ArtSvc["Artwork Service"]
-        UserSvc["User & Profile Service"]
-        FollowSvc["Follow Service"]
-        BookSvc["Bookmark Service"]
-        CommSvc["Comment Service"]
+    subgraph ServiceDomains ["Core Domain Services (Clean Architecture)"]
+        Auth["Auth Service\n(Constant-Time Bcrypt, JWT, Lockout)"]
+        Art["Artwork Service\n(Sqids HashID, Canvas Resampling)"]
+        Tag["Tag Service\n(Programmatic SEO, Trigram Search)"]
+        Inter["Interaction Service\n(Likes, Bookmarks, Follows, Comments)"]
+        User["User Service\n(Vanity Profile, Social Graph)"]
     end
 
-    subgraph DataLayer ["Storage & Infrastructure"]
-        PG[("PostgreSQL 15\n(pg_trgm GIN Indexes)")]
-        Redis[("Redis 7\n(Tokens, Cache, Rate Limits)")]
-        Cloudinary[("Cloudinary\n(CDN Media Delivery)")]
+    subgraph DataPersistence ["Production Data Layer"]
+        PG[("PostgreSQL 16 (Supabase)\n• B-Tree & GIN Trigram Indexes\n• Simple Protocol (Prepared Stmt Bypass)")]
+        Redis[("Redis 7 (Upstash TLS)\n• Atomic Lua Rate Limiters\n• Invalidation Cache\n• Ephemeral Tokens")]
     end
 
-    Nginx -->|HTTP /api/v1| Gin
-    Gin --> CORS --> SecHeaders --> RateLimit --> AuthMid
-    AuthMid --> ServiceLayer
-    ArtSvc --> PG
-    ArtSvc --> Redis
-    ArtSvc --> Cloudinary
-    UserSvc --> PG
-    UserSvc --> Redis
-    FollowSvc --> PG
-    BookSvc --> PG
-    CommSvc --> PG
+    Browser --> React
+    React --> Edge
+    Edge --> Gin
+    
+    Gin --> Auth
+    Gin --> Art
+    Gin --> Tag
+    Gin --> Inter
+    Gin --> User
+
+    Auth --> PG
+    Auth --> Redis
+    Art --> PG
+    Art --> Redis
+    Tag --> PG
+    Tag --> Redis
+    Inter --> PG
+    Inter --> Redis
+    User --> PG
+    User --> Redis
 ```
+
+### Architectural Separation of Concerns
+1. **Delivery Layer (`internal/handler`)**: Accepts HTTP requests, enforces strict struct-level DTO validations, decodes Sqids HashIDs, formats RFC 7807 error envelopes, and injects `X-Request-ID` tracing headers.
+2. **Business Domain Layer (`internal/service`)**: Implements pure domain rules: password entropy scoring, image dimension bounds validation, follow limits, and tag normalization. Independent of HTTP and database drivers.
+3. **Data Access Layer (`internal/repository`)**: Executes parameterized SQL queries via GORM, handles batch resolutions (`IN (?)`) to eliminate N+1 queries, and leverages PostgreSQL GIN Trigram indexes.
+4. **Resilience & Storage Layer**: Supabase PostgreSQL with Supavisor transaction pooling, Upstash Redis over TLS for distributed state, and Cloudinary for media storage.
 
 ---
 
@@ -136,100 +119,107 @@ flowchart TD
 
 ### Backend
 - **Language**: Go 1.24+
-- **HTTP Framework**: [Gin](https://github.com/gin-gonic/gin)
-- **Database & ORM**: PostgreSQL 15/16 with `pg_trgm`, [GORM](https://gorm.io/)
-- **In-Memory Store**: Redis 7 (atomic rate limiting via Lua, ephemeral tokens, cache)
-- **Object Storage**: Cloudinary SDK (with magic bytes MIME sniffing)
-- **ID Obfuscation**: [Sqids](https://sqids.org/go)
-- **Observability**: Go `log/slog` structured logging, `X-Request-ID` tracing, Prometheus `/metrics`
-- **Documentation**: OpenAPI 2.0 / Swagger ([swaggo/swag](https://github.com/swaggo/swag))
+- **HTTP Engine**: [Gin Web Framework](https://github.com/gin-gonic/gin)
+- **Database & Driver**: PostgreSQL 16 with `pg_trgm`, [GORM](https://gorm.io/) (`pgx/v5` driver)
+- **Cache & Rate Limiting**: Redis 7 (atomic Lua scripts, ephemeral token blacklist)
+- **Media Processing**: Cloudinary v2 SDK with Magic Bytes MIME sniffing (`http.DetectContentType`)
+- **Entity Obfuscation**: [Sqids Go](https://sqids.org/go) (replaces sequential IDs with 6-char URL-safe slugs)
+- **Telemetry & Logging**: Standard library `log/slog` structured JSON logging, Prometheus metrics (`/metrics`)
+- **API Documentation**: OpenAPI 2.0 / Swagger via [swaggo/swag](https://github.com/swaggo/swag)
 
 ### Frontend
-- **Framework**: React 19, [Vite 8](https://vitejs.dev/)
+- **Framework & Runtime**: React 19, [Vite 8](https://vitejs.dev/) (Rolldown bundler engine)
 - **Styling**: [TailwindCSS v4](https://tailwindcss.com/)
-- **Animations**: [Framer Motion v13](https://www.framer.com/motion/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **Typography**: Inter (Latin) with Japanese CJK font fallbacks (`Hiragino Sans`, `Yu Gothic UI`, `Meiryo`)
-- **PWA Engine**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox Service Worker, runtime asset caching)
-- **Production Server**: Nginx Alpine with Brotli/Gzip compression and static cache headers
+- **Micro-Animations**: [Framer Motion v13](https://www.framer.com/motion/)
+- **Iconography**: [Lucide React](https://lucide.dev/)
+- **PWA Engine**: [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (Workbox Service Worker, offline cache)
+- **Client HTTP Client**: Axios with dynamic bearer interceptors and token synchronization
+
+### Infrastructure & Deployment
+- **Edge Anycast**: Vercel Global Edge Network (Region `sin1` - Singapore)
+- **Managed Database**: Supabase PostgreSQL (Singapore AWS Region)
+- **Managed Cache**: Upstash Redis Serverless (Singapore Region)
+- **DNS & SSL**: Hostinger DNS, Automated Let's Encrypt TLS/SSL certificates
 
 ---
 
-## Enterprise Security and Hardening
+## Repository Structure
 
-1. **Timing-Attack Resilient Authentication**:
-   - In non-existent user login attempts, a pre-computed bcrypt canary hash is evaluated in constant time (~70ms) to prevent username enumeration.
-2. **Atomic Sliding Window Rate Limiting**:
-   - Single round-trip Redis Lua script enforcing limits with standard RFC headers (`X-RateLimit-Remaining`, `Retry-After`).
-3. **Session Revocation Epoch**:
-   - Password reset immediately sets a revocation timestamp in Redis. The authentication middleware rejects active JWTs issued prior to that epoch (`iat < epoch`).
-4. **Input Sanitization and Magic Bytes**:
-   - Artwork and avatar uploads inspect file headers via `http.DetectContentType` to prevent malicious payloads masked with image extensions.
-   - Text submissions undergo HTML escaping (`html.EscapeString`) to stop Stored XSS.
-5. **Fail-Fast Configuration**:
-   - Startup verification (`cfg.Validate()`) halts execution immediately if mandatory secrets (e.g. `JWT_SECRET` < 32 characters, invalid Cloudinary prefixes) are missing or misconfigured.
-6. **Optimized Query Performance**:
-   - GIN Trigram indexes enable ultra-fast substring searches (`ILIKE`) without sequential table scans.
-   - Batch query resolvers (`populateLikeCounts`, `populateUserLikeStatus`, `BatchCheckFollowing`) eliminate N+1 database queries across feeds and profile collections.
+```text
+lumiina/
+├── .github/workflows/        # Automated CI gates: golangci-lint, race detector, CodeQL SAST
+├── cmd/api/main.go           # Application entrypoint & dependency injection wiring
+├── config/                   # Fail-fast configuration validator & service initializers
+├── db/migrations/            # Up/Down SQL migration sequence (golang-migrate)
+├── docs/                     # Generated OpenAPI/Swagger docs & Architecture ADRs
+│   ├── adr/                  # Architecture Decision Records (ADR 0001 - 0004)
+│   ├── DEPLOYMENT.md         # Production deployment & cloud migration runbook
+│   └── TROUBLESHOOTING.md    # Operational incident playbooks & debugging guide
+├── internal/
+│   ├── handler/              # Gin HTTP request controllers (DTO validation, HTTP response)
+│   ├── middleware/           # Rate limiting, security headers, auth, tracing, bot pre-renderer
+│   ├── model/                # GORM entity schemas, JSON serializers, Sqids slug decoders
+│   ├── pkg/                  # Cloudinary, mailer, sanitization, HashID, and IndexNow helpers
+│   ├── repository/           # Parameterized SQL database queries & batch resolvers
+│   └── service/              # Core business logic, password hashing, and domain rules
+├── web/                      # React 19 SPA frontend (Vite 8 + TailwindCSS v4)
+│   ├── public/               # Static assets, official mascot WebP illustrations, and PWA manifest
+│   ├── src/
+│   │   ├── api/              # Axios HTTP client with unified auth interceptors
+│   │   ├── components/       # Reusable components (ArtworkCard, Navbar, Modals, Lightbox)
+│   │   ├── context/          # Context providers (Auth, Theme, Likes, Bookmarks, Follows)
+│   │   ├── pages/            # View pages (Feed, Discovery, Upload, Profile, Legal, About)
+│   │   ├── utils/            # Image optimizer canvas pipeline, color extractor, slug helpers
+│   │   └── App.jsx           # Client-side router configuration & lazy-loaded routes
+│   ├── Dockerfile            # Multi-stage production container for web (Nginx Alpine)
+│   └── nginx.conf            # SPA routing fallback and asset caching headers
+├── Dockerfile                # Multi-stage production container for Go binary
+├── docker-compose.yml        # Turnkey local development stack (PG, Redis, API, Web)
+└── Makefile                  # Developer automation (make run, make test-race, make migrate-up)
+```
 
 ---
 
-## Documentation and Engineering Runbooks
-
-- **[Architecture Decision Records (ADRs)](docs/adr/)**: Architectural rationale, trade-offs, and design choices.
-  - [ADR 0001: Record Architecture Decisions](docs/adr/0001-record-architecture-decisions.md)
-  - [ADR 0002: Clean Architecture and Dependency Inversion](docs/adr/0002-clean-architecture-and-dependency-inversion.md)
-  - [ADR 0003: Redis Atomic Rate Limiting & Ephemeral Tokens](docs/adr/0003-redis-atomic-rate-limiting-and-ephemeral-tokens.md)
-  - [ADR 0004: PostgreSQL Trigram GIN Indexes for Substring Search](docs/adr/0004-postgresql-trigram-gin-indexes-for-search.md)
-- **[Deployment Runbook](docs/DEPLOYMENT.md)**: Production container deployment and cloud readiness checks.
-- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)**: Diagnostic steps for database connection, fail-fast aborts, CORS, and Cloudinary.
-- **[Error Handling Specification](docs/ERROR_HANDLING.md)**: Standardized RFC 7807-inspired JSON error envelopes and status code mappings.
-- **[Contributing Guidelines](CONTRIBUTING.md)**: Gitflow branching strategy, Conventional Commits, and PR checklists.
-
----
-
-## Getting Started
+## Local Development
 
 ### Prerequisites
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- *Optional for native development*: Go 1.24+, Node.js 20+, PostgreSQL 15+, Redis 7+
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
+- *Optional for bare-metal execution*: Go 1.24+, Node.js 20+, PostgreSQL 16+, Redis 7+
 
-### 1. Environment Setup
-Copy the environment template and provide your Cloudinary and SMTP credentials:
+### 1. Turnkey Stack (Docker Compose)
+Run the entire production stack (Go API, PostgreSQL, Redis, React SPA, Nginx) with a single command:
 ```bash
+# 1. Clone repository
+git clone https://github.com/Nyanns/lumiina.git
+cd lumiina
+
+# 2. Copy environment template
 cp .env.example .env
-```
 
-### 2. Run with Docker Compose (Turnkey Full Stack)
-Start all services (PostgreSQL, Redis, Go API, and React Web Nginx):
-```bash
+# 3. Spin up full stack
 docker compose up --build
 ```
-
 Access the application:
-- **Frontend Web**: [http://localhost:5173](http://localhost:5173)
-- **Backend API**: [http://localhost:8080](http://localhost:8080)
-- **Interactive Swagger Docs**: [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
-- **Prometheus Metrics**: [http://localhost:8080/metrics](http://localhost:8080/metrics)
-- **Health Probes**: [http://localhost:8080/livez](http://localhost:8080/livez) and [http://localhost:8080/readyz](http://localhost:8080/readyz)
+- **Web Application**: `http://localhost:5173`
+- **Backend API**: `http://localhost:8080`
+- **Swagger Documentation**: `http://localhost:8080/swagger/index.html`
+- **Health Probes**: `http://localhost:8080/livez` & `http://localhost:8080/readyz`
 
-To shut down services:
+### 2. Bare-Metal Development
+
+#### Backend Server
 ```bash
-docker compose down
-```
+# Apply migrations to local PostgreSQL
+make migrate-up
 
-### 3. Native Development (Optional)
-
-#### Backend (Terminal 1)
-```bash
-# Run migrations & start API server
+# Start API server
 make run
 
-# Run unit tests with race detection
+# Run unit and race tests
 make test-race
 ```
 
-#### Frontend (Terminal 2)
+#### Frontend Web
 ```bash
 cd web
 npm install
@@ -238,99 +228,298 @@ npm run dev
 
 ---
 
-## API Reference Overview
+## Environment Variables
+
+Lumiina enforces **Fail-Fast Configuration** (`config/config.go`). The server halts immediately at startup if critical variables are missing or insecure.
+
+| Variable | Description | Required | Default / Example |
+| :--- | :--- | :---: | :--- |
+| `APP_ENV` | Application environment (`development`, `staging`, `production`) | No | `development` |
+| `PORT` | API server listening port | No | `8080` |
+| `DB_HOST` | PostgreSQL host | Yes | `localhost` / Supabase pooler host |
+| `DB_PORT` | PostgreSQL port | Yes | `5432` / `6543` (transaction pooler) |
+| `DB_USER` | PostgreSQL user | Yes | `postgres` |
+| `DB_PASSWORD` | PostgreSQL password | Yes | `<secret>` |
+| `DB_NAME` | PostgreSQL database name | Yes | `lumiina` |
+| `DB_SSLMODE` | SSL Mode (`disable`, `require`, `verify-full`) | No | `disable` (`require` in prod) |
+| `REDIS_HOST` | Redis host | Yes | `localhost:6379` / Upstash endpoint |
+| `REDIS_PASSWORD` | Redis password | No | `<secret>` |
+| `REDIS_USE_TLS` | Enforce TLS over Redis connection | No | `false` (`true` for Upstash) |
+| `JWT_SECRET` | Secret key for HS256 JWT tokens (Min. 32 characters) | Yes | `<high-entropy-string-32-chars+>` |
+| `JWT_TTL_HOURS` | Access token lifespan in hours | No | `72` |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary account cloud name | Yes | `lumiina-cloud` |
+| `CLOUDINARY_API_KEY` | Cloudinary public API key | Yes | `<api-key>` |
+| `CLOUDINARY_API_SECRET` | Cloudinary secret API key | Yes | `<api-secret>` |
+| `INDEXNOW_KEY` | Secret verification key for instant search engine indexing | No | `<indexnow-key>` |
+
+---
+
+## API Overview
 
 Base path: `/api/v1`
 
-### Authentication and Account
-| Method | Endpoint | Description | Access |
+### 1. Authentication & Account
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
-| `POST` | `/api/v1/auth/register` | Register new artist account | Public (Rate-Limited) |
-| `POST` | `/api/v1/auth/login` | Authenticate and obtain JWT token | Public (Rate-Limited) |
-| `GET` | `/api/v1/auth/verify-email` | Verify email token | Public |
+| `POST` | `/api/v1/auth/register` | Register new creator account | Public (15 req/min) |
+| `POST` | `/api/v1/auth/login` | Authenticate & issue JWT token | Public (15 req/min) |
+| `GET` | `/api/v1/auth/verify-email` | Verify email confirmation token | Public |
 | `POST` | `/api/v1/auth/forgot-password` | Request password reset token | Public (Rate-Limited) |
-| `POST` | `/api/v1/auth/reset-password` | Reset password using token | Public (Rate-Limited) |
-| `POST` | `/api/v1/auth/logout` | Revoke session and blacklist token | Bearer |
+| `POST` | `/api/v1/auth/reset-password` | Execute password reset via token | Public (Rate-Limited) |
+| `POST` | `/api/v1/auth/logout` | Revoke active session via Redis blacklist | Bearer |
 
-### Artworks and Discovery
-| Method | Endpoint | Description | Access |
+### 2. Artworks & Discovery
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
 | `GET` | `/api/v1/artworks` | Paginated feed with title search & tag filter | Public |
 | `GET` | `/api/v1/artworks/trending` | Artworks ranked by engagement velocity | Public |
 | `GET` | `/api/v1/artworks/recommended` | Personalized discovery feed | Public |
-| `GET` | `/api/v1/artworks/:id` | Artwork details by numeric ID or HashID | Public |
-| `POST` | `/api/v1/artworks` | Upload illustration (`multipart/form-data`) | Bearer |
+| `GET` | `/api/v1/artworks/:id` | Artwork details by ID or HashID slug | Public |
+| `POST` | `/api/v1/artworks` | Upload illustration (`multipart/form-data`) | Bearer (10 up/min) |
 | `PUT` | `/api/v1/artworks/:id` | Update title, description, or tags | Bearer (Owner) |
-| `DELETE` | `/api/v1/artworks/:id` | Delete artwork | Bearer (Owner/Admin) |
+| `DELETE` | `/api/v1/artworks/:id` | Soft-delete artwork | Bearer (Owner/Admin) |
 
-### Social Engagement and Collections
-| Method | Endpoint | Description | Access |
+### 3. Interactions & Social Graph
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/v1/artworks/:id/like` | Toggle artwork like | Bearer |
 | `GET` | `/api/v1/artworks/:id/like-status` | Get like status for current user | Public / Bearer |
 | `POST` | `/api/v1/artworks/:id/bookmark` | Toggle artwork bookmark | Bearer |
 | `GET` | `/api/v1/artworks/:id/bookmark-status` | Get bookmark status for current user | Public / Bearer |
-| `GET` | `/api/v1/users/:id/bookmarks` | Get artist's bookmarked collection | Public |
+| `GET` | `/api/v1/users/:id/bookmarks` | Fetch creator's bookmarked collection | Public |
 | `POST` | `/api/v1/users/:id/follow` | Toggle follow relationship | Bearer |
-| `GET` | `/api/v1/users/:id/follow-status` | Check if following a creator | Bearer |
-| `GET` | `/api/v1/users/:id/followers` | Get followers list | Public |
+| `GET` | `/api/v1/users/:id/followers` | Get creator followers list | Public |
 | `GET` | `/api/v1/users/:id/following` | Get creators followed by user | Public |
 
-### Discussions and Profiles
-| Method | Endpoint | Description | Access |
+### 4. Community & Profiles
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/api/v1/artworks/:id/comments` | List artwork comments | Public |
-| `POST` | `/api/v1/artworks/:id/comments` | Post comment | Bearer |
-| `DELETE` | `/api/v1/comments/:id` | Delete comment | Bearer (Author/Admin) |
+| `GET` | `/api/v1/artworks/:id/comments` | List artwork comments with sticker parsing | Public |
+| `POST` | `/api/v1/artworks/:id/comments` | Post comment (XSS sanitized) | Bearer |
+| `DELETE` | `/api/v1/comments/:id` | Delete comment | Bearer (Author/Artwork Owner) |
 | `GET` | `/api/v1/users/me` | Fetch authenticated user profile | Bearer |
-| `PUT` | `/api/v1/users/profile` | Update profile bio, links, and details | Bearer |
-| `POST` | `/api/v1/users/avatar` | Upload profile avatar | Bearer |
+| `PUT` | `/api/v1/users/profile` | Update profile bio, links, and vanity details | Bearer |
+| `POST` | `/api/v1/users/avatar` | Upload avatar (Canvas cropped) | Bearer |
 | `POST` | `/api/v1/users/banner` | Upload profile header banner | Bearer |
-| `GET` | `/api/v1/users/search` | Search users by username substring | Public |
 | `GET` | `/api/v1/users/:id` | Public profile by ID, handle, or HashID | Public |
 
-### Search Engine Optimization, AI Discovery & Probes
-| Method | Endpoint | Description | Access |
+### 5. Probes, SEO & Bot Infrastructure
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/sitemap.xml` | Dynamic XML Sitemap with Google Image extensions (Redis cached) | Public (Crawlers) |
-| `GET` | `/robots.txt` | Crawler policies for GoogleBot, GPTBot, ClaudeBot, PerplexityBot | Public |
-| `GET` | `/llms.txt` | Machine-readable site overview & schema context for LLM agents | Public |
-| `GET` | `/livez` | Server liveness probe (orchestrator health) | Public |
-| `GET` | `/readyz` | Opaque dependency readiness probe (PostgreSQL & Redis check) | Public |
-| `GET` | `/metrics` | Prometheus telemetry (locked down in production: 404 / loopback) | Admin / Scraper |
+| `GET` | `/sitemap.xml` | Dynamic XML Sitemap with Google Image extensions | Public (Redis cached) |
+| `GET` | `/robots.txt` | Crawler policies for GoogleBot, GPTBot, ClaudeBot | Public |
+| `GET` | `/llms.txt` | Machine-readable context for AI search agents | Public |
+| `GET` | `/livez` | Server liveness probe | Public |
+| `GET` | `/readyz` | Opaque dependency readiness probe (PostgreSQL & Redis) | Public |
+| `GET` | `/metrics` | Prometheus telemetry (Protected: 404 in production) | Internal |
 
 ---
 
-## Project Structure
+## Database Architecture
 
-```text
-lumiina/
-├── .github/workflows/        # Automated CI (lint, race tests, CodeQL SAST)
-├── cmd/api/main.go           # Go application entrypoint & dependency injection
-├── config/                   # Fail-fast configuration & service initializers
-├── db/migrations/            # Up/Down SQL migration sequence (golang-migrate)
-├── docs/                     # Generated OpenAPI/Swagger docs & Architecture ADRs
-├── internal/
-│   ├── handler/              # Gin HTTP request controllers
-│   ├── middleware/           # Rate limiting, auth, CORS, security headers, tracing
-│   ├── model/                # GORM schemas, JSON serializers, DTOs
-│   ├── pkg/                  # Cloudinary, mailer, sanitization, HashID helpers
-│   ├── repository/           # Parameterized database queries & batch resolvers
-│   └── service/              # Core business logic & security validations
-├── web/                      # React 18 frontend (Vite + TailwindCSS + Framer Motion)
-│   ├── public/               # Static assets, branding, and mascot illustrations
-│   ├── src/
-│   │   ├── api/              # Axios HTTP client with auth interceptors
-│   │   ├── components/       # UI components (ArtworkCard, Navbar, Modals, Lightbox)
-│   │   ├── context/          # Auth, Theme, Likes, Bookmarks, and Follow providers
-│   │   ├── pages/            # Multi-page views (Feed, Discovery, Upload, Legal, Profile)
-│   │   └── App.jsx           # Client-side routing configuration
-│   ├── Dockerfile            # Multi-stage production container (Nginx Alpine)
-│   └── nginx.conf            # SPA routing fallback and cache directives
-├── Dockerfile                # Multi-stage production container for Go API
-├── docker-compose.yml        # Full-stack local development & deployment stack
-└── Makefile                  # Automation commands for build, test, and linting
+### Entity Relationship Model (PostgreSQL 16)
+
+```mermaid
+erDiagram
+    USERS ||--o{ ARTWORKS : publishes
+    USERS ||--o{ LIKES : casts
+    USERS ||--o{ BOOKMARKS : saves
+    USERS ||--o{ COMMENTS : writes
+    USERS ||--o{ FOLLOWS : "follows (follower_id)"
+    USERS ||--o{ FOLLOWS : "is followed (following_id)"
+    
+    ARTWORKS ||--o{ ARTWORK_TAGS : categorized
+    TAGS ||--o{ ARTWORK_TAGS : maps
+    ARTWORKS ||--o{ LIKES : receives
+    ARTWORKS ||--o{ BOOKMARKS : collected_in
+    ARTWORKS ||--o{ COMMENTS : discusses
+
+    USERS {
+        bigint id PK
+        varchar username UK
+        varchar email UK
+        varchar password_hash
+        varchar display_name
+        text bio
+        varchar avatar_url
+        varchar banner_url
+        jsonb social_links
+        timestamp created_at
+    }
+
+    ARTWORKS {
+        bigint id PK
+        bigint user_id FK
+        varchar title
+        text description
+        varchar image_url
+        varchar thumbnail_url
+        integer width
+        integer height
+        bigint view_count
+        timestamp created_at
+    }
+
+    TAGS {
+        bigint id PK
+        varchar name UK
+    }
+
+    ARTWORK_TAGS {
+        bigint artwork_id PK,FK
+        bigint tag_id PK,FK
+    }
+
+    FOLLOWS {
+        bigint follower_id PK,FK
+        bigint following_id PK,FK
+        timestamp created_at
+    }
+
+    LIKES {
+        bigint user_id PK,FK
+        bigint artwork_id PK,FK
+        timestamp created_at
+    }
+
+    BOOKMARKS {
+        bigint user_id PK,FK
+        bigint artwork_id PK,FK
+        timestamp created_at
+    }
 ```
+
+### Indexing & Performance Optimizations
+1. **GIN Trigram Fuzzy Search**:
+   - Extension `pg_trgm` applied on `artworks.title` (`idx_artworks_title_trgm`) and `users.username` (`idx_users_username_trgm`).
+   - Enables sub-millisecond substring queries (`ILIKE '%query%'`) avoiding sequential table scans.
+2. **Composite Unique Constraints**:
+   - `follows (follower_id, following_id)` with `CHECK (follower_id <> following_id)` preventing self-follows at database engine level.
+   - `likes (user_id, artwork_id)` and `bookmarks (user_id, artwork_id)` guaranteeing data integrity under concurrent requests.
+3. **Transaction Pooler Statement Bypass**:
+   - Configured GORM postgres driver with `PreferSimpleProtocol: true` to eliminate prepared statement collisions (`SQLSTATE 42P05`) across pooled Supabase Supavisor connections.
+
+---
+
+## Caching Strategy
+
+Lumiina employs a multi-tiered caching model designed to minimize database roundtrips and withstand traffic spikes:
+
+```mermaid
+flowchart LR
+    Req["Incoming Request"] --> Route{"Is Cacheable?"}
+    Route -->|Yes: Sitemap/Public Feed| RCache["Check Redis Cache"]
+    Route -->|No: Mutations/Auth| DB["Direct PostgreSQL"]
+    
+    RCache -->|Hit (O(1))| Return["Instant HTTP Response"]
+    RCache -->|Miss| DB
+    DB --> Repopulate["Populate Redis with TTL"]
+    Repopulate --> Return
+```
+
+1. **Redis Cache-Aside Pattern**:
+   - Public discovery feeds and XML Sitemaps (`seo:sitemap_xml:v2`) are cached with 30-minute TTLs.
+2. **Synchronous Cache Invalidation (`internal/pkg/cache/invalidator.go`)**:
+   - Any artwork creation, update, or deletion synchronously purges associated feed caches and tag aggregations across patterns `artworks:feed:*` and `tags:popular`.
+3. **Atomic Lua Rate Limiting**:
+   - Rate limit counters execute in a single round-trip Redis Lua script, maintaining rolling window counters without race conditions.
+4. **Session Revocation Epochs**:
+   - Resetting passwords writes a revocation timestamp key `user_revocation:<user_id>`. JWT verification checks this epoch in $O(1)$ memory time, invalidating older tokens immediately without database writes.
+
+---
+
+## Security
+
+Lumiina enforces an enterprise **Defense-in-Depth** security posture across 7 hardened vectors:
+
+1. **Anti-Enumeration Canary Evaluation**:
+   - When authenticating a non-existent username, a pre-computed Bcrypt canary hash is evaluated in constant time (~70ms) to ensure response times do not leak user existence.
+2. **Pixel Flood / Decompression Bomb Defense**:
+   - Image uploads inspect image header dimensions via `image.DecodeConfig` before allocating uncompressed RGBA pixel buffers in memory. Images exceeding 10,000 × 10,000 px are rejected immediately.
+3. **Magic Bytes Content-Type Sniffing**:
+   - Files are validated using `http.DetectContentType` on the initial 512-byte header stream, thwarting malicious executables disguised with `.png`/`.jpg` extensions.
+4. **Account Lockout Protection**:
+   - 5 consecutive failed login attempts trigger an automatic 15-minute account freeze (`AUTH_ACCOUNT_LOCKED` / HTTP 429) backed by Redis TTL counters.
+5. **Strict Content Security Policy (CSP)**:
+   - Security headers middleware strips `'unsafe-eval'`, locks down frame embedding (`X-Frame-Options: DENY`), and enforces HSTS with preloading headers.
+6. **Opaque Infrastructure Probes**:
+   - `/readyz` returns a sanitized status envelope (`{"status":"ready"}`) without leaking internal hostnames, ports, or topology of PostgreSQL and Redis.
+7. **Telemetry Port Cloaking**:
+   - Prometheus `/metrics` returns HTTP 404 in production to defeat automated endpoint scanners, allowing access exclusively to loopback scrapers (`127.0.0.1`, `::1`).
+
+---
+
+## Testing
+
+```bash
+# Run unit and race-condition test suites across all packages
+make test-race
+
+# Run linter checks
+golangci-lint run ./...
+```
+
+- **Race Condition Detection**: All Go test suites are executed with `go test -race ./...` to guarantee 0 data races in concurrent services.
+- **Automated CI Quality Gates**: GitHub Actions pipeline runs on every push and PR:
+  - Go compiler checks & static analysis.
+  - Automated CodeQL SAST scanning (100% resolved alerts for CWE-093, CWE-079, CWE-117).
+- **QA Automation Suite (`qa-journey/`)**:
+  - Structured against IEEE 829 test specifications and ISTQB test design techniques (Equivalence Partitioning, Boundary Value Analysis).
+  - Automated API test suite running via Postman & Newman CLI.
+  - End-to-End (E2E) browser automation using Playwright.
+
+---
+
+## Performance
+
+- **Sub-50ms API Latency**: Vercel Serverless Functions aligned to Singapore region (`sin1`), achieving single-digit millisecond latency to Supabase PostgreSQL and Upstash Redis.
+- **Client-Side Image Preprocessing**: Canvas downsampling downscales oversized 8K raw files to 2560px WebP at 0.90 quality factor, saving **85% to 95% bandwidth** and reducing upload latency by ~20x.
+- **Code-Splitting & Zero CLS**: Route-level dynamic imports (`React.lazy()`) reduced initial entry bundle from 640 kB to **22.07 kB (>93% reduction)**.
+- **Zero N+1 Query Resolvers**: Batch queries (`populateLikeCounts`, `populateUserLikeStatus`, `BatchCheckFollowing`) consolidate feed queries into $O(1)$ batch operations via SQL `IN (?)`.
+- **Wave-1 Bot Pre-rendering**: Zero-overhead User-Agent sniffing dynamically injects OpenGraph, Twitter Cards, and JSON-LD microdata directly into the initial HTML response for search engine crawlers.
+
+---
+
+## Deployment
+
+Lumiina runs on a distributed cloud topology:
+
+```mermaid
+flowchart LR
+    subgraph EdgeLayer ["Anycast Edge (Vercel)"]
+        VercelFrontend["React 19 SPA Build (CDN Cache)"]
+        VercelAPI["Go Binary Serverless Function (sin1)"]
+    end
+
+    subgraph CloudServices ["Managed Cloud Infrastructure"]
+        SupaDB[("Supabase PostgreSQL (Singapore)\nPooler Port 6543")]
+        UpstashRedis[("Upstash Redis (Singapore)\nTLS Encryption")]
+        CloudinaryCDN[("Cloudinary CDN\nImage Transformations")]
+    end
+
+    VercelFrontend --> VercelAPI
+    VercelAPI --> SupaDB
+    VercelAPI --> UpstashRedis
+    VercelAPI --> CloudinaryCDN
+```
+
+- **Domain Routing**: Apex domain (`https://lumiina.art`) permanently 308-redirects to canonical `https://www.lumiina.art`.
+- **Zero-Downtime Deployment**: Continuous deployment wired via Vercel GitHub integration; database migrations managed via `golang-migrate`.
+- **Operational Runbooks**: Complete runbooks available in [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) and [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
+
+---
+
+## Roadmap
+
+- [x] **Core Gallery Platform**: Clean Architecture Go API, artwork uploads, tagging, and discovery.
+- [x] **Social Interactions**: Likes, Bookmarks, and Creator Follow / Unfollow system.
+- [x] **Cloud Migration & Production Launch**: Live deployment on `lumiina.art` with Supabase, Upstash, and Vercel.
+- [x] **Production Security Hardening**: Defense-in-depth vectors 1–7, account lockout, and timing attack protection.
+- [x] **Technical SEO & AI Discovery**: Dynamic XML Sitemaps, Google Image extensions, Wave-1 Bot Pre-renderer, and `llms.txt`.
+- [x] **Official Mascot Property & Creator Studio**: Lumiina Character Bible v1.0, 9-expression sticker engine, Showcase Card Studio, and Color Palette Extractor.
+- [ ] **QA Automation Suite (Modul 5)**: Comprehensive Playwright E2E automation for live production regression testing.
+- [ ] **Real-Time Notification Pipeline**: WebSocket or Server-Sent Events (SSE) for instant interaction notifications.
+- [ ] **Solo Capstone Project**: GoAntri — Smart Queue Management System.
 
 ---
 
