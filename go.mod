@@ -74,7 +74,7 @@ require (
 )
 
 require (
-	github.com/cloudinary/cloudinary-go/v2 v2.16.0
+	github.com/cloudinary/cloudinary-go/v2 v2.16.1
 	github.com/gin-gonic/gin v1.12.0
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
